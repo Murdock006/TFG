@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/fragment_Presentacion" >
+
+
+    <fragment
+        android:id="@+id/fragment_Presentacion"
+        android:name="com.example.tfg.vista.FragmentPresentacion"
+        android:label="fragment_presentacion"
+        tools:layout="@layout/fragment_presentacion" >
+        <action
+            android:id="@+id/action_fragment_Presentacion_to_fragment_Login"
+            app:destination="@id/fragment_Login" />
+    </fragment>
+    <fragment
+        android:id="@+id/fragment_Login"
+        android:name="com.example.tfg.vista.FragmentLogin"
+        android:label="fragment_login"
+        tools:layout="@layout/fragment_login" >
+        <action
+            android:id="@+id/action_fragment_Login_to_fragment_PgPrincipal"
+            app:destination="@id/fragment_PgPrincipal" />
+        <action
+            android:id="@+id/action_fragment_Login_to_fragment_Registro"
+            app:destination="@id/fragment_Registro" />
+    </fragment>
+    <fragment
+        android:id="@+id/fragment_PgPrincipal"
+        android:name="com.example.tfg.vista.FragmentPgPrincipal"
+        android:label="fragment_pg_principal"
+        tools:layout="@layout/fragment_pg_principal" />
+
+
+    <fragment
+        android:id="@+id/fragment_Recompensas"
+        android:name="com.example.tfg.vista.FragmentRecompensas"
+        android:label="fragment_recompensas"
+        tools:layout="@layout/fragment_recompensas" />
+
+    <fragment
+        android:id="@+id/fragment_Perfil"
+        android:name="com.example.tfg.vista.FragmentPerfil"
+        android:label="fragment_perfil"
+        tools:layout="@layout/fragment_perfil" />
+
+    <fragment
+        android:id="@+id/fragment_Registro"
+        android:name="com.example.tfg.vista.FragmentRegistro"
+        android:label="fragment_registro"
+        tools:layout="@layout/fragment_registro" />
+</navigation>
