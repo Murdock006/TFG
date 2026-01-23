@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@drawable/degradado">
+
+    <TextView
+        android:id="@+id/tvTituloPareja"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Gestión de pareja/grupo"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvMiembros"
+        android:layout_width="0dp"
+        android:layout_height="120dp"
+        app:layout_constraintTop_toBottomOf="@id/tvTituloPareja"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp" />
+
+    <Button
+        android:id="@+id/btnCrearGrupo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Crear grupo"
+        app:layout_constraintTop_toBottomOf="@id/rvMiembros"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp" />
+
+    <Button
+        android:id="@+id/btnGenerarInvitacion"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Generar invitación"
+        app:layout_constraintTop_toBottomOf="@id/btnCrearGrupo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp" />
+
+    <TextView
+        android:id="@+id/tvCodigo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Código: -"
+        app:layout_constraintTop_toBottomOf="@id/btnGenerarInvitacion"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp" />
+
+    <EditText
+        android:id="@+id/etCodigoAceptar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Introduce código para aceptar"
+        app:layout_constraintTop_toBottomOf="@id/tvCodigo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp" />
+
+    <Button
+        android:id="@+id/btnAceptarInvitacion"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Aceptar invitación"
+        app:layout_constraintTop_toBottomOf="@id/etCodigoAceptar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
