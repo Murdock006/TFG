@@ -9,4 +9,13 @@ interface AuthRepositorio {
     suspend fun logout()
     fun usuarioActual(): Usuario?
     fun observarUsuarios(): Flow<List<Usuario>>
+
+    // operaciones de puntos
+    suspend fun sumarPuntos(usuarioId: String, puntos: Int): Result<Int>
+    suspend fun reservarPuntos(usuarioId: String, puntos: Int): Result<Unit>
+    suspend fun liberarPuntos(usuarioId: String, puntos: Int): Result<Unit>
+    suspend fun comprarPuntos(usuarioId: String, puntos: Int): Result<Int>
+
+    // sumar puntos aplicando bonificaciones por racha (devuelve puntos totales añadidos)
+    suspend fun sumarPuntosConBonificacion(usuarioId: String, basePuntos: Int): Result<Int>
 }

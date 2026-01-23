@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tfg.repositorio.RepositorioDatos
-import com.example.tfg.service.ServiceLocator
+import com.example.tfg.service.LocalizadorServicios
 import kotlinx.coroutines.launch
 
 // ViewModel en castellano que expone LiveData para la vista
@@ -35,8 +35,8 @@ class VistaModeloPrincipal(
 
     fun actualizarConteos() {
         viewModelScope.launch {
-            val gruposRes = ServiceLocator.grupoRepositorio.obtenerGrupos()
-            val tareasRes = ServiceLocator.tareaRepositorio.obtenerTareas()
+            val gruposRes = LocalizadorServicios.repositorioGrupo.obtenerGrupos()
+            val tareasRes = LocalizadorServicios.repositorioTarea.obtenerTareas()
             _numGrupos.value = gruposRes.getOrNull()?.size ?: 0
             _numTareas.value = tareasRes.getOrNull()?.size ?: 0
         }

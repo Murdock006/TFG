@@ -9,12 +9,12 @@ import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.tfg.databinding.FragmentRegistroBinding
-import com.example.tfg.viewmodel.AuthViewModel
+import com.example.tfg.viewmodel.VistaModeloAuth
 
 class FragmentRegistro : Fragment() {
 
     private lateinit var binding: FragmentRegistroBinding
-    private val authViewModel: AuthViewModel by viewModels()
+    private val vistaModeloAuth: VistaModeloAuth by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,17 +39,17 @@ class FragmentRegistro : Fragment() {
                 return@setOnClickListener
             }
 
-            authViewModel.registrar(nombre, edad, ciudad, email, pass)
+            vistaModeloAuth.registrar(nombre, edad, ciudad, email, pass)
         }
 
-        authViewModel.usuario.observe(viewLifecycleOwner) { usuario ->
+        vistaModeloAuth.usuario.observe(viewLifecycleOwner) { usuario ->
             if (usuario != null) {
                 Toast.makeText(requireContext(), "Registro correcto", Toast.LENGTH_SHORT).show()
                 findNavController().navigate(com.example.tfg.R.id.fragment_PgPrincipal)
             }
         }
 
-        authViewModel.error.observe(viewLifecycleOwner) { err ->
+        vistaModeloAuth.error.observe(viewLifecycleOwner) { err ->
             if (!err.isNullOrEmpty()) {
                 Toast.makeText(requireContext(), err, Toast.LENGTH_SHORT).show()
             }

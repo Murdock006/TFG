@@ -19,7 +19,7 @@ class AuthRepositorioInMemory : AuthRepositorio {
             if (usuarios.any { it.email == usuario.email }) {
                 Result.failure(Exception("El email ya está registrado"))
             } else {
-                val u = usuario.copy(id = UUID.randomUUID().toString())
+                val u = usuario.copy(id = UUID.randomUUID().toString(), puntos = 1000)
                 usuarios.add(u)
                 usuariosFlow.value = usuarios.toList()
                 usuarioLogueado = u
@@ -47,4 +47,75 @@ class AuthRepositorioInMemory : AuthRepositorio {
     override fun usuarioActual(): Usuario? = usuarioLogueado
 
     override fun observarUsuarios(): Flow<List<Usuario>> = usuariosFlow
+
+    override suspend fun sumarPuntos(usuarioId: String, puntos: Int): Result<Int> {
+        return withContext(Dispatchers.Default) {
+            val idx = usuarios.indexOfFirst { it.id == usuarioId }
+            if (idx < 0) return@withContext Result.failure(Exception("Usuario no encontrado"))
+            val u = usuarios[idx]
+            val nuevo = u.copy(puntos = u.puntos + puntos)
+            usuarios[idx] = nuevo
+            if (usuarioLogueado?.id == usuarioId) usuarioLogueado = nuevo
+            usuariosFlow.value = usuarios.toList()
+            Result.success(nuevo.puntos)
+        }
+    }
+
+    override suspend fun reservarPuntos(usuarioId: String, puntos: Int): Result<Unit> {
+        return withContext(Dispatchers.Default) {
+            val idx = usuarios.indexOfFirst { it.id == usuarioId }
+            if (idx < 0) return@withContext Result.failure(Exception("Usuario no encontrado"))
+            val u = usuarios[idx]
+            if (u.puntos < puntos) return@withContext Result.failure(Exception("Fondos insuficientes"))
+            val nuevo = u.copy(puntos = u.puntos - puntos, puntosReservados = u.puntosReservados + puntos)
+            usuarios[idx] = nuevo
+            if (usuarioLogueado?.id == usuarioId) usuarioLogueado = nuevo
+            usuariosFlow.value = usuarios.toList()
+            Result.success(Unit)
+        }
+    }
+
+    override suspend fun liberarPuntos(usuarioId: String, puntos: Int): Result<Unit> {
+        return withContext(Dispatchers.Default) {
+            val idx = usuarios.indexOfFirst { it.id == usuarioId }
+            if (idx < 0) return@withContext Result.failure(Exception("Usuario no encontrado"))
+            val u = usuarios[idx]
+            val puntosReservados = u.puntosReservados
+            val aLiberar = if (puntos > puntosReservados) puntosReservados else puntos
+            val nuevo = u.copy(puntos = u.puntos + aLiberar, puntosReservados = u.puntosReservados - aLiberar)
+            usuarios[idx] = nuevo
+            if (usuarioLogueado?.id == usuarioId) usuarioLogueado = nuevo
+            usuariosFlow.value = usuarios.toList()
+            Result.success(Unit)
+        }
+    }
+
+    override suspend fun comprarPuntos(usuarioId: String, puntos: Int): Result<Int> {
+        return withContext(Dispatchers.Default) {
+            val idx = usuarios.indexOfFirst { it.id == usuarioId }
+            if (idx < 0) return@withContext Result.failure(Exception("Usuario no encontrado"))
+            val u = usuarios[idx]
+            val nuevo = u.copy(puntos = u.puntos + puntos)
+            usuarios[idx] = nuevo
+            if (usuarioLogueado?.id == usuarioId) usuarioLogueado = nuevo
+            usuariosFlow.value = usuarios.toList()
+            Result.success(nuevo.puntos)
+        }
+    }
+
+    override suspend fun sumarPuntosConBonificacion(usuarioId: String, basePuntos: Int): Result<Int> {
+        return withContext(Dispatchers.Default) {
+            val idx = usuarios.indexOfFirst { it.id == usuarioId }
+            if (idx < 0) return@withContext Result.failure(Exception("Usuario no encontrado"))
+            val u = usuarios[idx]
+            val nuevaRacha = u.rachaDias + 1
+            val bonus = if (nuevaRacha >= 7) (basePuntos * 0.10).toInt() else 0
+            val totalAñadido = basePuntos + bonus
+            val nuevo = u.copy(puntos = u.puntos + totalAñadido, rachaDias = nuevaRacha)
+            usuarios[idx] = nuevo
+            if (usuarioLogueado?.id == usuarioId) usuarioLogueado = nuevo
+            usuariosFlow.value = usuarios.toList()
+            Result.success(totalAñadido)
+        }
+    }
 }

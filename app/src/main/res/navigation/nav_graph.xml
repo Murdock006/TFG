@@ -31,7 +31,23 @@
         android:id="@+id/fragment_PgPrincipal"
         android:name="com.example.tfg.vista.FragmentPgPrincipal"
         android:label="fragment_pg_principal"
-        tools:layout="@layout/fragment_pg_principal" />
+        tools:layout="@layout/fragment_pg_principal" >
+        <action
+            android:id="@+id/action_fragment_PgPrincipal_to_fragment_Calendario"
+            app:destination="@id/fragment_Calendario" />
+        <action
+            android:id="@+id/action_fragment_PgPrincipal_to_fragment_Recompensas"
+            app:destination="@id/fragment_Recompensas" />
+        <action
+            android:id="@+id/action_fragment_PgPrincipal_to_fragment_Perfil"
+            app:destination="@id/fragment_Perfil" />
+        <action
+            android:id="@+id/action_fragment_PgPrincipal_to_fragment_Tareas"
+            app:destination="@id/fragment_Tareas" />
+        <action
+            android:id="@+id/action_fragment_PgPrincipal_to_fragment_Pareja"
+            app:destination="@id/fragment_Pareja" />
+    </fragment>
 
 
     <fragment
@@ -51,4 +67,22 @@
         android:name="com.example.tfg.vista.FragmentRegistro"
         android:label="fragment_registro"
         tools:layout="@layout/fragment_registro" />
+
+    <fragment
+        android:id="@+id/fragment_Pareja"
+        android:name="com.example.tfg.vista.FragmentPareja"
+        android:label="fragment_pareja"
+        tools:layout="@layout/fragment_pareja" />
+
+    <fragment
+        android:id="@+id/fragment_Tareas"
+        android:name="com.example.tfg.vista.FragmentTareas"
+        android:label="fragment_tareas"
+        tools:layout="@layout/fragment_tareas_lista" />
+
+    <fragment
+        android:id="@+id/fragment_Calendario"
+        android:name="com.example.tfg.vista.FragmentCalendario"
+        android:label="fragment_calendario"
+        tools:layout="@layout/fragment_calendario" />
 </navigation>

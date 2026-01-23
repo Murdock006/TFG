@@ -28,7 +28,9 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 "nombre" to usuario.nombre,
                 "edad" to usuario.edad,
                 "ciudad" to usuario.ciudad,
-                "email" to usuario.email
+                "email" to usuario.email,
+                "puntos" to 1000,
+                "puntosReservados" to 0
             )
             firestore.collection("usuarios").document(firebaseUser.uid).set(data).await()
             Result.success(Usuario(id = firebaseUser.uid, nombre = usuario.nombre, edad = usuario.edad, ciudad = usuario.ciudad, email = firebaseUser.email ?: usuario.email))
@@ -46,7 +48,9 @@ class AuthRepositorioFirebase : AuthRepositorio {
             val nombre = doc.getString("nombre") ?: ""
             val edad = doc.getLong("edad")?.toInt()
             val ciudad = doc.getString("ciudad")
-            val user = Usuario(id = firebaseUser.uid, nombre = nombre, edad = edad, ciudad = ciudad, email = firebaseUser.email ?: email)
+            val puntos = doc.getLong("puntos")?.toInt() ?: 0
+            val puntosReservados = doc.getLong("puntosReservados")?.toInt() ?: 0
+            val user = Usuario(id = firebaseUser.uid, nombre = nombre, edad = edad, ciudad = ciudad, email = firebaseUser.email ?: email, puntos = puntos)
             Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
@@ -76,10 +80,96 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 val edad = doc.getLong("edad")?.toInt()
                 val ciudad = doc.getString("ciudad")
                 val email = doc.getString("email") ?: ""
-                Usuario(id = id, nombre = nombre, edad = edad, ciudad = ciudad, email = email)
+                val puntos = doc.getLong("puntos")?.toInt() ?: 0
+                val puntosReservados = doc.getLong("puntosReservados")?.toInt() ?: 0
+                Usuario(id = id, nombre = nombre, edad = edad, ciudad = ciudad, email = email, puntos = puntos)
             } ?: emptyList()
             trySend(list)
         }
         awaitClose { listener.remove() }
+    }
+
+    override suspend fun sumarPuntos(usuarioId: String, puntos: Int): Result<Int> {
+        return try {
+            val userRef = firestore.collection("usuarios").document(usuarioId)
+            val result = firestore.runTransaction { t ->
+                val snap = t.get(userRef)
+                val actuales = (snap.getLong("puntos") ?: 0L).toInt()
+                val nuevo = actuales + puntos
+                t.update(userRef, "puntos", nuevo)
+                nuevo
+            }.await()
+            Result.success(result)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun reservarPuntos(usuarioId: String, puntos: Int): Result<Unit> {
+        return try {
+            val userRef = firestore.collection("usuarios").document(usuarioId)
+            firestore.runTransaction { t ->
+                val snap = t.get(userRef)
+                val actuales = (snap.getLong("puntos") ?: 0L).toInt()
+                if (actuales < puntos) throw Exception("Fondos insuficientes")
+                val reservados = (snap.getLong("puntosReservados") ?: 0L).toInt()
+                t.update(userRef, mapOf("puntos" to (actuales - puntos), "puntosReservados" to (reservados + puntos)))
+            }.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun liberarPuntos(usuarioId: String, puntos: Int): Result<Unit> {
+        return try {
+            val userRef = firestore.collection("usuarios").document(usuarioId)
+            firestore.runTransaction { t ->
+                val snap = t.get(userRef)
+                val reservados = (snap.getLong("puntosReservados") ?: 0L).toInt()
+                val aLiberar = if (puntos > reservados) reservados else puntos
+                val actuales = (snap.getLong("puntos") ?: 0L).toInt()
+                t.update(userRef, mapOf("puntos" to (actuales + aLiberar), "puntosReservados" to (reservados - aLiberar)))
+            }.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun comprarPuntos(usuarioId: String, puntos: Int): Result<Int> {
+        return try {
+            val userRef = firestore.collection("usuarios").document(usuarioId)
+            val result = firestore.runTransaction { t ->
+                val snap = t.get(userRef)
+                val actuales = (snap.getLong("puntos") ?: 0L).toInt()
+                val nuevo = actuales + puntos
+                t.update(userRef, "puntos", nuevo)
+                nuevo
+            }.await()
+            Result.success(result)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun sumarPuntosConBonificacion(usuarioId: String, basePuntos: Int): Result<Int> {
+        return try {
+            val userRef = firestore.collection("usuarios").document(usuarioId)
+            val result = firestore.runTransaction { t ->
+                val snap = t.get(userRef)
+                val actuales = (snap.getLong("puntos") ?: 0L).toInt()
+                val racha = (snap.getLong("rachaDias") ?: 0L).toInt()
+                val nuevaRacha = racha + 1
+                val bonus = if (nuevaRacha >= 7) (basePuntos * 0.10).toInt() else 0
+                val totalAñadido = basePuntos + bonus
+                val nuevo = actuales + totalAñadido
+                t.update(userRef, mapOf("puntos" to nuevo, "rachaDias" to nuevaRacha))
+                totalAñadido
+            }.await()
+            Result.success(result)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

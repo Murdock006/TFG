@@ -4,6 +4,7 @@
     <color name="primario">#90CAF9</color>
     <color name="primario_variant">#64B5F6</color>
     <color name="azul">#0D47A1</color>
+    <color name="azul_principal">#1976D2</color>
     <color name="rojo">#FF0000</color>
     <color name="negro">#000000</color>
     <color name="white">#FFFFFF</color>

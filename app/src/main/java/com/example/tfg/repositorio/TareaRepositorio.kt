@@ -8,4 +8,5 @@ interface TareaRepositorio {
     suspend fun obtenerTareas(): Result<List<Tarea>>
     fun observarTareas(): Flow<List<Tarea>>
     suspend fun actualizarTarea(tarea: Tarea): Result<Tarea>
+    suspend fun resolverReclamo(tareaId: String, aceptado: Boolean): Result<Tarea>
 }

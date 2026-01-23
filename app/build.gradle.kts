@@ -49,6 +49,10 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+
+    // Await para Tasks de Firebase desde coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -62,6 +66,10 @@ dependencies {
     implementation(libs.androidx.navigation.fragment)
     implementation("androidx.navigation:navigation-ui-ktx:2.9.6")
     implementation("androidx.cardview:cardview:1.0.0")
+
+    // WorkManager (KTX)
+    implementation("androidx.work:work-runtime-ktx:2.8.1")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
