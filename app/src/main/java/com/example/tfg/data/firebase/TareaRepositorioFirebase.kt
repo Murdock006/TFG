@@ -188,36 +188,57 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 "reclamadoPor" to tarea.reclamadoPor,
                 "motivoReclamo" to tarea.motivoReclamo
             )
-            // reemplazar set simple por transacción que también gestione puntos reservados/transferencias
+            // reestructurar la transacción: leer TODO antes de escribir y usar las mismas DocumentReference
             firestore.runTransaction { t ->
                 val snapTx = t.get(docRef)
                 val previoTx = docToTarea(snapTx)
 
-                // Si la tarea pasó de 'completada' a 'confirmada', transferir puntos al asignado y disminuir reservas del creador
-                if (previoTx != null && previoTx.estado == "completada" && tarea.estado == "confirmada") {
-                    val ejecutor = tarea.asignadoA
-                    val creador = tarea.creadoPor
-                    if (!ejecutor.isNullOrBlank()) {
-                        val ejecRef = firestore.collection("usuarios").document(ejecutor)
-                        val ejecSnap = t.get(ejecRef)
+                // determinar qué acciones se deben hacer en la transacción
+                val necesitaTransferir = (previoTx != null && previoTx.estado == "completada" && tarea.estado == "confirmada")
+                val necesitaLiberarPorDesasignar = (previoTx != null && !previoTx.asignadoA.isNullOrBlank() && tarea.asignadoA.isNullOrBlank())
+                val necesitaReservarPorAsignar = (previoTx != null && previoTx.asignadoA.isNullOrBlank() && !tarea.asignadoA.isNullOrBlank())
+
+                // coleccionar referencias únicas que habrá que leer: mapa uid -> DocumentReference
+                val refsPorUid = linkedMapOf<String, com.google.firebase.firestore.DocumentReference>()
+                if (necesitaTransferir) {
+                    tarea.asignadoA?.let { refsPorUid[it] = firestore.collection("usuarios").document(it) }
+                    tarea.creadoPor?.let { refsPorUid[it] = firestore.collection("usuarios").document(it) }
+                }
+                if (necesitaLiberarPorDesasignar) {
+                    previoTx?.creadoPor?.let { refsPorUid[it] = firestore.collection("usuarios").document(it) }
+                }
+                if (necesitaReservarPorAsignar) {
+                    tarea.creadoPor?.let { refsPorUid[it] = firestore.collection("usuarios").document(it) }
+                }
+
+                // ejecutar todas las lecturas antes de cualquier escritura
+                val snapsLectura = mutableMapOf<String, DocumentSnapshot>()
+                for ((uid, ref) in refsPorUid) {
+                    snapsLectura[uid] = t.get(ref)
+                }
+
+                // ahora aplicar las escrituras según los datos leídos
+                if (necesitaTransferir) {
+                    tarea.asignadoA?.let { ejecutor ->
+                        val ejecRef = refsPorUid[ejecutor] ?: firestore.collection("usuarios").document(ejecutor)
+                        val ejecSnap = snapsLectura[ejecutor] ?: t.get(ejecRef)
                         val puntosEjec = (ejecSnap.getLong("puntos") ?: 0L).toInt()
                         t.update(ejecRef, "puntos", puntosEjec + tarea.puntos)
                     }
-                    if (!creador.isNullOrBlank()) {
-                        val creadRef = firestore.collection("usuarios").document(creador)
-                        val creadSnap = t.get(creadRef)
+                    tarea.creadoPor?.let { creador ->
+                        val creadRef = refsPorUid[creador] ?: firestore.collection("usuarios").document(creador)
+                        val creadSnap = snapsLectura[creador] ?: t.get(creadRef)
                         val reservados = (creadSnap.getLong("puntosReservados") ?: 0L).toInt()
                         val nuevoReservados = maxOf(0, reservados - tarea.puntos)
                         t.update(creadRef, "puntosReservados", nuevoReservados)
                     }
                 }
 
-                // Si la tarea pasa de asignada a no asignada, liberar puntos del creador
-                if (previoTx != null && !previoTx.asignadoA.isNullOrBlank() && tarea.asignadoA.isNullOrBlank()) {
-                    val creador = tarea.creadoPor
+                if (necesitaLiberarPorDesasignar) {
+                    val creador = previoTx?.creadoPor
                     if (!creador.isNullOrBlank()) {
-                        val creadRef = firestore.collection("usuarios").document(creador)
-                        val creadSnap = t.get(creadRef)
+                        val creadRef = refsPorUid[creador] ?: firestore.collection("usuarios").document(creador)
+                        val creadSnap = snapsLectura[creador] ?: t.get(creadRef)
                         val reservados = (creadSnap.getLong("puntosReservados") ?: 0L).toInt()
                         val puntosAct = (creadSnap.getLong("puntos") ?: 0L).toInt()
                         val liberar = minOf(reservados, tarea.puntos)
@@ -225,12 +246,11 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                     }
                 }
 
-                // Si la tarea pasa de no asignada a asignada, reservar puntos en la cuenta del creador (si tiene saldo)
-                if (previoTx != null && previoTx.asignadoA.isNullOrBlank() && !tarea.asignadoA.isNullOrBlank()) {
+                if (necesitaReservarPorAsignar) {
                     val creador = tarea.creadoPor
                     if (!creador.isNullOrBlank() && tarea.puntos > 0) {
-                        val creadRef = firestore.collection("usuarios").document(creador)
-                        val creadSnap = t.get(creadRef)
+                        val creadRef = refsPorUid[creador] ?: firestore.collection("usuarios").document(creador)
+                        val creadSnap = snapsLectura[creador] ?: t.get(creadRef)
                         val puntosAct = (creadSnap.getLong("puntos") ?: 0L).toInt()
                         val reservados = (creadSnap.getLong("puntosReservados") ?: 0L).toInt()
                         if (puntosAct < tarea.puntos) throw Exception("Fondos insuficientes")
@@ -238,10 +258,9 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                     }
                 }
 
-                // escribir la tarea actualizada
+                // por último escribir la tarea actualizada (última escritura)
                 t.set(docRef, map)
 
-                // Retornar valor (no usado)
                 null
             }.await()
 
@@ -298,14 +317,16 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
             val tarea = docToTarea(snap) ?: return Result.failure(Exception("Tarea inválida"))
 
             if (!tarea.requiereConfirmacion) {
-                // confirmar y transferir en transacción
+                // confirmar y transferir en transacción (leer todo antes de escribir)
                 firestore.runTransaction { t ->
                     val snapTx = t.get(docRef)
                     val tareaTx = docToTarea(snapTx) ?: throw Exception("Tarea inválida")
                     if (tareaTx.estado != "pendiente") throw Exception("Tarea no está en estado pendiente")
 
-                    // Leer referencias necesarias ANTES de cualquier escritura
+                    // Referencia a ejecutor
                     val ejecRef = firestore.collection("usuarios").document(ejecutorUid)
+
+                    // Leer antes de escribir
                     val ejecSnap = t.get(ejecRef)
 
                     // ahora aplicar escrituras
@@ -313,6 +334,8 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
 
                     val actuales = (ejecSnap.getLong("puntos") ?: 0L).toInt()
                     t.update(ejecRef, "puntos", actuales + tarea.puntos)
+
+                    null
                 }.await()
                 Result.success(Unit)
             } else {

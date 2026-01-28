@@ -240,8 +240,22 @@ class FragmentTareas : Fragment() {
                                         "Editar" -> mostrarDialogoEditar(tarea)
                                         "Eliminar" -> lifecycleScope.launch { LocalizadorServicios.repositorioTarea.actualizarTarea(tarea.copy(estado = "eliminada")) }
                                         "Confirmar" -> lifecycleScope.launch {
-                                            val r = LocalizadorServicios.repositorioTarea.actualizarTarea(tarea.copy(estado = "confirmada"))
-                                            if (r.isSuccess) Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show() else Toast.makeText(requireContext(), r.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+                                            // deshabilitar botón para evitar doble click
+                                            btnAccion.isEnabled = false
+                                            try {
+                                                val r = LocalizadorServicios.repositorioTarea.actualizarTarea(tarea.copy(estado = "confirmada"))
+                                                if (r.isSuccess) {
+                                                    Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show()
+                                                    // ocultar el botón de acción en la vista detalle
+                                                    btnAccion.visibility = Button.GONE
+                                                } else {
+                                                    Toast.makeText(requireContext(), r.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+                                                    btnAccion.isEnabled = true
+                                                }
+                                            } catch (e: Exception) {
+                                                Toast.makeText(requireContext(), e.message ?: "Error", Toast.LENGTH_SHORT).show()
+                                                btnAccion.isEnabled = true
+                                            }
                                         }
                                         "Reclamar" -> { pendingTareaParaDisputa = tarea; pickImageLauncher?.launch("image/*") }
                                     }
@@ -254,8 +268,15 @@ class FragmentTareas : Fragment() {
                                 btnAccion.text = "Confirmar"
                                 btnAccion.setOnClickListener {
                                     lifecycleScope.launch {
+                                        btnAccion.isEnabled = false
                                         val res = LocalizadorServicios.repositorioTarea.actualizarTarea(tarea.copy(estado = "confirmada"))
-                                        if (res.isSuccess) Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show() else Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+                                        if (res.isSuccess) {
+                                            Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show()
+                                            btnAccion.visibility = Button.GONE
+                                        } else {
+                                            Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+                                            btnAccion.isEnabled = true
+                                        }
                                     }
                                 }
                             }
@@ -399,9 +420,18 @@ class FragmentTareas : Fragment() {
                                         // reasignar - reutilizar lógica
                                     }
                                     1 -> lifecycleScope.launch {
+                                        // deshabilitar para evitar doble confirmación
+                                        holder.btnAccion.isEnabled = false
                                         val nueva = tarea.copy(estado = "confirmada")
                                         val r = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
-                                        if (r.isSuccess) Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show() else Toast.makeText(requireContext(), r.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+                                        if (r.isSuccess) {
+                                            Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show()
+                                            // ocultar el botón de acciones una vez confirmada
+                                            holder.btnAccion.visibility = View.GONE
+                                        } else {
+                                            Toast.makeText(requireContext(), r.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+                                            holder.btnAccion.isEnabled = true
+                                        }
                                     }
                                     2 -> lifecycleScope.launch {
                                         val ahora = com.google.firebase.Timestamp.now()
@@ -421,7 +451,7 @@ class FragmentTareas : Fragment() {
                 }
             }
 
-            holder.btnAccion.setOnClickListener {}
+            // no sobreescribir el listener por defecto
         }
 
         override fun getItemCount(): Int = items.size

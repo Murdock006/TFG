@@ -2,6 +2,8 @@ package com.example.tfg.vista
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -23,6 +25,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val parejaVM: ParejaViewModel by viewModels()
 
+    // NavController guardado para uso en callbacks
+    private lateinit var navController: androidx.navigation.NavController
+
+    // control doble retroceso
+    private var ultimoRetrocesoMs: Long = 0L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -43,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val navHostFragment = supportFragmentManager.findFragmentById(com.example.tfg.R.id.nav_host_fragment) as? NavHostFragment
-        val navController = navHostFragment?.navController ?: run {
+        navController = navHostFragment?.navController ?: run {
             val found = try {
                 Navigation.findNavController(this, com.example.tfg.R.id.nav_host_fragment)
             } catch (e: IllegalStateException) {
@@ -93,7 +101,7 @@ class MainActivity : AppCompatActivity() {
 
         // manejar si la activity fue lanzada con openTaskId
         intent?.getStringExtra("openTaskId")?.let { tid ->
-            handleOpenTaskId(tid, navController)
+            handleOpenTaskId(tid)
         }
 
         // Ocultar la barra inferior en pantallas de presentación y login
@@ -104,18 +112,42 @@ class MainActivity : AppCompatActivity() {
                 else -> binding.bottomNavigation.visibility = View.VISIBLE
             }
         }
+
+        // manejar doble retroceso: si estamos en el fragment principal, pedir confirmación con Toast
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                try {
+                    val destId = navController.currentDestination?.id
+                    // considerar fragment_PgPrincipal como la pantalla principal
+                    if (destId == com.example.tfg.R.id.fragment_PgPrincipal) {
+                        val ahora = System.currentTimeMillis()
+                        if (ahora - ultimoRetrocesoMs <= 2000L) {
+                            // salir de la app
+                            finish()
+                        } else {
+                            ultimoRetrocesoMs = ahora
+                            Toast.makeText(this@MainActivity, "Pulsa de nuevo retroceder para salir", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        // dejar que NavController intente popBackStack, si no, terminar
+                        if (!navController.popBackStack()) finish()
+                    }
+                } catch (e: Exception) {
+                    // fallback default
+                    if (!navController.popBackStack()) finish()
+                }
+            }
+        })
     }
 
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
         intent.getStringExtra("openTaskId")?.let { tid ->
-            val navHostFragment = supportFragmentManager.findFragmentById(com.example.tfg.R.id.nav_host_fragment) as? NavHostFragment
-            val navController = navHostFragment?.navController
-            if (navController != null) handleOpenTaskId(tid, navController)
+            if (::navController.isInitialized) handleOpenTaskId(tid)
         }
     }
 
-    private fun handleOpenTaskId(taskId: String, navController: androidx.navigation.NavController) {
+    private fun handleOpenTaskId(taskId: String) {
         try {
             val bundle = android.os.Bundle().apply { putString("taskId", taskId) }
             navController.navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
