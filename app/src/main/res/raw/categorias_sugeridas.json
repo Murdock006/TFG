@@ -1,0 +1,87 @@
+{
+  "categorias": [
+    {
+      "id": "cocina",
+      "nombre": "Cocina",
+      "descripcion": "Tareas relacionadas con cocinar y dejar la cocina en orden",
+      "colorHex": "#FF7043",
+      "icono": "ic_cocina",
+      "orden": 1,
+      "tareas": [
+        { "id": "hacer_cena", "titulo": "Hacer la cena", "descripcion": "Preparar la cena", "dificultad": "FACIL", "puntos": 50 },
+        { "id": "hacer_desayuno", "titulo": "Hacer el desayuno", "descripcion": "Preparar el desayuno", "dificultad": "FACIL", "puntos": 50 },
+        { "id": "lavar_platos", "titulo": "Lavar los platos", "descripcion": "Lavar y guardar los platos", "dificultad": "MEDIA", "puntos": 100 },
+        { "id": "hacer_compra", "titulo": "Hacer la compra", "descripcion": "Lista y compra de alimentos", "dificultad": "DIFICIL", "puntos": 200 },
+        { "id": "organizar_despensa", "titulo": "Organizar despensa", "descripcion": "Revisar fechas y ordenar alimentos", "dificultad": "FACIL", "puntos": 40 },
+        { "id": "preparar_batch_cocina", "titulo": "Preparar batch de comida", "descripcion": "Cocinar porciones para la semana", "dificultad": "MEDIA", "puntos": 130 }
+      ]
+    },
+    {
+      "id": "limpieza",
+      "nombre": "Limpieza",
+      "descripcion": "Tareas de limpieza del hogar",
+      "colorHex": "#42A5F5",
+      "icono": "ic_limpieza",
+      "orden": 2,
+      "tareas": [
+        { "id": "barrer_fregar", "titulo": "Barrer y fregar el suelo", "descripcion": "Barrido y fregado completo", "dificultad": "MEDIA", "puntos": 120 },
+        { "id": "limpiar_bano", "titulo": "Limpiar baño a fondo", "descripcion": "Limpieza completa del baño", "dificultad": "DIFICIL", "puntos": 200 },
+        { "id": "sacar_basura", "titulo": "Sacar la basura", "descripcion": "Sacar bolsas y limpiar cubo", "dificultad": "FACIL", "puntos": 40 },
+        { "id": "limpiar_ventanas", "titulo": "Limpiar ventanas", "descripcion": "Limpiar cristales y marcos", "dificultad": "MEDIA", "puntos": 90 },
+        { "id": "limpiar_cocina_profundo", "titulo": "Limpieza profunda cocina", "descripcion": "Limpiar horno y campana", "dificultad": "DIFICIL", "puntos": 220 }
+      ]
+    },
+    {
+      "id": "ropa",
+      "nombre": "Ropa",
+      "descripcion": "Tareas relacionadas con la colada y planchado",
+      "colorHex": "#66BB6A",
+      "icono": "ic_ropa",
+      "orden": 3,
+      "tareas": [
+        { "id": "poner_lavadora", "titulo": "Poner lavadora", "descripcion": "Cargar y programar la lavadora", "dificultad": "FACIL", "puntos": 60 },
+        { "id": "planchar_camisas", "titulo": "Planchar dos camisas", "descripcion": "Planchar dos camisas", "dificultad": "MEDIA", "puntos": 90 },
+        { "id": "doblar_repartir", "titulo": "Doblar y repartir ropa", "descripcion": "Doblar y repartir la ropa limpia", "dificultad": "FACIL", "puntos": 50 },
+        { "id": "ordenar_armario", "titulo": "Ordenar armario", "descripcion": "Clasificar y ordenar la ropa del armario", "dificultad": "MEDIA", "puntos": 100 }
+      ]
+    },
+    {
+      "id": "mascotas",
+      "nombre": "Mascotas",
+      "descripcion": "Cuidado y atención de mascotas",
+      "colorHex": "#FFCA28",
+      "icono": "ic_mascotas",
+      "orden": 4,
+      "tareas": [
+        { "id": "pasear_30min", "titulo": "Pasear 30 minutos", "descripcion": "Paseo de 30 minutos", "dificultad": "FACIL", "puntos": 70 },
+        { "id": "limpiar_arenero", "titulo": "Limpiar arenero / jaula", "descripcion": "Limpieza del arenero o jaula", "dificultad": "MEDIA", "puntos": 110 },
+        { "id": "dar_comida_mascota", "titulo": "Dar comida a la mascota", "descripcion": "Poner comida y agua", "dificultad": "FACIL", "puntos": 30 }
+      ]
+    },
+    {
+      "id": "recados",
+      "nombre": "Recados",
+      "descripcion": "Pequeños encargos y gestiones fuera de casa",
+      "colorHex": "#AB47BC",
+      "icono": "ic_recados",
+      "orden": 5,
+      "tareas": [
+        { "id": "ir_farmacia", "titulo": "Ir a la farmacia", "descripcion": "Comprar en farmacia lo necesario", "dificultad": "FACIL", "puntos": 50 },
+        { "id": "llevar_taller", "titulo": "Llevar el coche al taller", "descripcion": "Conducir al taller y gestionar entrega", "dificultad": "DIFICIL", "puntos": 180 },
+        { "id": "recoger_paquete", "titulo": "Recoger paquete", "descripcion": "Ir a paquetería a recoger un paquete", "dificultad": "FACIL", "puntos": 45 }
+      ]
+    },
+    {
+      "id": "personalizado",
+      "nombre": "Personalizado",
+      "descripcion": "Crea tareas a medida",
+      "colorHex": "#8D6E63",
+      "icono": "ic_personalizado",
+      "orden": 6,
+      "tareas": [
+        { "id": "personalizada_ejemplo", "titulo": "Tarea personalizada ejemplo", "descripcion": "Crea y edita esta tarea", "dificultad": "MEDIA", "puntos": 150 },
+        { "id": "evento_especial", "titulo": "Preparar evento especial", "descripcion": "Ayudar a organizar una pequeña celebración", "dificultad": "DIFICIL", "puntos": 250 }
+      ]
+    }
+  ]
+}

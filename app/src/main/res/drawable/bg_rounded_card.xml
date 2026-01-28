@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- sombra sutil debajo -->
+    <item android:top="2dp" android:left="0dp" android:right="0dp" android:bottom="0dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#22000000" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+    <!-- superficie con degradado y borde -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/superficie" />
+            <corners android:radius="12dp" />
+            <stroke android:width="1dp" android:color="@color/negro" />
+            <padding android:left="8dp" android:top="8dp" android:right="8dp" android:bottom="8dp" />
+        </shape>
+    </item>
+</layer-list>

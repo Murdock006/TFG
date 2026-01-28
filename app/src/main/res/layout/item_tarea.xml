@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="6dp"
+    app:cardCornerRadius="10dp"
+    app:cardUseCompatPadding="true"
+    app:cardElevation="4dp"
+    android:foregroundTintMode="src_over"
+    app:cardBackgroundColor="@color/superficie_variant">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_item_tarea"
+        android:foreground="?attr/selectableItemBackground">
+
+        <View
+            android:id="@+id/vIndicator"
+            android:layout_width="6dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="8dp"
+            android:background="@color/primario"
+            android:contentDescription="" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvTituloTarea"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/titulo_tarea_ejemplo"
+                android:textColor="@color/texto_principal"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:contentDescription="@string/titulo_tarea_ejemplo" />
+
+            <TextView
+                android:id="@+id/tvDificultad"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dificultad_facil"
+                android:textColor="@color/texto_secundario"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp" />
+
+            <TextView
+                android:id="@+id/tvMetaTarea"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/meta_tarea_ejemplo"
+                android:textColor="@color/texto_secundario"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvAsignado"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/asignado_por_defecto"
+                android:textColor="@color/texto_secundario"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnAccionTarea"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/Widget.TFG.Boton.Contorno"
+            android:text=""
+            android:textColor="@color/texto_principal"
+            android:contentDescription="" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
