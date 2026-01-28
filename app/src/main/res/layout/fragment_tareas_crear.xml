@@ -4,15 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="@drawable/degradado">
+    android:background="@color/fondo">
 
     <TextView
         android:id="@+id/tvTituloCrear"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Crear tarea"
+        android:text="@string/crear_tarea"
         android:textSize="20sp"
         android:textStyle="bold"
+        android:textColor="@color/texto_principal"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -21,16 +22,23 @@
         android:id="@+id/etTitulo"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Título"
+        android:background="@drawable/bg_rounded_card"
+        android:hint="@string/titulo_hint"
+        android:textColor="@color/texto_principal"
+        android:textColorHint="@color/texto_secundario"
         app:layout_constraintTop_toBottomOf="@id/tvTituloCrear"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="12dp" />
+        android:layout_marginTop="12dp"
+        android:autofillHints="none"
+        android:inputType="text"
+        android:imeOptions="flagNoExtractUi" />
 
     <Spinner
         android:id="@+id/spCategoria"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_rounded_card"
         app:layout_constraintTop_toBottomOf="@id/etTitulo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -49,12 +57,17 @@
         android:id="@+id/etPuntos"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Puntos"
+        android:background="@drawable/bg_rounded_card"
+        android:hint="@string/puntos_hint"
         android:inputType="number"
+        android:textColor="@color/texto_principal"
+        android:textColorHint="@color/texto_secundario"
         app:layout_constraintTop_toBottomOf="@id/spDificultad"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="12dp" />
+        android:layout_marginTop="12dp"
+        android:autofillHints="none"
+        android:imeOptions="flagNoExtractUi" />
 
     <Spinner
         android:id="@+id/spAsignarA"
@@ -80,24 +93,27 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Fecha: hoy"
-            android:padding="8dp" />
+            android:text="@string/fecha_hoy"
+            android:padding="8dp"
+            android:textColor="@color/texto_principal" />
 
         <Button
             android:id="@+id/btnElegirFecha"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Elegir" />
+            style="@style/Widget.TFG.Boton.Contorno"
+            android:text="@string/elegir" />
+
     </LinearLayout>
 
     <Button
-        android:id="@+id/btnCrear"
+        android:id="@+id/btnCrearTarea"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Crear tarea"
-        app:layout_constraintTop_toBottomOf="@id/llFecha"
+        style="@style/Widget.TFG.Boton.Relleno"
+        android:text="@string/crear"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

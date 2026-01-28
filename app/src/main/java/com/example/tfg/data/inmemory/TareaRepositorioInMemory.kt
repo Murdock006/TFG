@@ -111,4 +111,31 @@ class TareaRepositorioInMemory : TareaRepositorio {
             return@withContext Result.success(nueva)
         }
     }
+
+    override suspend fun marcarCompletada(tareaId: String, ejecutorUid: String): Result<Unit> = withContext(Dispatchers.Default) {
+        val idx = tareas.indexOfFirst { it.id == tareaId }
+        if (idx < 0) return@withContext Result.failure(Exception("Tarea no encontrada"))
+        val tarea = tareas[idx]
+        if (tarea.estado != "pendiente") return@withContext Result.failure(Exception("Tarea no está en estado pendiente"))
+
+        if (!tarea.requiereConfirmacion) {
+            // confirmar y transferir
+            val nueva = tarea.copy(estado = "confirmada")
+            tareas[idx] = nueva
+            // sumar puntos al ejecutor y liberar reservas del creador
+            try {
+                val asignado = tarea.asignadoA ?: ejecutorUid
+                val creador = tarea.creadoPor
+                if (!asignado.isNullOrBlank()) LocalizadorServicios.repositorioAuth.sumarPuntosConBonificacion(asignado, tarea.puntos)
+                if (!creador.isNullOrBlank()) LocalizadorServicios.repositorioAuth.liberarPuntos(creador, tarea.puntos)
+            } catch (e: Exception) { /* ignore */ }
+            tareasFlow.value = tareas.toList()
+            return@withContext Result.success(Unit)
+        } else {
+            // marcar completada y esperar confirmación
+            tareas[idx] = tarea.copy(estado = "completada")
+            tareasFlow.value = tareas.toList()
+            return@withContext Result.success(Unit)
+        }
+    }
 }

@@ -1,59 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Marca / Primario (versiones para oscuro) -->
-    <color name="primario">#90CAF9</color>
-    <color name="primario_variant">#64B5F6</color>
-    <color name="azul">#0D47A1</color>
-    <color name="azul_principal">#1976D2</color>
-    <color name="rojo">#FF0000</color>
+    <!-- Paleta moderna blanco/negro -->
+    <color name="primario">#000000</color>
+    <color name="primario_variant">#222222</color>
     <color name="negro">#000000</color>
+    <color name="gris_oscuro">#222222</color>
+    <color name="gris">#6E6E6E</color>
+    <color name="gris_claro">#BDBDBD</color>
     <color name="white">#FFFFFF</color>
 
-
-
-    <!-- Acento / CTA -->
-    <color name="acento">#FFB74D</color>
-    <color name="sobre_acento">#212121</color>
-
-    <!-- Superficie / Fondo -->
-    <color name="fondo">#121212</color>
-    <color name="superficie">#1E1E1E</color>
-    <color name="sobre_superficie">#FFFFFF</color>
-    <color name="superficie_variant">#232323</color>
+    <!-- Fondo / superficies -->
+    <color name="fondo">#FFFFFF</color>
+    <color name="superficie">#FFFFFF</color>
+    <color name="superficie_variant">#F5F5F5</color>
 
     <!-- Texto -->
-    <color name="texto_principal">#FFFFFF</color>
-    <color name="texto_secundario">#BDBDBD</color>
-    <color name="texto_deshabilitado">#757575</color>
+    <color name="texto_principal">#000000</color>
+    <color name="texto_secundario">#6E6E6E</color>
+    <color name="texto_deshabilitado">#9E9E9E</color>
 
-    <!-- Semánticos -->
-    <color name="exito">#81C784</color>
-    <color name="advertencia">#FFD54F</color>
-    <color name="error">#EF9A9A</color>
-    <color name="sobre_error">#212121</color>
+    <!-- Acento / CTA (usar negro sobre blanco o invertir) -->
+    <color name="acento">#000000</color>
+    <color name="on_acento">#FFFFFF</color>
 
-    <!-- Prioridades / Etiquetas -->
-    <color name="prioridad_alta">#EF5350</color>
-    <color name="prioridad_media">#FFA726</color>
-    <color name="prioridad_baja">#66BB6A</color>
+    <!-- Semantic colors preserved -->
+    <color name="exito">#2E7D32</color>
+    <color name="advertencia">#F9A825</color>
+    <color name="error">#C62828</color>
+    <!-- Compatibilidad: alias de colores antiguos usados en layouts -->
+    <color name="rojo">#C62828</color>
+    <color name="azul_principal">#000000</color>
 
-    <!-- Avatares (versiones para oscuro) -->
-    <color name="avatar_azul">#90CAF9</color>
-    <color name="avatar_morado">#CE93D8</color>
-    <color name="avatar_verde_azulado">#80CBC4</color>
-    <color name="avatar_naranja">#FFCC80</color>
-    <color name="avatar_rosa">#F48FB1</color>
-    <color name="avatar_cian">#80DEEA</color>
-    <color name="avatar_marron">#BCAAA4</color>
-    <color name="avatar_ardoise">#78909C</color>
-
-    <!-- Tonos -->
-    <color name="tono_100">#0B0B0B</color>
-    <color name="tono_200">#141414</color>
-    <color name="divisor">#2C2C2C</color>
-    <color name="light_blue_600">#FF039BE5</color>
-    <color name="light_blue_900">#FF01579B</color>
-    <color name="light_blue_A200">#FF40C4FF</color>
-    <color name="light_blue_A400">#FF00B0FF</color>
+    <!-- Divisores y overlays -->
+    <color name="divisor">#E0E0E0</color>
+    <color name="divider">#E0E0E0</color>
     <color name="black_overlay">#66000000</color>
+    <!-- Alias retrocompatibilidad para recursos antiguos -->
+    <color name="light_blue_600">#000000</color>
+    <color name="light_blue_900">#000000</color>
+    <color name="light_blue_A200">#BDBDBD</color>
+    <color name="light_blue_A400">#9E9E9E</color>
 </resources>

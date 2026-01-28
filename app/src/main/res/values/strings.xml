@@ -1,7 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TFG</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- Puntos y UI general -->
+    <string name="tus_puntos">Tus puntos</string>
+    <string name="comprar_puntos">Puedes comprar más: 1000 = 5€</string>
+    <string name="tu_companero">Tu compañer@</string>
+    <string name="vincula_pareja">Vincula a tu pareja para ver sus puntos</string>
+    <string name="asignar_tareas">Asignar Tareas</string>
+    <string name="tareas_recientes">Tareas recientes</string>
+    <string name="asignado_a">Asignado a: %1$s</string>
+    <string name="asignar">Asignar</string>
+    <string name="completar">Completar</string>
+    <string name="selecciona_miembro">Selecciona miembro</string>
+    <string name="no_hay_miembros">No hay miembros para asignar</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="calendario">📅 Calendario</string>
+    <string name="recompensas">🎁 Recompensas</string>
+    <string name="perfil_pareja">👥 Perfil de Pareja</string>
+
+    <!-- FragmentPareja strings -->
+    <string name="titulo_pareja">Gestión de pareja/grupo</string>
+    <string name="crear_grupo">Crear grupo</string>
+    <string name="generar_invitacion">Generar invitación</string>
+    <string name="codigo_placeholder">Código: -</string>
+    <string name="introduce_codigo">Introduce código para aceptar</string>
+    <string name="aceptar_invitacion">Aceptar invitación</string>
+    <string name="crear_grupo_title">Crear grupo</string>
+    <string name="nombre_grupo_hint">Nombre del grupo</string>
+    <string name="creando_grupo_status">Creando grupo...</string>
+    <string name="creando_grupo">Creando grupo %1$s...</string>
+    <string name="grupo_creado_codigo">Código: %1$s</string>
+    <string name="invitacion_enviada_a">Invitación enviada a %1$s</string>
+    <string name="correo_vacio">Correo vacío</string>
+    <string name="no_hay_grupo_activo">No hay grupo activo</string>
+    <string name="miembros_del_grupo">Miembros del grupo</string>
+    <string name="salir_del_grupo_confirm">¿Estás seguro de que quieres salir del grupo?</string>
+    <string name="editar_nombre_grupo">Editar nombre del grupo</string>
+    <string name="guardar">Guardar</string>
+    <string name="aceptar">Aceptar</string>
+    <string name="nombre_actualizado">Nombre actualizado</string>
+    <string name="inicia_sesion_para_crear_grupo">Inicia sesión para crear un grupo</string>
+    <string name="inicia_sesion_para_aceptar">Inicia sesión para aceptar invitaciones</string>
+    <string name="inicia_sesion_para_generar">Inicia sesión para generar invitaciones</string>
+    <string name="salir_grupo_ok">Has salido del grupo</string>
+
+    <!-- Mensajes y utilidades -->
+    <string name="tarea_asignada_ok">Tarea asignada a %1$s</string>
+    <string name="selecciona_fecha">Selecciona fecha</string>
+    <string name="tarea_completada_ok">Has marcado la tarea como completada</string>
+    <string name="cargando">Cargando...</string>
+    <string name="asignado_por">Asignada por: %1$s</string>
+    <string name="salir">Salir</string>
+    <string name="abrir">Abrir</string>
+    <string name="titulo_tarea_ejemplo">Título</string>
+    <string name="dificultad_facil">Fácil</string>
+    <string name="meta_tarea_ejemplo">50 pts · Fácil</string>
+    <string name="asignado_por_defecto">Asignado a: -</string>
+
+    <!-- Strings usados en layouts -->
+    <string name="logo_desc">Logo de TeamTask</string>
+    <string name="usuario_hint">Usuario</string>
+    <string name="contrasena_hint">Contraseña</string>
+    <string name="aun_no_registrado">¿Aún no estás registrado?</string>
+    <string name="pincha_aqui">Pincha aquí</string>
+    <string name="iniciar_sesion">Iniciar sesión</string>
+
+    <string name="nombre_hint">Nombre</string>
+    <string name="edad_hint">Edad</string>
+    <string name="ciudad_hint">Ciudad</string>
+    <string name="email_hint">Email</string>
+    <string name="registrar">Registrar</string>
+
+    <string name="crear_tarea">Crear tarea</string>
+    <string name="titulo_hint">Título</string>
+    <string name="puntos_hint">Puntos</string>
+    <string name="fecha_hoy">Fecha: hoy</string>
+    <string name="elegir">Elegir</string>
+    <string name="crear">Crear</string>
+
+    <string name="categoria_cocina">🍳 COCINA</string>
+    <string name="categoria_ropa">👕 ROPA</string>
+    <string name="categoria_limpieza">🧼 LIMPIEZA</string>
+    <string name="categoria_mascotas">🐾 MASCOTAS</string>
+    <string name="categoria_recados">🧾 RECADOS</string>
+    <string name="categoria_personalizado">⚙️PERSONALIZADO</string>
+
+    <string name="reservados_format">Reservados: %1$d</string>
+    <string name="miembros_format">Miembros: %1$d</string>
+    <string name="cero">0</string>
+    <string name="invitacion_titulo">Invitaciones</string>
+    <string name="aceptar_invitacion_titulo">Introduce código para aceptar una invitación</string>
 </resources>

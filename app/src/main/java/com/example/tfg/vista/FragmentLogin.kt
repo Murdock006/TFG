@@ -7,14 +7,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.tfg.databinding.FragmentLoginBinding
 import com.example.tfg.viewmodel.VistaModeloAuth
+import com.example.tfg.viewmodel.ParejaViewModel
 
 class FragmentLogin : Fragment() {
 
     private lateinit var binding: FragmentLoginBinding
     private val vistaModeloAuth: VistaModeloAuth by viewModels()
+    private val parejaVM: ParejaViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,6 +42,8 @@ class FragmentLogin : Fragment() {
 
         vistaModeloAuth.usuario.observe(viewLifecycleOwner) { usuario ->
             if (usuario != null) {
+                // Cargar grupo asociado al usuario para asegurar persistencia
+                parejaVM.cargarGrupoPorUsuario(usuario.id)
                 findNavController().navigate(com.example.tfg.R.id.action_fragment_Login_to_fragment_PgPrincipal)
             }
         }

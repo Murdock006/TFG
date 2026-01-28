@@ -5,15 +5,14 @@
     android:layout_height="match_parent"
     android:padding="16dp"
     android:paddingBottom="72dp"
-    android:background="@drawable/degradado">
+    android:background="@color/fondo">
 
     <TextView
         android:id="@+id/tv_perfil_titulo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Perfil"
-        android:textSize="20sp"
-        android:textStyle="bold"
+        style="@style/TextAppearance.TFG.Titulo"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -22,6 +21,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Información del perfil"
+        style="@style/TextAppearance.TFG.Cuerpo"
         app:layout_constraintTop_toBottomOf="@id/tv_perfil_titulo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

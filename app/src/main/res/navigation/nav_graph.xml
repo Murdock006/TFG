@@ -47,6 +47,9 @@
         <action
             android:id="@+id/action_fragment_PgPrincipal_to_fragment_Pareja"
             app:destination="@id/fragment_Pareja" />
+        <action
+            android:id="@+id/action_fragment_PgPrincipal_to_fragment_TareasPendientes"
+            app:destination="@id/fragment_TareasPendientes" />
     </fragment>
 
 
@@ -85,4 +88,11 @@
         android:name="com.example.tfg.vista.FragmentCalendario"
         android:label="fragment_calendario"
         tools:layout="@layout/fragment_calendario" />
+
+    <fragment
+        android:id="@+id/fragment_TareasPendientes"
+        android:name="com.example.tfg.vista.FragmentTareasPendientes"
+        android:label="fragment_tareas_pendientes"
+        tools:layout="@layout/fragment_tareas_pendientes" />
+
 </navigation>

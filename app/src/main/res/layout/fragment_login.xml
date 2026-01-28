@@ -5,14 +5,14 @@
     android:id="@+id/login_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/degradado"
+    android:background="@color/fondo"
     tools:context="com.example.tfg.vista.FragmentLogin">
 
     <ImageView
         android:id="@+id/logo"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:contentDescription="logo"
+        android:contentDescription="@string/logo_desc"
         android:src="@drawable/teamtask"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
@@ -40,31 +40,40 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingTop="8dp"
-            android:paddingBottom="24dp">
+            android:paddingBottom="24dp"
+            android:background="@color/superficie">
 
             <EditText
                 android:id="@+id/usuario"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:background="@drawable/borde"
-                android:hint="Usuario"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_rounded_card"
+                android:hint="@string/usuario_hint"
                 android:inputType="textPersonName"
-                android:layout_marginTop="8dp" />
+                android:layout_marginTop="8dp"
+                android:textColor="@color/texto_principal"
+                android:textColorHint="@color/texto_secundario"
+                android:autofillHints="username" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/contraseiaLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Contraseña"
+                android:hint="@string/contrasena_hint"
                 app:endIconMode="password_toggle"
                 android:layout_marginTop="8dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/textocontraseA"
-                    android:background="@drawable/borde"
+                    android:background="@drawable/bg_rounded_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPassword" />
+                    android:inputType="textPassword"
+                    android:imeOptions="flagNoExtractUi"
+                    android:textColor="@color/texto_principal"
+                    android:textColorHint="@color/texto_secundario"
+                    android:autofillHints="password" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <LinearLayout
@@ -78,16 +87,16 @@
                     android:id="@+id/sinRegistro"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="¿Aún no estás registrado?"
-                    android:textColor="@android:color/black"
+                    android:text="@string/aun_no_registrado"
+                    android:textColor="@color/texto_principal"
                     android:textSize="16sp" />
 
                 <Button
                     android:id="@+id/botonTransparente"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@android:color/transparent"
-                    android:text="Pincha aquí"
+                    style="@style/Widget.TFG.Boton.Contorno"
+                    android:text="@string/pincha_aqui"
                     android:textColor="@color/rojo"
                     android:layout_marginStart="8dp" />
 
@@ -97,9 +106,8 @@
                 android:id="@+id/iniciarSesion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/negro"
-                android:text="Iniciar sesión"
-                android:backgroundTint="@color/azul_principal"
+                style="@style/Widget.TFG.Boton.Relleno"
+                android:text="@string/iniciar_sesion"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="24dp" />
 

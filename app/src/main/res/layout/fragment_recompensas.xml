@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:padding="16dp"
     android:paddingBottom="72dp"
-    android:background="@drawable/degradado"
+    android:background="@color/fondo"
     tools:context="com.example.tfg.vista.FragmentRecompensas">
 
     <TextView
@@ -14,7 +14,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Aquí verás las recompensas disponibles"
-        android:textSize="18sp"
+        style="@style/TextAppearance.TFG.Cuerpo"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

@@ -1,5 +1,6 @@
 package com.example.tfg.data.firebase
 
+import android.util.Log
 import com.example.tfg.modelo.Usuario
 import com.example.tfg.repositorio.AuthRepositorio
 import com.google.firebase.auth.FirebaseAuth
@@ -18,11 +19,13 @@ class AuthRepositorioFirebase : AuthRepositorio {
     private val auth: FirebaseAuth = Firebase.auth
     private val firestore = Firebase.firestore
     private var usuariosListener: ListenerRegistration? = null
+    private val TAG = "AuthRepoFirebase"
 
     override suspend fun registrar(usuario: Usuario, password: String): Result<Usuario> {
         return try {
             val result = auth.createUserWithEmailAndPassword(usuario.email, password).await()
             val firebaseUser = result.user ?: throw Exception("Registro fallido: no hay usuario")
+            Log.d(TAG, "registrar OK uid=${firebaseUser.uid} email=${firebaseUser.email}")
             // Guardar datos adicionales en Firestore
             val data = mapOf(
                 "nombre" to usuario.nombre,
@@ -33,9 +36,19 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 "puntosReservados" to 0
             )
             firestore.collection("usuarios").document(firebaseUser.uid).set(data).await()
+            Log.d(TAG, "usuario document creado uid=${firebaseUser.uid}")
             Result.success(Usuario(id = firebaseUser.uid, nombre = usuario.nombre, edad = usuario.edad, ciudad = usuario.ciudad, email = firebaseUser.email ?: usuario.email))
         } catch (e: Exception) {
-            Result.failure(e)
+            Log.e(TAG, "Error registrar", e)
+            // Mejora de mensajes para errores comunes
+            val msg = when (e) {
+                is com.google.firebase.auth.FirebaseAuthWeakPasswordException -> "Contraseña débil: ${e.reason ?: e.message}"
+                is com.google.firebase.auth.FirebaseAuthUserCollisionException -> "Ya existe una cuenta con ese email"
+                is com.google.firebase.FirebaseNetworkException -> "Fallo de red: comprueba tu conexión"
+                is com.google.firebase.auth.FirebaseAuthException -> "Error de autenticación: ${e.errorCode}"
+                else -> e.message ?: "Error desconocido"
+            }
+            Result.failure(Exception(msg))
         }
     }
 
@@ -43,17 +56,42 @@ class AuthRepositorioFirebase : AuthRepositorio {
         return try {
             val res = auth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = res.user ?: throw Exception("Login fallido: no hay usuario")
+            Log.d(TAG, "login OK uid=${firebaseUser.uid} email=${firebaseUser.email}")
             // Leer datos del usuario en Firestore
-            val doc = firestore.collection("usuarios").document(firebaseUser.uid).get().await()
-            val nombre = doc.getString("nombre") ?: ""
-            val edad = doc.getLong("edad")?.toInt()
-            val ciudad = doc.getString("ciudad")
-            val puntos = doc.getLong("puntos")?.toInt() ?: 0
-            val puntosReservados = doc.getLong("puntosReservados")?.toInt() ?: 0
+            val docRef = firestore.collection("usuarios").document(firebaseUser.uid)
+            val doc = docRef.get().await()
+            if (!doc.exists()) {
+                // crear documento por defecto si falta
+                Log.w(TAG, "Documento usuario no existe, creando por defecto uid=${firebaseUser.uid}")
+                val dataDefault = mapOf(
+                    "nombre" to (firebaseUser.displayName ?: ""),
+                    "edad" to null,
+                    "ciudad" to null,
+                    "email" to (firebaseUser.email ?: email),
+                    "puntos" to 1000,
+                    "puntosReservados" to 0
+                )
+                docRef.set(dataDefault).await()
+            }
+
+            val reloaded = docRef.get().await()
+            val nombre = reloaded.getString("nombre") ?: ""
+            val edad = reloaded.getLong("edad")?.toInt()
+            val ciudad = reloaded.getString("ciudad")
+            val puntos = reloaded.getLong("puntos")?.toInt() ?: 0
+            val puntosReservados = reloaded.getLong("puntosReservados")?.toInt() ?: 0
             val user = Usuario(id = firebaseUser.uid, nombre = nombre, edad = edad, ciudad = ciudad, email = firebaseUser.email ?: email, puntos = puntos)
+            Log.d(TAG, "usuario cargado desde Firestore uid=${firebaseUser.uid} puntos=$puntos")
             Result.success(user)
         } catch (e: Exception) {
-            Result.failure(e)
+            Log.e(TAG, "Error login", e)
+            val msg = when (e) {
+                is com.google.firebase.auth.FirebaseAuthInvalidUserException -> "Usuario no encontrado"
+                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> "Credenciales inválidas"
+                is com.google.firebase.FirebaseNetworkException -> "Fallo de red: comprueba tu conexión"
+                else -> e.message ?: "Error desconocido"
+            }
+            Result.failure(Exception(msg))
         }
     }
 
@@ -64,6 +102,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
     override fun usuarioActual(): Usuario? {
         val u = auth.currentUser ?: return null
         // Nota: datos extra (nombre, edad, ciudad) no se devuelven aquí sin consultar Firestore
+        Log.d(TAG, "usuarioActual uid=${u.uid} email=${u.email}")
         return Usuario(id = u.uid, nombre = u.displayName ?: "", edad = null, ciudad = null, email = u.email ?: "")
     }
 
@@ -121,18 +160,23 @@ class AuthRepositorioFirebase : AuthRepositorio {
         }
     }
 
+    // Implementación requerida por la interfaz: liberar puntos reservados (devolver a saldo disponible)
     override suspend fun liberarPuntos(usuarioId: String, puntos: Int): Result<Unit> {
         return try {
             val userRef = firestore.collection("usuarios").document(usuarioId)
             firestore.runTransaction { t ->
                 val snap = t.get(userRef)
                 val reservados = (snap.getLong("puntosReservados") ?: 0L).toInt()
-                val aLiberar = if (puntos > reservados) reservados else puntos
                 val actuales = (snap.getLong("puntos") ?: 0L).toInt()
-                t.update(userRef, mapOf("puntos" to (actuales + aLiberar), "puntosReservados" to (reservados - aLiberar)))
+                val aLiberar = minOf(puntos, reservados)
+                val nuevoReservados = reservados - aLiberar
+                val nuevoPuntos = actuales + aLiberar
+                t.update(userRef, mapOf("puntos" to nuevoPuntos, "puntosReservados" to nuevoReservados))
             }.await()
+            Log.d(TAG, "liberarPuntos OK usuario=$usuarioId puntos=$puntos")
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "liberarPuntos error", e)
             Result.failure(e)
         }
     }

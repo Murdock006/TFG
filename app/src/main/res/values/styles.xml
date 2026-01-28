@@ -1,13 +1,70 @@
 <resources>
 
-    <style name="Widget.Theme.TFG.ButtonBar.Fullscreen" parent="">
-        <item name="android:background">@color/black_overlay</item>
-        <item name="android:buttonBarStyle">?android:attr/buttonBarStyle</item>
+    <style name="Tema.TFG.Moderno" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Core colors -->
+        <item name="colorPrimary">@color/primario</item>
+        <item name="colorOnPrimary">@color/on_acento</item>
+        <item name="android:colorBackground">@color/fondo</item>
+        <item name="colorSurface">@color/superficie</item>
+        <item name="colorOnSurface">@color/texto_principal</item>
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="materialCardViewStyle">@style/Widget.TFG.Tarjeta</item>
+
+        <!-- Forzar colores de texto por defecto para evitar textos blancos sobre fondo blanco -->
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:textColorSecondary">@color/texto_secundario</item>
+        <item name="android:editTextStyle">@style/Widget.TFG.EditText</item>
+        <item name="textAppearanceBody1">@style/TextAppearance.TFG.Cuerpo</item>
+        <item name="textAppearanceHeadline6">@style/TextAppearance.TFG.Titulo</item>
     </style>
 
-    <style name="Theme.TFG2" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/primario</item>
-        <item name="colorPrimaryVariant">@color/primario_variant</item>
-        <item name="colorOnPrimary">@color/white</item>
+    <!-- Estilo para EditText (incluye TextInputEditText) -->
+    <style name="Widget.TFG.EditText" parent="@style/Widget.MaterialComponents.TextInputEditText.OutlinedBox">
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:textColorHint">@color/texto_secundario</item>
+        <!-- asegurar tamaño y padding neutro para que no rompa diseño -->
+        <item name="android:padding">10dp</item>
+        <item name="android:background">@drawable/bg_rounded_card</item>
     </style>
+
+    <!-- Pequeño overlay para TextInputLayout donde se use cuadro outlined -->
+    <style name="Widget.TFG.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/superficie</item>
+        <item name="boxStrokeColor">@color/negro</item>
+        <item name="hintTextAppearance">@style/TextAppearance.TFG.Cuerpo</item>
+    </style>
+
+    <!-- Botones -->
+    <style name="Widget.TFG.Boton.Contorno" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:background">@drawable/btn_outline_black</item>
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+    </style>
+
+    <style name="Widget.TFG.Boton.Relleno" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/btn_filled_black</item>
+        <item name="android:textColor">@color/on_acento</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:stateListAnimator">@animator/btn_state_animator</item>
+    </style>
+
+    <style name="Widget.TFG.Tarjeta" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardUseCompatPadding">true</item>
+        <item name="cardPreventCornerOverlap">false</item>
+        <item name="cardBackgroundColor">@color/superficie_variant</item>
+        <item name="android:stateListAnimator">@animator/btn_state_animator</item>
+        <item name="strokeColor">@color/negro</item>
+        <item name="strokeWidth">2dp</item>
+    </style>
+
+    <style name="TextAppearance.TFG.Titulo" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textColor">@color/texto_principal</item>
+    </style>
+
+    <style name="TextAppearance.TFG.Cuerpo" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">@color/texto_secundario</item>
+    </style>
+
 </resources>

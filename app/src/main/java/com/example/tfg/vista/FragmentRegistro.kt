@@ -27,7 +27,7 @@ class FragmentRegistro : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnRegistrarse.setOnClickListener {
+        binding.btnRegistrar.setOnClickListener {
             val nombre = binding.etNombre.text.toString().trim()
             val edad = binding.etEdad.text.toString().toIntOrNull()
             val ciudad = binding.etCiudad.text.toString().trim()
