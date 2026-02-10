@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.tfg.databinding.FragmentTareasPendientesBinding
 import com.example.tfg.modelo.Tarea
 import com.example.tfg.service.LocalizadorServicios
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class FragmentTareasPendientes : Fragment() {
@@ -35,6 +34,7 @@ class FragmentTareasPendientes : Fragment() {
 
         // botones para cambiar vista
         binding.btnPendientes.setOnClickListener { mostrarPendientes() }
+        binding.btnAsignadas.setOnClickListener { mostrarAsignadas() }
         binding.btnHistorial.setOnClickListener { mostrarHistorial() }
 
         // observar usuarios para mostrar nombres correctamente
@@ -43,7 +43,7 @@ class FragmentTareasPendientes : Fragment() {
                 LocalizadorServicios.repositorioAuth.observarUsuarios().collect { lista ->
                     adapter.updateUsuarios(lista)
                 }
-            } catch (e: Exception) { /* ignore */ }
+            } catch (_: Exception) { /* ignore */ }
         }
 
         // observar tareas y actualizar vista según modo actual
@@ -56,11 +56,14 @@ class FragmentTareasPendientes : Fragment() {
     }
 
     private var modoHistorial: Boolean = false
+    private var modoAsignadas: Boolean = false
 
     private fun mostrarPendientes() {
         modoHistorial = false
+        modoAsignadas = false
         // cambiar estado visual de botones
         binding.btnPendientes.isEnabled = false
+        binding.btnAsignadas.isEnabled = true
         binding.btnHistorial.isEnabled = true
         // forzar reconsulta (obs ya activa) -> simplemente filtrar la última lista
         viewLifecycleOwner.lifecycleScope.launch {
@@ -69,9 +72,23 @@ class FragmentTareasPendientes : Fragment() {
         }
     }
 
+    private fun mostrarAsignadas() {
+        modoHistorial = false
+        modoAsignadas = true
+        binding.btnPendientes.isEnabled = true
+        binding.btnAsignadas.isEnabled = false
+        binding.btnHistorial.isEnabled = true
+        viewLifecycleOwner.lifecycleScope.launch {
+            val list = LocalizadorServicios.repositorioTarea.obtenerTareas().getOrNull() ?: emptyList()
+            actualizarListado(list)
+        }
+    }
+
     private fun mostrarHistorial() {
         modoHistorial = true
+        modoAsignadas = false
         binding.btnPendientes.isEnabled = true
+        binding.btnAsignadas.isEnabled = true
         binding.btnHistorial.isEnabled = false
         viewLifecycleOwner.lifecycleScope.launch {
             val list = LocalizadorServicios.repositorioTarea.obtenerTareas().getOrNull() ?: emptyList()
@@ -81,12 +98,20 @@ class FragmentTareasPendientes : Fragment() {
 
     private fun actualizarListado(list: List<Tarea>) {
         val uid = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
-        val filtrado = if (modoHistorial) {
-            // historial: tareas completadas, confirmadas o reclamadas donde soy creador o asignado
-            list.filter { (it.creadoPor == uid || it.asignadoA == uid) && (it.estado == "completada" || it.estado == "confirmada" || it.estado == "reclamada") }
-        } else {
-            // pendientes: tareas asignadas a mi y en estado pendiente
-            list.filter { it.asignadoA == uid && it.estado == "pendiente" }
+        val filtrado = when {
+            modoAsignadas -> {
+                // mostrar todas las tareas creadas por el usuario (asignadas por él), sin filtrar por estado
+                list.filter { it.creadoPor == uid }
+            }
+            modoHistorial -> {
+                // historial: tareas completadas, confirmadas o reclamadas donde soy creador o asignado
+                list.filter { (it.creadoPor == uid || it.asignadoA == uid) && (it.estado == "completada" || it.estado == "confirmada" || it.estado == "reclamada") }
+            }
+            else -> {
+                // pendientes: tareas asignadas a mi y en estado pendiente
+                // además incluir tareas que yo he creado y están pendientes de confirmación (para que el creador pueda confirmar)
+                list.filter { (it.asignadoA == uid && it.estado == "pendiente") || (it.creadoPor == uid && it.estado == "pendiente_confirmacion") }
+            }
         }
         adapter.updateItems(filtrado)
     }

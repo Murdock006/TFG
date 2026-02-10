@@ -138,4 +138,25 @@ class TareaRepositorioInMemory : TareaRepositorio {
             return@withContext Result.success(Unit)
         }
     }
+
+    override suspend fun confirmarTarea(tareaId: String, confirmadoPorUid: String): Result<Unit> = withContext(Dispatchers.Default) {
+        val idx = tareas.indexOfFirst { it.id == tareaId }
+        if (idx < 0) return@withContext Result.failure(Exception("Tarea no encontrada"))
+        val tarea = tareas[idx]
+        if (tarea.estado != "pendiente_confirmacion" && tarea.estado != "completada") return@withContext Result.failure(Exception("La tarea no está en estado pendiente de confirmación"))
+
+        // confirmar y transferir puntos al asignado
+        val nueva = tarea.copy(estado = "confirmada", fechaReclamada = null, reclamadoPor = null, motivoReclamo = null)
+        tareas[idx] = nueva
+        tareasFlow.value = tareas.toList()
+
+        try {
+            val asignado = nueva.asignadoA ?: throw Exception("Tarea sin asignado")
+            LocalizadorServicios.repositorioAuth.sumarPuntosConBonificacion(asignado, nueva.puntos)
+            val creador = nueva.creadoPor
+            if (!creador.isNullOrBlank()) LocalizadorServicios.repositorioAuth.liberarPuntos(creador, nueva.puntos)
+        } catch (e: Exception) { /* ignore */ }
+
+        Result.success(Unit)
+    }
 }

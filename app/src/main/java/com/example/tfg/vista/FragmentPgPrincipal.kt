@@ -251,15 +251,23 @@ class FragmentPgPrincipal : Fragment() {
         setupCategoriaAsignacion(binding.categoriaRecados, "recados")
         setupCategoriaAsignacion(binding.categoriaPersonalizado, "personalizado")
 
-        // Conectar botones 'Asignar' para abrir directamente el flujo de asignación
-        binding.btnAsignarCocina.setOnClickListener { lanzarAsignacion("cocina") }
-        binding.btnAsignarLimpieza.setOnClickListener { lanzarAsignacion("limpieza") }
-        binding.btnAsignarRopa.setOnClickListener { lanzarAsignacion("ropa") }
-        binding.btnAsignarMascotas.setOnClickListener { lanzarAsignacion("mascotas") }
-        binding.btnAsignarRecados.setOnClickListener { lanzarAsignacion("recados") }
-        binding.btnAsignarPersonalizado.setOnClickListener { lanzarAsignacion("personalizado") }
+        // ocultar el texto del repositorio ya que no lo queremos mostrar
+        try {
+            binding.textViewResultados.visibility = View.GONE
+        } catch (_: Exception) { }
 
-        // ...existing click listeners for bottom buttons preserved above...
+        // Conectar botones 'Asignar' para abrir directamente el flujo de asignación
+        // Se eliminan/ocultan: mover la lógica de asignación al fragment de categoría
+        try {
+            binding.btnAsignarCocina.visibility = View.GONE
+            binding.btnAsignarLimpieza.visibility = View.GONE
+            binding.btnAsignarRopa.visibility = View.GONE
+            binding.btnAsignarMascotas.visibility = View.GONE
+            binding.btnAsignarRecados.visibility = View.GONE
+            binding.btnAsignarPersonalizado.visibility = View.GONE
+        } catch (_: Exception) { }
+
+        // ...existing code...
     }
 
     // adaptador simple para mostrar miembros (nombre y puntos)

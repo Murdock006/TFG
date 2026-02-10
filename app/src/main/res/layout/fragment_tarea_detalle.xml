@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textColor="@color/texto_secundario"
-            android:text="Asignado a: -" />
+            android:text="" />
 
         <TextView
             android:id="@+id/tvDetalleDescripcion"
@@ -49,6 +49,14 @@
             android:orientation="horizontal"
             android:layout_marginTop="16dp"
             android:gravity="end">
+
+            <Button
+                android:id="@+id/btnDetalleAsignar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/Widget.TFG.Boton.Contorno"
+                android:text="Asignar"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/btnDetalleAccion"

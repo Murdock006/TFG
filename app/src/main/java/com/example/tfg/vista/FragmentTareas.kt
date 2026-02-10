@@ -24,11 +24,11 @@ import com.example.tfg.databinding.FragmentTareasCrearBinding
 import com.example.tfg.databinding.FragmentTareasListaBinding
 import com.example.tfg.modelo.Disputa
 import com.example.tfg.modelo.Tarea
-import com.example.tfg.repositorio.CategoriasRepositorio
 import com.example.tfg.repositorio.RepositorioDisputas
 import com.example.tfg.service.LocalizadorServicios
 import com.example.tfg.service.NotificationScheduler
 import com.example.tfg.viewmodel.ParejaViewModel
+import com.example.tfg.repositorio.CategoriasRepositorio
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -95,23 +95,38 @@ class FragmentTareas : Fragment() {
         }
 
         listaBinding?.let { b ->
-            val adapter = TareasAdapter()
-            b.rvTareas.layoutManager = LinearLayoutManager(requireContext())
-            b.rvTareas.adapter = adapter
-
-            // observar tareas
-            lifecycleScope.launch {
-                LocalizadorServicios.repositorioTarea.observarTareas().collect { list -> adapter.setItems(list) }
-            }
-
-            // si viene taskId abrir detalles
-            val taskIdArg = arguments?.getString("taskId")
-            if (!taskIdArg.isNullOrBlank()) {
+            val categoriaArg = arguments?.getString("categoria")
+            if (!categoriaArg.isNullOrBlank()) {
+                // Mostrar plantillas/sugerencias de la categoría y permitir crear nuevas instancias (reasignables)
+                b.rvTareas.layoutManager = LinearLayoutManager(requireContext())
                 lifecycleScope.launch {
-                    val res = LocalizadorServicios.repositorioTarea.obtenerTareas()
-                    if (res.isSuccess) {
-                        val tarea = res.getOrNull()?.firstOrNull { it.id == taskIdArg }
-                        if (tarea != null) mostrarDialogoTareaDetalles(tarea)
+                    val repoCat = CategoriasRepositorio(requireContext())
+                    val cats = try { repoCat.cargarCategoriasDesdeRaw() } catch (e: Exception) { emptyList() }
+                    val cat = cats.find { it.id.equals(categoriaArg, true) || it.nombre.equals(categoriaArg, true) }
+                    val sugeridas = cat?.tareas ?: emptyList()
+                    val adapter = SugeridasAdapter(sugeridas, categoriaArg)
+                    b.rvTareas.adapter = adapter
+                }
+            } else {
+                // comportamiento original: mostrar tareas reales (creadas / asignadas / del grupo)
+                val adapter = TareasAdapter()
+                b.rvTareas.layoutManager = LinearLayoutManager(requireContext())
+                b.rvTareas.adapter = adapter
+
+                // observar tareas
+                lifecycleScope.launch {
+                    LocalizadorServicios.repositorioTarea.observarTareas().collect { list -> adapter.setItems(list) }
+                }
+
+                // si viene taskId abrir detalles
+                val taskIdArg = arguments?.getString("taskId")
+                if (!taskIdArg.isNullOrBlank()) {
+                    lifecycleScope.launch {
+                        val res = LocalizadorServicios.repositorioTarea.obtenerTareas()
+                        if (res.isSuccess) {
+                            val tarea = res.getOrNull()?.firstOrNull { it.id == taskIdArg }
+                            if (tarea != null) mostrarDialogoTareaDetalles(tarea)
+                        }
                     }
                 }
             }
@@ -205,6 +220,7 @@ class FragmentTareas : Fragment() {
             val tvDesc = view.findViewById<TextView>(R.id.tvDetalleDescripcion)
             val btnAccion = view.findViewById<Button>(R.id.btnDetalleAccion)
             val btnMas = view.findViewById<Button>(R.id.btnDetalleMas)
+            val btnAsignar = view.findViewById<Button>(R.id.btnDetalleAsignar)
 
             lifecycleScope.launch {
                 val res = LocalizadorServicios.repositorioTarea.obtenerTareas()
@@ -213,19 +229,48 @@ class FragmentTareas : Fragment() {
                     if (tarea != null) {
                         tvTitulo.text = tarea.titulo
                         val dif = when (tarea.dificultad) {1->"Fácil";2->"Media";else->"Difícil"}
-                        tvMeta.text = "${tarea.puntos} pts · $dif · ${tarea.estado}"
+                        tvMeta.text = "${tarea.puntos} pts · $dif"
                         tvDesc.text = tarea.descripcion ?: ""
-                        if (!tarea.asignadoA.isNullOrBlank()) {
-                            val u = usuariosCacheGlobal.find { it.id == tarea.asignadoA }
-                            val nombre = when {
-                                u != null && u.nombre.isNotBlank() -> u.nombre
-                                u != null && u.email.isNotBlank() -> u.email
-                                else -> tarea.asignadoA
-                            }
-                            tvAsignado.text = "Asignado a: $nombre"
-                        } else tvAsignado.text = "Asignado a: -"
 
-                        // configurar botones coherentes
+                        // Mostramos la opción de asignar siempre al creador cuando la tarea esté pendiente; no mostramos a quién está asignada aquí
+                        val usuarioActualId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
+                        if (!usuarioActualId.isBlank() && usuarioActualId == tarea.creadoPor && tarea.estado == "pendiente") {
+                            tvAsignado.text = ""
+                            btnAsignar.visibility = View.VISIBLE
+                            btnAsignar.setOnClickListener {
+                                lifecycleScope.launch {
+                                    val grupo = parejaVM.grupo.value
+                                    val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
+                                    val opciones = mutableListOf<Pair<String,String>>()
+                                    if (grupo != null) {
+                                        grupo.miembros.keys.forEach { uid ->
+                                            val u2 = usuarios.find { it.id == uid }
+                                            val display = if (u2 != null && u2.nombre.isNotBlank()) "${u2.nombre} (${if (u2.email.isNotBlank()) u2.email else u2.id})" else u2?.email ?: uid
+                                            opciones.add(Pair(display, uid))
+                                        }
+                                    }
+                                    if (opciones.isEmpty()) Toast.makeText(requireContext(), "No hay miembros", Toast.LENGTH_SHORT).show() else {
+                                        val names = opciones.map { it.first }.toTypedArray()
+                                        androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
+                                            lifecycleScope.launch {
+                                                val elegido = opciones[idx].second
+                                                val nueva = tarea.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
+                                                val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
+                                                if (res2.isSuccess) {
+                                                    Toast.makeText(requireContext(), "Tarea asignada", Toast.LENGTH_SHORT).show()
+                                                } else {
+                                                    Toast.makeText(requireContext(), res2.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
+                                                }
+                                            }
+                                        }.setNegativeButton("Cancelar", null).show()
+                                    }
+                                }
+                            }
+                        } else {
+                            btnAsignar.visibility = View.GONE
+                        }
+
+                        // configurar botones coherentes (sin mostrar a quién se asignó aquí)
                         btnMas.setOnClickListener {
                             // Mostrar opciones secundarias según estado
                             val opciones = when (tarea.estado) {
@@ -243,7 +288,7 @@ class FragmentTareas : Fragment() {
                                             // deshabilitar botón para evitar doble click
                                             btnAccion.isEnabled = false
                                             try {
-                                                val r = LocalizadorServicios.repositorioTarea.actualizarTarea(tarea.copy(estado = "confirmada"))
+                                                val r = LocalizadorServicios.repositorioTarea.confirmarTarea(tarea.id, tarea.creadoPor ?: "")
                                                 if (r.isSuccess) {
                                                     Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show()
                                                     // ocultar el botón de acción en la vista detalle
@@ -269,7 +314,7 @@ class FragmentTareas : Fragment() {
                                 btnAccion.setOnClickListener {
                                     lifecycleScope.launch {
                                         btnAccion.isEnabled = false
-                                        val res = LocalizadorServicios.repositorioTarea.actualizarTarea(tarea.copy(estado = "confirmada"))
+                                        val res = LocalizadorServicios.repositorioTarea.confirmarTarea(tarea.id, tarea.creadoPor ?: "")
                                         if (res.isSuccess) {
                                             Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show()
                                             btnAccion.visibility = Button.GONE
@@ -310,6 +355,7 @@ class FragmentTareas : Fragment() {
             val tvAsignado: TextView = root.findViewById(R.id.tvAsignado)
             val btnAccion: Button = root.findViewById(R.id.btnAccionTarea)
             val cardRoot: androidx.cardview.widget.CardView = root.findViewById(R.id.cardRoot)
+            val vIndicator: View? = root.findViewById(R.id.vIndicator)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -323,16 +369,16 @@ class FragmentTareas : Fragment() {
             holder.tvTitulo.text = tarea.titulo
             val dif = when (tarea.dificultad) {1->"Fácil";2->"Media";else->"Difícil"}
             holder.tvMeta.text = "${tarea.puntos} pts · $dif"
-            if (!tarea.asignadoA.isNullOrBlank()) {
-                val u = usuariosCacheGlobal.find { it.id == tarea.asignadoA }
-                val nombre = when {
-                    u != null && u.nombre.isNotBlank() -> u.nombre
-                    u != null && u.email.isNotBlank() -> u.email
-                    else -> tarea.asignadoA
-                }
-                holder.tvAsignado.visibility = View.VISIBLE
-                holder.tvAsignado.text = "Asignado a: $nombre"
-            } else holder.tvAsignado.visibility = View.GONE
+
+            // No mostrar asignación en la tarjeta de lista (se gestiona en detalle)
+            holder.tvAsignado.visibility = View.GONE
+
+            // indicador lateral por dificultad (verde/amarillo/rojo)
+            when (tarea.dificultad) {
+                1 -> holder.vIndicator?.setBackgroundColor(android.graphics.Color.parseColor("#A5D6A7"))
+                2 -> holder.vIndicator?.setBackgroundColor(android.graphics.Color.parseColor("#FFF59D"))
+                else -> holder.vIndicator?.setBackgroundColor(android.graphics.Color.parseColor("#FFCDD2"))
+            }
 
             holder.cardRoot.setCardBackgroundColor(android.graphics.Color.WHITE)
             when (tarea.estado) {
@@ -343,115 +389,140 @@ class FragmentTareas : Fragment() {
 
             holder.btnAccion.setOnClickListener(null)
             holder.root.setOnLongClickListener { mostrarDialogoEditar(tarea); true }
-
-            // lógica simple de acción
-            when (tarea.estado) {
-                "pendiente" -> {
-                    if (!usuarioId.isBlank() && usuarioId == tarea.creadoPor) {
-                        holder.btnAccion.text = "Asignar"
-                        holder.btnAccion.isEnabled = true
-                        holder.btnAccion.setOnClickListener {
-                            lifecycleScope.launch {
-                                val grupo = parejaVM.grupo.value
-                                val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
-                                val opciones = mutableListOf<Pair<String,String>>()
-                                if (grupo != null) {
-                                    grupo.miembros.keys.forEach { uid ->
-                                        val u = usuarios.find { it.id == uid }
-                                        val display = if (u != null && u.nombre.isNotBlank()) "${u.nombre} (${if (u.email.isNotBlank()) u.email else u.id})" else u?.email ?: uid
-                                        opciones.add(Pair(display, uid))
-                                    }
-                                }
-                                if (opciones.isEmpty()) Toast.makeText(requireContext(), "No hay miembros", Toast.LENGTH_SHORT).show() else {
-                                    val names = opciones.map { it.first }.toTypedArray()
-                                    androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
-                                        lifecycleScope.launch {
-                                            val elegido = opciones[idx].second
-                                            val nueva = tarea.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
-                                            val res = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
-                                            if (res.isSuccess) {
-                                                Toast.makeText(requireContext(), "Tarea asignada", Toast.LENGTH_SHORT).show()
-                                                NotificationScheduler.showImmediateNotification(requireContext(), ("tarea_${nueva.id}").hashCode(), "Nueva tarea asignada", "Te han asignado: ${nueva.titulo}", nueva.id)
-                                            } else {
-                                                val msg = res.exceptionOrNull()?.message ?: "Error"
-                                                Log.e(TAG, "Error asignar tarea: $msg")
-                                                Toast.makeText(requireContext(), "Error asignar: $msg", Toast.LENGTH_LONG).show()
-                                            }
-                                        }
-                                    }.setNegativeButton("Cancelar", null).show()
-                                }
-                            }
-                        }
-                    } else {
-                        if (tarea.asignadoA.isNullOrBlank() || tarea.asignadoA == usuarioId) {
-                            holder.btnAccion.text = "Completar"
-                            holder.btnAccion.isEnabled = true
-                            holder.btnAccion.setOnClickListener {
-                                lifecycleScope.launch {
-                                    val uid = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
-                                    if (uid.isBlank()) { Toast.makeText(requireContext(), "Inicia sesión", Toast.LENGTH_SHORT).show(); return@launch }
-                                    val res = LocalizadorServicios.repositorioTarea.marcarCompletada(tarea.id, uid)
-                                    if (res.isSuccess) Toast.makeText(requireContext(), "Tarea actualizada", Toast.LENGTH_SHORT).show() else {
-                                        val msg = res.exceptionOrNull()?.message ?: "Error"
-                                        Log.e(TAG, "marcarCompletada failed: $msg")
-                                        if (msg.contains("PERMISSION_DENIED") || msg.contains("permission" , true)) {
-                                            Toast.makeText(requireContext(), "Permisos Firestore insuficientes: revisa reglas en Firebase Console", Toast.LENGTH_LONG).show()
-                                        } else {
-                                            Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            holder.btnAccion.text = "No puedes"
-                            holder.btnAccion.isEnabled = false
+            // Simplificar lista: solo permitir "Completar" si soy el asignado y la tarea está pendiente
+            if (!usuarioId.isBlank() && usuarioId == tarea.asignadoA && tarea.estado == "pendiente") {
+                holder.btnAccion.visibility = View.VISIBLE
+                holder.btnAccion.isEnabled = true
+                holder.btnAccion.text = "Completar"
+                holder.btnAccion.setOnClickListener {
+                    lifecycleScope.launch {
+                        val res = LocalizadorServicios.repositorioTarea.marcarCompletada(tarea.id, usuarioId)
+                        if (res.isSuccess) Toast.makeText(requireContext(), "Tarea marcada como completada", Toast.LENGTH_SHORT).show() else {
+                            val msg = res.exceptionOrNull()?.message ?: "Error"
+                            Log.e(TAG, "marcarCompletada failed: $msg")
+                            if (msg.contains("PERMISSION_DENIED") || msg.contains("permission", true)) Toast.makeText(requireContext(), "Permisos Firestore insuficientes", Toast.LENGTH_LONG).show() else Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
                         }
                     }
                 }
-                "completada" -> {
-                    if (!usuarioId.isBlank() && usuarioId == tarea.creadoPor) {
-                        holder.btnAccion.text = "Acciones"
-                        holder.btnAccion.isEnabled = true
-                        holder.btnAccion.setOnClickListener {
-                            val opciones = arrayOf("Asignar", "Confirmar", "Reclamar")
-                            androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Elige acción").setItems(opciones) { _, which ->
-                                when (which) {
-                                    0 -> {
-                                        // reasignar - reutilizar lógica
-                                    }
-                                    1 -> lifecycleScope.launch {
-                                        // deshabilitar para evitar doble confirmación
-                                        holder.btnAccion.isEnabled = false
-                                        val nueva = tarea.copy(estado = "confirmada")
-                                        val r = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
-                                        if (r.isSuccess) {
-                                            Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show()
-                                            // ocultar el botón de acciones una vez confirmada
-                                            holder.btnAccion.visibility = View.GONE
-                                        } else {
-                                            Toast.makeText(requireContext(), r.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
-                                            holder.btnAccion.isEnabled = true
-                                        }
-                                    }
-                                    2 -> lifecycleScope.launch {
-                                        val ahora = com.google.firebase.Timestamp.now()
-                                        val nueva = tarea.copy(estado = "reclamada", fechaReclamada = ahora, reclamadoPor = usuarioId)
-                                        LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
-                                        pendingTareaParaDisputa = nueva
-                                        pickImageLauncher?.launch("image/*")
+            } else if (!usuarioId.isBlank() && usuarioId == tarea.creadoPor && tarea.estado == "pendiente") {
+                // Si soy el creador y la tarea está pendiente, permitir asignar/reasignar desde la lista
+                holder.btnAccion.visibility = View.VISIBLE
+                holder.btnAccion.isEnabled = true
+                holder.btnAccion.text = "Asignar"
+                holder.btnAccion.setOnClickListener {
+                    lifecycleScope.launch {
+                        val grupo = parejaVM.grupo.value
+                        val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
+                        val opciones = mutableListOf<Pair<String,String>>()
+                        if (grupo != null) {
+                            grupo.miembros.keys.forEach { uid ->
+                                val u2 = usuarios.find { it.id == uid }
+                                val display = if (u2 != null && u2.nombre.isNotBlank()) "${u2.nombre} (${if (u2.email.isNotBlank()) u2.email else u2.id})" else u2?.email ?: uid
+                                opciones.add(Pair(display, uid))
+                            }
+                        }
+                        if (opciones.isEmpty()) Toast.makeText(requireContext(), "No hay miembros", Toast.LENGTH_SHORT).show() else {
+                            val names = opciones.map { it.first }.toTypedArray()
+                            androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
+                                lifecycleScope.launch {
+                                    val elegido = opciones[idx].second
+                                    val nueva = tarea.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
+                                    val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
+                                    if (res2.isSuccess) {
+                                        Toast.makeText(requireContext(), "Tarea asignada", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(requireContext(), res2.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
                                     }
                                 }
                             }.setNegativeButton("Cancelar", null).show()
                         }
                     }
                 }
-                else -> {
-                    holder.btnAccion.text = "Pendiente"
-                    holder.btnAccion.isEnabled = false
+            } else {
+                holder.btnAccion.visibility = View.GONE
+            }
+            // clic corto abre siempre el detalle
+            holder.root.setOnClickListener { mostrarDialogoTareaDetalles(tarea) }
+        }
+
+        override fun getItemCount(): Int = items.size
+    }
+
+    // Adapter para sugeridas (plantillas)
+    private inner class SugeridasAdapter(private val items: List<com.example.tfg.modelo.TareaSugerida>, private val categoriaId: String) : RecyclerView.Adapter<SugeridasAdapter.SV>() {
+        inner class SV(val root: View) : RecyclerView.ViewHolder(root) {
+            val tvTitulo: TextView = root.findViewById(R.id.tvTituloTarea)
+            val tvMeta: TextView = root.findViewById(R.id.tvMetaTarea)
+            val btnAccion: Button = root.findViewById(R.id.btnAccionTarea)
+            val vIndicator: View? = root.findViewById(R.id.vIndicator)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SV {
+            val v = LayoutInflater.from(parent.context).inflate(R.layout.item_tarea, parent, false)
+            return SV(v)
+        }
+
+        override fun onBindViewHolder(holder: SV, position: Int) {
+            val sug = items[position]
+            Log.d(TAG, "SugeridasAdapter bind: ${sug.titulo} at pos $position")
+            holder.tvTitulo.text = sug.titulo
+            holder.tvMeta.text = "${sug.puntos} pts · ${sug.dificultad}"
+            holder.btnAccion.visibility = View.VISIBLE
+            holder.btnAccion.text = getString(R.string.asignar)
+
+            // indicador lateral por dificultad
+            when (sug.dificultad.lowercase()) {
+                "fácil", "facil" -> holder.vIndicator?.setBackgroundColor(android.graphics.Color.parseColor("#A5D6A7"))
+                "media" -> holder.vIndicator?.setBackgroundColor(android.graphics.Color.parseColor("#FFF59D"))
+                else -> holder.vIndicator?.setBackgroundColor(android.graphics.Color.parseColor("#FFCDD2"))
+            }
+
+            holder.btnAccion.setOnClickListener {
+                // abrir selector de miembro para crear una nueva instancia de Tarea (siempre permite crear)
+                lifecycleScope.launch {
+                    Log.d(TAG, "Intentando asignar sugerida: ${sug.titulo}")
+                    val grupo = parejaVM.grupo.value
+                    val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
+                    val opciones = mutableListOf<Pair<String,String>>()
+                    // permitir 'Sin asignar' para crear sin responsable
+                    opciones.add(Pair(getString(R.string.asignado_por_defecto), ""))
+                    if (grupo != null) {
+                        grupo.miembros.keys.forEach { uid ->
+                            val u2 = usuarios.find { it.id == uid }
+                            val display = when {
+                                u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
+                                u2 != null && u2.email.isNotBlank() -> u2.email
+                                else -> uid
+                            }
+                            opciones.add(Pair(display, uid))
+                        }
+                    }
+                    // opciones siempre contiene al menos 'Sin asignar'
+                    val nombres = opciones.map { it.first }.toTypedArray()
+                    androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle(getString(R.string.selecciona_miembro)).setItems(nombres) { _, idx ->
+                        lifecycleScope.launch {
+                            val elegidoUid = opciones[idx].second.ifBlank { null }
+                            val creador = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
+                            val dificultadInt = when (sug.dificultad.lowercase()) { "fácil", "facil" -> 1; "media" -> 2; else -> 3 }
+                            val tarea = Tarea(titulo = sug.titulo, descripcion = sug.descripcion, categoria = categoriaId, dificultad = dificultadInt, puntos = sug.puntos, creadoPor = creador, asignadoA = elegidoUid, grupoId = parejaVM.grupo.value?.id)
+                            Log.d(TAG, "Creando tarea desde sugerida: titulo=${tarea.titulo} asignadoA=${tarea.asignadoA}")
+                            val res = LocalizadorServicios.repositorioTarea.crearTarea(tarea)
+                            if (res.isSuccess) {
+                                Log.d(TAG, "Tarea creada OK: ${res.getOrNull()?.id}")
+                                Toast.makeText(requireContext(), getString(R.string.tarea_asignada_ok, opciones[idx].first), Toast.LENGTH_SHORT).show()
+                                // opcional: si quieres volver atrás para ver la lista real, descomenta:
+                                // findNavController().popBackStack()
+                            } else {
+                                Log.e(TAG, "Error crear tarea: ${res.exceptionOrNull()?.message}")
+                                Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }.setNegativeButton(getString(R.string.cancelar), null).show()
                 }
             }
 
-            // no sobreescribir el listener por defecto
+            // click en la tarjeta puede mostrar detalles de la sugerencia si se quiere
+            holder.root.setOnClickListener { /* opcional: mostrar info */ }
         }
 
         override fun getItemCount(): Int = items.size
@@ -484,12 +555,106 @@ class FragmentTareas : Fragment() {
     }
 
     private fun mostrarDialogoTareaDetalles(tarea: Tarea) {
+        // Mostrar diálogo con información básica y opción 'Asignar' si corresponde
         val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
         val sb = StringBuilder()
         sb.append("Título: ${tarea.titulo}\n")
         sb.append("Puntos: ${tarea.puntos}\n")
-        sb.append("Estado: ${tarea.estado}\n")
         if (!tarea.descripcion.isNullOrBlank()) sb.append("\n${tarea.descripcion}\n")
-        builder.setTitle("Detalle tarea").setMessage(sb.toString()).setNeutralButton("Cerrar", null).show()
+
+        // cerrar = positive
+        builder.setTitle("Detalle tarea").setMessage(sb.toString())
+            .setPositiveButton("Cerrar", null)
+
+        // Añadir botón "Crear otra" para crear una nueva instancia (duplicado) y asignarla
+        builder.setNegativeButton("Crear otra") { _, _ ->
+            lifecycleScope.launch {
+                // elegir miembro (incluye 'Sin asignar')
+                val grupo = parejaVM.grupo.value
+                val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
+                val opciones = mutableListOf<Pair<String,String>>()
+                opciones.add(Pair(getString(R.string.asignado_por_defecto), ""))
+                if (grupo != null) {
+                    grupo.miembros.keys.forEach { uid ->
+                        val u2 = usuarios.find { it.id == uid }
+                        val display = when {
+                            u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
+                            u2 != null && u2.email.isNotBlank() -> u2.email
+                            else -> uid
+                        }
+                        opciones.add(Pair(display, uid))
+                    }
+                }
+                val nombres = opciones.map { it.first }.toTypedArray()
+                androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle(getString(R.string.selecciona_miembro))
+                    .setItems(nombres) { _, idx ->
+                        lifecycleScope.launch {
+                            val elegidoUid = opciones[idx].second.ifBlank { null }
+                            val creador = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
+                            val nueva = Tarea(
+                                titulo = tarea.titulo,
+                                descripcion = tarea.descripcion,
+                                categoria = tarea.categoria,
+                                dificultad = tarea.dificultad,
+                                puntos = tarea.puntos,
+                                creadoPor = creador,
+                                asignadoA = elegidoUid,
+                                grupoId = parejaVM.grupo.value?.id
+                            )
+                            Log.d(TAG, "Creando duplicado de tarea: ${nueva.titulo} asignadoA=${nueva.asignadoA}")
+                            val res = LocalizadorServicios.repositorioTarea.crearTarea(nueva)
+                            if (res.isSuccess) {
+                                Toast.makeText(requireContext(), "Tarea creada y asignada", Toast.LENGTH_SHORT).show()
+                                NotificationScheduler.showImmediateNotification(requireContext(), ("tarea_${res.getOrNull()?.id}").hashCode(), "Nueva tarea", "Se ha creado: ${nueva.titulo}", res.getOrNull()?.id ?: "")
+                            } else {
+                                Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error al crear tarea", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                    .setNegativeButton(getString(R.string.cancelar), null)
+                    .show()
+            }
+        }
+
+        // permite asignar solo si soy el creador y la tarea está pendiente: siempre abrir selector para asignar/reasignar
+        val usuarioActualId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
+        if (!usuarioActualId.isBlank() && usuarioActualId == tarea.creadoPor && tarea.estado == "pendiente") {
+            builder.setNeutralButton("Asignar") { _, _ ->
+                lifecycleScope.launch {
+                    val grupo = parejaVM.grupo.value
+                    val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
+                    val opciones = mutableListOf<Pair<String,String>>()
+                    if (grupo != null) {
+                        grupo.miembros.keys.forEach { uid ->
+                            val u2 = usuarios.find { it.id == uid }
+                            val display = if (u2 != null && u2.nombre.isNotBlank()) "${u2.nombre} (${if (u2.email.isNotBlank()) u2.email else u2.id})" else u2?.email ?: uid
+                            opciones.add(Pair(display, uid))
+                        }
+                    }
+                    if (opciones.isEmpty()) Toast.makeText(requireContext(), "No hay miembros", Toast.LENGTH_SHORT).show() else {
+                        val names = opciones.map { it.first }.toTypedArray()
+                        androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
+                            lifecycleScope.launch {
+                                val elegido = opciones[idx].second
+                                val nueva = tarea.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
+                                val res = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
+                                if (res.isSuccess) {
+                                    Toast.makeText(requireContext(), "Tarea asignada", Toast.LENGTH_SHORT).show()
+                                    NotificationScheduler.showImmediateNotification(requireContext(), ("tarea_${nueva.id}").hashCode(), "Nueva asignación", "Te han asignado: ${nueva.titulo}", nueva.id)
+                                } else {
+                                    val msg = res.exceptionOrNull()?.message ?: "Error"
+                                    Log.e(TAG, "Error asignar tarea desde detalle: $msg")
+                                    Toast.makeText(requireContext(), "Error asignar: $msg", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        }.setNegativeButton("Cancelar", null).show()
+                    }
+                }
+            }
+        }
+
+        builder.show()
     }
+
 }

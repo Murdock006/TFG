@@ -10,4 +10,5 @@ interface TareaRepositorio {
     suspend fun actualizarTarea(tarea: Tarea): Result<Tarea>
     suspend fun resolverReclamo(tareaId: String, aceptado: Boolean): Result<Tarea>
     suspend fun marcarCompletada(tareaId: String, ejecutorUid: String): Result<Unit>
+    suspend fun confirmarTarea(tareaId: String, confirmadoPorUid: String): Result<Unit>
 }
