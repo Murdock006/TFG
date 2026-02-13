@@ -92,4 +92,8 @@
     <string name="cero">0</string>
     <string name="invitacion_titulo">Invitaciones</string>
     <string name="aceptar_invitacion_titulo">Introduce código para aceptar una invitación</string>
+    <string name="guion">-</string>
+
+    <!-- Rango de semana mostrado en calendario -->
+    <string name="semana_rango">Semana del %1$s al %2$s</string>
 </resources>

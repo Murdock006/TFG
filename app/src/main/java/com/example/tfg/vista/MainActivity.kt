@@ -108,7 +108,8 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 com.example.tfg.R.id.fragment_Presentacion,
-                com.example.tfg.R.id.fragment_Login -> binding.bottomNavigation.visibility = View.GONE
+                com.example.tfg.R.id.fragment_Login,
+                com.example.tfg.R.id.fragment_Registro -> binding.bottomNavigation.visibility = View.GONE
                 else -> binding.bottomNavigation.visibility = View.VISIBLE
             }
         }

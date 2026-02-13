@@ -1,262 +1,156 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:background="@color/fondo">
+    android:fillViewport="true"
+    android:background="@android:color/white">
 
-    <TextView
-        android:id="@+id/tvTituloPareja"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/titulo_pareja"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/texto_principal"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <!-- Card: Crear grupo / generar invitación -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/cardCrearGrupo"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        style="@style/Widget.TFG.Tarjeta"
-        app:layout_constraintTop_toBottomOf="@id/tvTituloPareja"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
+        <TextView
+            android:id="@+id/tvTituloPareja"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="12dp">
+            android:text="Perfil de pareja"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/crear_grupo"
-                android:textStyle="bold"
-                android:textColor="@color/texto_principal"
-                android:textSize="16sp" />
+        <TextView
+            android:id="@+id/tvTusPuntos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="18sp"
+            android:layout_marginBottom="4dp" />
 
-            <EditText
-                android:id="@+id/etNombreGrupo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:hint="@string/nombre_grupo_hint"
-                android:background="@drawable/bg_rounded_card"
-                android:padding="10dp"
-                android:textColor="@color/texto_principal"
-                android:textColorHint="@color/texto_secundario"
-                android:imeOptions="flagNoExtractUi"
-                android:inputType="textPersonName"
-                android:autofillHints="name" />
+        <TextView
+            android:id="@+id/tvPuntosReservados"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reservados: 0"
+            android:layout_marginBottom="8dp" />
 
-            <Button
-                android:id="@+id/btnCrearGrupo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                style="@style/Widget.TFG.Boton.Relleno"
-                android:text="@string/crear_grupo" />
+        <TextView
+            android:id="@+id/tvPuntosCompanero"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="18sp"
+            android:layout_marginBottom="4dp" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="12dp"
-                android:background="@color/divider" />
+        <TextView
+            android:id="@+id/tvNombreGrupoSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:layout_marginBottom="12dp" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/invitacion_titulo"
-                android:textStyle="bold"
-                android:textSize="14sp"
-                android:layout_marginTop="12dp"
-                android:textColor="@color/texto_principal" />
-
-            <Button
-                android:id="@+id/btnGenerarInvitacion"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                style="@style/Widget.TFG.Boton.Contorno"
-                android:text="@string/generar_invitacion" />
-
-            <TextView
-                android:id="@+id/tvCodigo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/codigo_placeholder"
-                android:textColor="@color/texto_principal" />
-
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <!-- Card: Aceptar invitación -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/cardAceptar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        style="@style/Widget.TFG.Tarjeta"
-        app:layout_constraintTop_toBottomOf="@id/cardCrearGrupo"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
+        <Button
+            android:id="@+id/btnCrearGrupo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="12dp">
+            android:text="Crear grupo"
+            android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/aceptar_invitacion_titulo"
-                android:textStyle="bold"
-                android:textColor="@color/texto_principal" />
-
-            <EditText
-                android:id="@+id/etCodigoAceptar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:hint="@string/introduce_codigo"
-                android:background="@drawable/bg_rounded_card"
-                android:padding="10dp"
-                android:textColor="@color/texto_principal"
-                android:textColorHint="@color/texto_secundario"
-                android:inputType="text"
-                android:autofillHints="none"
-                android:imeOptions="flagNoExtractUi" />
-
-            <Button
-                android:id="@+id/btnAceptarInvitacion"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                style="@style/Widget.TFG.Boton.Relleno"
-                android:text="@string/aceptar_invitacion" />
-
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <!-- Lista de miembros -->
-    <TextView
-        android:id="@+id/tvMiembrosTitulo"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/miembros_del_grupo"
-        android:textStyle="bold"
-        android:textColor="@color/texto_principal"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/cardAceptar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvMiembros"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/tvMiembrosTitulo"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomBar"
-        android:clipToPadding="false" />
-
-    <!-- Barra inferior fija que muestra el grupo anclado -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/bottomBar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="12dp"
-        android:visibility="gone"
-        style="@style/Widget.TFG.Tarjeta"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
+        <Button
+            android:id="@+id/btnGenerarInvitacion"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="12dp"
-            android:gravity="center_vertical"
-            android:baselineAligned="false">
+            android:text="Generar invitación"
+            android:layout_marginBottom="8dp" />
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+        <TextView
+            android:id="@+id/tvCodigo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Código: -"
+            android:layout_marginBottom="8dp" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+        <EditText
+            android:id="@+id/etCodigoAceptar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Introduce código"
+            android:layout_marginBottom="8dp" />
 
-                    <TextView
-                        android:id="@+id/tvGroupName"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="@string/nombre_grupo_hint"
-                        android:textStyle="bold"
-                        android:textSize="16sp"
-                        android:textColor="@color/texto_principal" />
+        <Button
+            android:id="@+id/btnAceptarInvitacion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Aceptar invitación"
+            android:layout_marginBottom="12dp" />
 
-                    <Button
-                        android:id="@+id/btnEditarNombre"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        style="@style/Widget.TFG.Boton.Contorno"
-                        android:text="@string/guardar"
-                        android:textSize="12sp" />
+        <Button
+            android:id="@+id/btnSalirGrupoTop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Salir"
+            android:visibility="gone"
+            android:layout_marginBottom="12dp" />
 
-                </LinearLayout>
+        <TextView
+            android:id="@+id/tvGroupName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nombre del grupo"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:layout_marginBottom="4dp" />
 
-                <TextView
-                    android:id="@+id/tvGroupMembers"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/miembros_del_grupo"
-                    android:textSize="14sp"
-                    android:textColor="@android:color/darker_gray" />
+        <TextView
+            android:id="@+id/tvGroupMembers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Miembros: 0"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp" />
 
-            </LinearLayout>
+        <Button
+            android:id="@+id/btnAbrirGrupo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Abrir"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp" />
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+        <Button
+            android:id="@+id/btnEditarNombre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Guardar"
+            android:visibility="gone"
+            android:layout_marginBottom="12dp" />
 
-                <Button
-                    android:id="@+id/btnAbrirGrupo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.TFG.Boton.Contorno"
-                    android:text="@string/abrir"/>
+        <TextView
+            android:id="@+id/tvMiembrosTitulo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Miembros del grupo"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp" />
 
-                <Button
-                    android:id="@+id/btnSalirGrupo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.TFG.Boton.Contorno"
-                    android:text="@string/salir"
-                    android:layout_marginTop="6dp"/>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvMiembros"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
 
-            </LinearLayout>
+        <FrameLayout
+            android:id="@+id/bottomContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
-        </LinearLayout>
+        <androidx.cardview.widget.CardView
+            android:id="@+id/bottomBar"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
-    </androidx.cardview.widget.CardView>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+</ScrollView>

@@ -53,7 +53,7 @@
         <item name="cardCornerRadius">12dp</item>
         <item name="cardUseCompatPadding">true</item>
         <item name="cardPreventCornerOverlap">false</item>
-        <item name="cardBackgroundColor">@color/superficie_variant</item>
+        <item name="cardBackgroundColor">@color/gris_claro</item>
         <item name="android:stateListAnimator">@animator/btn_state_animator</item>
         <item name="strokeColor">@color/negro</item>
         <item name="strokeWidth">2dp</item>

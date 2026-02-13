@@ -130,6 +130,14 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseFires
                     t.update(userRef, "grupoId", invitacion.grupoId)
                 }
             }.await()
+
+            // Asegurar por seguridad que el campo grupoId queda persistido en el documento de usuario
+            try {
+                firestore.collection(coleccionUsuarios).document(usuarioUid).set(mapOf("grupoId" to invitacion.grupoId), SetOptions.merge()).await()
+            } catch (e: Exception) {
+                Log.w(TAG, "aceptarInvitacion: set post-transacción fallo para user $usuarioUid: ${e.message}")
+            }
+
             Log.d(TAG, "aceptarInvitacion OK codigo=${invitacion.codigo} usuario=$usuarioUid grupo=${invitacion.grupoId}")
             Result.success(invitacion.grupoId)
         } catch (e: Exception) {
@@ -148,7 +156,7 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseFires
     override suspend fun obtenerGrupos(): Result<List<Grupo>> {
         return try {
             val q = firestore.collection(coleccionGrupos).get().await()
-            val lista = q.documents.mapNotNull { it.toObject(Grupo::class.java) }
+            val lista = q.documents.mapNotNull { it.toObject(Grupo::class.java)?.copy(id = it.id) }
             Result.success(lista)
         } catch (e: Exception) {
             Log.e(TAG, "obtenerGrupos error", e)
@@ -184,7 +192,7 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseFires
         return try {
             // Firestore no permite buscar por clave de mapa fácilmente; leemos los grupos y filtramos client-side
             val q = firestore.collection(coleccionGrupos).get().await()
-            val g = q.documents.mapNotNull { it.toObject(Grupo::class.java) }.firstOrNull { it.miembros.containsKey(usuarioUid) }
+            val g = q.documents.mapNotNull { it.toObject(Grupo::class.java)?.copy(id = it.id) }.firstOrNull { it.miembros.containsKey(usuarioUid) }
             Result.success(g)
         } catch (e: Exception) {
             Log.e(TAG, "obtenerGrupoPorUsuario error", e)

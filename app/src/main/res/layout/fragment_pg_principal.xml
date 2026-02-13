@@ -47,7 +47,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="12dp"
-                    android:background="@color/superficie">
+                    android:background="@color/tarjetaPrincipal">
 
                     <TextView
                         android:text="@string/tus_puntos"
@@ -59,7 +59,7 @@
 
                     <TextView
                         android:id="@+id/puntosUsuario"
-                        android:text="@string/hello_blank_fragment"
+                        android:text="@string/cargando"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
                         android:textSize="20sp"
@@ -95,7 +95,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="12dp"
-                    android:background="@color/superficie">
+                    android:background="@color/tarjetaPrincipal">
 
                     <TextView
                         android:text="@string/tu_companero"
@@ -109,7 +109,7 @@
                         android:id="@+id/nombreGrupo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="-"
+                        android:text="@string/guion"
                         android:textColor="@color/texto_principal"
                         android:textSize="14sp"
                         android:layout_marginTop="4dp" />
@@ -396,69 +396,6 @@
             android:paddingBottom="12dp"
             android:nestedScrollingEnabled="false"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-
-        <!-- Tarjetas inferiores independientes (Calendario / Recompensas / Perfil) -->
-        <LinearLayout
-            android:id="@+id/bloqueInferior"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="32dp"
-            android:gravity="center"
-            android:weightSum="3">
-
-            <!-- Calendario -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_margin="8dp"
-                style="@style/Widget.TFG.Tarjeta">
-
-                <Button
-                    android:id="@+id/verCalendario"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.TFG.Boton.Relleno"
-                    android:text="@string/calendario" />
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Recompensas -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_margin="8dp"
-                style="@style/Widget.TFG.Tarjeta">
-
-                <Button
-                    android:id="@+id/misRecompensas"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.TFG.Boton.Relleno"
-                    android:text="@string/recompensas" />
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Perfil de Pareja -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_margin="8dp"
-                style="@style/Widget.TFG.Tarjeta">
-
-                <Button
-                    android:id="@+id/perfilPareja"
-                    android:textSize="12sp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.TFG.Boton.Relleno"
-                    android:text="@string/perfil_pareja" />
-            </androidx.cardview.widget.CardView>
-
-        </LinearLayout>
 
     </LinearLayout>
 

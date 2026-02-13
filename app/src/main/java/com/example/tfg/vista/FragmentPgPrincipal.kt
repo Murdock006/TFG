@@ -23,7 +23,6 @@ import com.example.tfg.modelo.Tarea
 import com.example.tfg.modelo.Usuario
 import com.example.tfg.repositorio.CategoriasRepositorio
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 
 class FragmentPgPrincipal : Fragment() {
@@ -75,26 +74,18 @@ class FragmentPgPrincipal : Fragment() {
             findNavController().navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
         }
 
-        binding.verCalendario.setOnClickListener {
-            findNavController().navigate(com.example.tfg.R.id.fragment_Calendario)
-        }
-        binding.misRecompensas.setOnClickListener {
-            findNavController().navigate(com.example.tfg.R.id.fragment_Recompensas)
-        }
-        binding.perfilPareja.setOnClickListener {
-            findNavController().navigate(com.example.tfg.R.id.fragment_Pareja)
-        }
+        // El acceso a Perfil de pareja se realiza desde la BottomNavigation ahora.
 
         // configurar reciclerview de miembros (usar findViewById si binding no contiene la vista todavía)
         val rvMiembros = try {
             binding.root.findViewById<RecyclerView>(com.example.tfg.R.id.rvMiembros)
-        } catch (e: Exception) { null }
-        rvMiembros?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext(), androidx.recyclerview.widget.LinearLayoutManager.VERTICAL, false)
+        } catch (_: Exception) { null }
+        rvMiembros?.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         rvMiembros?.isNestedScrollingEnabled = false
         rvMiembros?.adapter = MiembrosAdapter()
 
         // helper para actualizar items del recycler (si binding no expone la vista)
-        fun actualizarMiembros(miembros: List<com.example.tfg.modelo.Usuario>) {
+        fun actualizarMiembros(miembros: List<Usuario>) {
             val adapter = rvMiembros?.adapter
             if (adapter is MiembrosAdapter) adapter.setItems(miembros)
         }
@@ -110,21 +101,21 @@ class FragmentPgPrincipal : Fragment() {
                     if (myId != null) {
                         val yo = listaUsuarios.find { it.id == myId }
                         binding.puntosUsuario.text = (yo?.puntos ?: 0).toString()
-                        binding.puntosReservados.text = "Reservados: ${yo?.puntosReservados ?: 0}"
+                        binding.puntosReservados.text = getString(com.example.tfg.R.string.reservados_format, yo?.puntosReservados ?: 0)
                     } else {
                         binding.puntosUsuario.text = "0"
-                        binding.puntosReservados.text = "Reservados: 0"
+                        binding.puntosReservados.text = getString(com.example.tfg.R.string.reservados_format, 0)
                     }
 
                     // Si hay grupo, mostrar puntos del primer compañero distinto
                     val grupo = parejaVM.grupo.value
                     if (grupo == null) {
                         binding.puntosCompanero.text = "-"
-                        binding.nombreGrupo.text = "-"
-                        binding.miembrosCount.text = "Miembros: 0"
+                        binding.nombreGrupo.text = getString(com.example.tfg.R.string.guion)
+                        binding.miembrosCount.text = getString(com.example.tfg.R.string.miembros_format, 0)
                     } else {
-                        binding.nombreGrupo.text = grupo.nombre ?: "-"
-                        binding.miembrosCount.text = "Miembros: ${grupo.miembros.size}"
+                        binding.nombreGrupo.text = grupo.nombre ?: getString(com.example.tfg.R.string.guion)
+                        binding.miembrosCount.text = getString(com.example.tfg.R.string.miembros_format, grupo.miembros.size)
                         val otroUid = grupo.miembros.keys.firstOrNull { it != myId }
                         if (otroUid != null) {
                             val otro = listaUsuarios.find { it.id == otroUid }
@@ -133,7 +124,7 @@ class FragmentPgPrincipal : Fragment() {
                             binding.puntosCompanero.text = "-"
                         }
                         // poblar recycler miembros
-                        val miembrosList = grupo.miembros.keys.map { uid -> listaUsuarios.find { it.id == uid } ?: com.example.tfg.modelo.Usuario(id = uid, nombre = uid, email = "", puntos = 0) }
+                        val miembrosList = grupo.miembros.keys.map { uid -> listaUsuarios.find { it.id == uid } ?: Usuario(id = uid, nombre = uid, email = "", puntos = 0) }
                         actualizarMiembros(miembrosList)
                     }
 
@@ -178,7 +169,7 @@ class FragmentPgPrincipal : Fragment() {
         val lanzarAsignacion: (String) -> Unit = { categoriaId ->
             viewLifecycleOwner.lifecycleScope.launch {
                 val repoCat = CategoriasRepositorio(requireContext())
-                val cats = try { repoCat.cargarCategoriasDesdeRaw() } catch (e: Exception) { emptyList() }
+                val cats = try { repoCat.cargarCategoriasDesdeRaw() } catch (_: Exception) { emptyList() }
                 val cat = cats.find { it.nombre.equals(categoriaId, true) || it.id.equals(categoriaId, true) }
                 val sugeridas = cat?.tareas ?: emptyList()
                 if (sugeridas.isEmpty()) { Toast.makeText(requireContext(), "No hay sugerencias para $categoriaId", Toast.LENGTH_SHORT).show(); return@launch }
@@ -190,7 +181,7 @@ class FragmentPgPrincipal : Fragment() {
                         // elegir miembro del grupo
                         viewLifecycleOwner.lifecycleScope.launch {
                             val grupo = parejaVM.grupo.value
-                            val usuariosCache = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (e: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
+                            val usuariosCache = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<Usuario>() }
                             val opcionesMiembros = mutableListOf<Pair<String,String>>()
                             if (grupo != null) {
                                 grupo.miembros.keys.forEach { uid ->
@@ -206,22 +197,22 @@ class FragmentPgPrincipal : Fragment() {
                                     opcionesMiembros.add(Pair(display, uid))
                                 }
                             }
-                            if (opcionesMiembros.isEmpty()) { Toast.makeText(requireContext(), "No hay miembros para asignar", Toast.LENGTH_SHORT).show(); return@launch }
+                            if (opcionesMiembros.isEmpty()) { Toast.makeText(requireContext(), getString(com.example.tfg.R.string.no_hay_miembros), Toast.LENGTH_SHORT).show(); return@launch }
                             val nombres = opcionesMiembros.map { it.first }.toTypedArray()
                             androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                                .setTitle("Selecciona miembro")
+                                .setTitle(getString(com.example.tfg.R.string.selecciona_miembro))
                                 .setItems(nombres) { _, mIdx ->
                                     viewLifecycleOwner.lifecycleScope.launch {
                                         val elegidoUid = opcionesMiembros[mIdx].second
                                         val tarea = Tarea(titulo = sel.titulo, descripcion = sel.descripcion, categoria = categoriaId, dificultad = if (sel.dificultad.uppercase()=="FACIL") 1 else if (sel.dificultad.uppercase()=="MEDIA") 2 else 3, puntos = sel.puntos, creadoPor = LocalizadorServicios.repositorioAuth.usuarioActual()?.id, asignadoA = elegidoUid, grupoId = parejaVM.grupo.value?.id)
                                         val res = LocalizadorServicios.repositorioTarea.crearTarea(tarea)
-                                        if (res.isSuccess) Toast.makeText(requireContext(), "Tarea creada y asignada a ${opcionesMiembros[mIdx].first}", Toast.LENGTH_SHORT).show() else Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+                                        if (res.isSuccess) Toast.makeText(requireContext(), getString(com.example.tfg.R.string.tarea_asignada_ok, opcionesMiembros[mIdx].first), Toast.LENGTH_SHORT).show() else Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
                                     }
                                 }
-                                .setNegativeButton("Cancelar", null).show()
+                                .setNegativeButton(getString(com.example.tfg.R.string.cancelar), null).show()
                         }
                     }
-                    .setNegativeButton("Cancelar", null)
+                    .setNegativeButton(getString(com.example.tfg.R.string.cancelar), null)
                     .show()
             }
         }
@@ -272,8 +263,8 @@ class FragmentPgPrincipal : Fragment() {
 
     // adaptador simple para mostrar miembros (nombre y puntos)
     private inner class MiembrosAdapter : RecyclerView.Adapter<MiembrosAdapter.MV>() {
-        private var items: List<com.example.tfg.modelo.Usuario> = emptyList()
-        fun setItems(list: List<com.example.tfg.modelo.Usuario>) { items = list; notifyDataSetChanged() }
+        private var items: List<Usuario> = emptyList()
+        fun setItems(list: List<Usuario>) { items = list; notifyDataSetChanged() }
         inner class MV(val root: View) : RecyclerView.ViewHolder(root) {
             val tvNombre: TextView = root.findViewById(com.example.tfg.R.id.tvMiembroNombre)
             val tvPuntos: TextView = root.findViewById(com.example.tfg.R.id.tvMiembroPuntos)

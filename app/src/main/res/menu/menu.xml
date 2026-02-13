@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/fragment_PgPrincipal"
-        android:icon="@mipmap/ic_launcher"
-        android:title="@string/app_name"/>
+        android:icon="@drawable/inicio"
+        android:title="INICIO"/>
     <item android:id="@+id/fragment_TareasPendientes"
-        android:icon="@mipmap/ic_launcher"
-        android:title="@string/tareas_recientes"/>
+        android:icon="@drawable/tareas"
+        android:title="TAREAS"/>
     <item android:id="@+id/fragment_Recompensas"
-        android:icon="@mipmap/ic_launcher"
-        android:title="@string/recompensas"/>
-    <item android:id="@+id/fragment_Perfil"
-        android:icon="@mipmap/ic_launcher"
-        android:title="@string/perfil_pareja"/>
+        android:icon="@drawable/recompensas"
+        android:title="RECOMPENSAS"/>
+    <item android:id="@+id/fragment_Pareja"
+        android:icon="@drawable/perfil"
+        android:title="PERFIL"/>
+    <item android:id="@+id/fragment_Calendario"
+        android:icon="@drawable/calendario"
+        android:title="CALENDARIO"/>
 </menu>

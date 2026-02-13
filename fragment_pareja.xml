@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/fondo">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+        <TextView android:id="@+id/tvTituloPareja" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/titulo_pareja" android:textSize="20sp" android:textStyle="bold" android:textColor="@color/texto_principal" android:layout_marginBottom="16dp" />
+        <TextView android:id="@+id/tvTusPuntos" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="18sp" android:textColor="@color/texto_principal" />
+        <TextView android:id="@+id/tvPuntosReservados" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Reservados: 0" android:textColor="@color/texto_secundario" />
+        <TextView android:id="@+id/tvPuntosCompanero" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="18sp" android:textColor="@color/texto_principal" />
+        <TextView android:id="@+id/tvNombreGrupoSmall" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-" android:textColor="@color/texto_secundario" />
+        <Button android:id="@+id/btnCrearGrupo" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/crear_grupo" />
+        <Button android:id="@+id/btnGenerarInvitacion" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/generar_invitacion" />
+        <TextView android:id="@+id/tvCodigo" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Codigo: -" android:textColor="@color/texto_principal" />
+        <EditText android:id="@+id/etCodigoAceptar" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Introduce codigo" android:textColor="@color/texto_principal" />
+        <Button android:id="@+id/btnAceptarInvitacion" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/aceptar_invitacion" />
+        <Button android:id="@+id/btnSalirGrupoTop" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Salir" android:visibility="gone" />
+        <TextView android:id="@+id/tvGroupName" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Grupo" android:textStyle="bold" android:textSize="16sp" android:textColor="@color/texto_principal" android:visibility="gone" />
+        <TextView android:id="@+id/tvGroupMembers" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Miembros: 0" android:textColor="@android:color/darker_gray" android:visibility="gone" />
+        <Button android:id="@+id/btnAbrirGrupo" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Abrir" android:visibility="gone" />
+        <Button android:id="@+id/btnEditarNombre" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Guardar" android:visibility="gone" />
+        <TextView android:id="@+id/tvMiembrosTitulo" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/miembros_del_grupo" android:visibility="gone" />
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvMiembros" android:layout_width="match_parent" android:layout_height="wrap_content" android:nestedScrollingEnabled="false" android:visibility="gone" />
+        <FrameLayout android:id="@+id/bottomContainer" android:layout_width="match_parent" android:layout_height="0dp" android:visibility="gone" />
+        <androidx.cardview.widget.CardView android:id="@+id/bottomBar" android:layout_width="match_parent" android:layout_height="0dp" android:visibility="gone" />
+        <androidx.cardview.widget.CardView android:id="@+id/cardPuntos" android:layout_width="match_parent" android:layout_height="0dp" android:visibility="gone" />
+        <androidx.cardview.widget.CardView android:id="@+id/cardCrearGrupo" android:layout_width="match_parent" android:layout_height="0dp" android:visibility="gone" />
+        <androidx.cardview.widget.CardView android:id="@+id/cardAceptar" android:layout_width="match_parent" android:layout_height="0dp" android:visibility="gone" />
+        <androidx.cardview.widget.CardView android:id="@+id/cardGrupo" android:layout_width="match_parent" android:layout_height="0dp" android:visibility="gone" />
+    </LinearLayout>
+</ScrollView>
