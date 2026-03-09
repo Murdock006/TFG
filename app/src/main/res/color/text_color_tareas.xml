@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Si está seleccionado (activo) -> blanco -->
+    <item android:color="@android:color/white" android:state_selected="true" />
+    <!-- Si está presionado pero no seleccionado -> texto principal (negro) -->
+    <item android:color="@color/texto_principal" android:state_pressed="true" />
+    <!-- Por defecto -> texto principal -->
+    <item android:color="@color/texto_principal" />
+</selector>

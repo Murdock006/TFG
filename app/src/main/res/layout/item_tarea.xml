@@ -8,6 +8,7 @@
     app:cardCornerRadius="10dp"
     app:cardUseCompatPadding="true"
     app:cardElevation="4dp"
+    android:layout_marginTop="20dp"
     android:foregroundTintMode="src_over"
     app:cardBackgroundColor="@color/superficie_variant">
 

@@ -21,6 +21,9 @@ class AuthRepositorioFirebase : AuthRepositorio {
     private var usuariosListener: ListenerRegistration? = null
     private val TAG = "AuthRepoFirebase"
 
+    // Caché del usuario completo (se actualiza en login y se actualiza vía observarUsuarios)
+    private var _usuarioCache: Usuario? = null
+
     override suspend fun registrar(usuario: Usuario, password: String): Result<Usuario> {
         return try {
             val result = auth.createUserWithEmailAndPassword(usuario.email, password).await()
@@ -33,7 +36,8 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 "ciudad" to usuario.ciudad,
                 "email" to usuario.email,
                 "puntos" to 1000,
-                "puntosReservados" to 0
+                "puntosReservados" to 0,
+                "puntosRecompensa" to 0
             )
             firestore.collection("usuarios").document(firebaseUser.uid).set(data).await()
             Log.d(TAG, "usuario document creado uid=${firebaseUser.uid}")
@@ -69,7 +73,8 @@ class AuthRepositorioFirebase : AuthRepositorio {
                     "ciudad" to null,
                     "email" to (firebaseUser.email ?: email),
                     "puntos" to 1000,
-                    "puntosReservados" to 0
+                    "puntosReservados" to 0,
+                    "puntosRecompensa" to 0
                 )
                 docRef.set(dataDefault).await()
             }
@@ -80,8 +85,10 @@ class AuthRepositorioFirebase : AuthRepositorio {
             val ciudad = reloaded.getString("ciudad")
             val puntos = reloaded.getLong("puntos")?.toInt() ?: 0
             val puntosReservados = reloaded.getLong("puntosReservados")?.toInt() ?: 0
-            val user = Usuario(id = firebaseUser.uid, nombre = nombre, edad = edad, ciudad = ciudad, email = firebaseUser.email ?: email, puntos = puntos)
+            val puntosRecompensa = reloaded.getLong("puntosRecompensa")?.toInt() ?: 0
+            val user = Usuario(id = firebaseUser.uid, nombre = nombre, edad = edad, ciudad = ciudad, email = firebaseUser.email ?: email, puntos = puntos, puntosReservados = puntosReservados, puntosRecompensa = puntosRecompensa)
             Log.d(TAG, "usuario cargado desde Firestore uid=${firebaseUser.uid} puntos=$puntos")
+            _usuarioCache = user
             Result.success(user)
         } catch (e: Exception) {
             Log.e(TAG, "Error login", e)
@@ -95,15 +102,56 @@ class AuthRepositorioFirebase : AuthRepositorio {
         }
     }
 
+    // Inicio de sesión con token de proveedor externo (ej. Google idToken)
+    override suspend fun loginConTokenProveedor(idToken: String, proveedor: String): Result<Usuario> {
+        return try {
+            // Actualmente implementamos para Google: crear credencial y firmar con FirebaseAuth
+            val cred = com.google.firebase.auth.GoogleAuthProvider.getCredential(idToken, null)
+            val res = auth.signInWithCredential(cred).await()
+            val firebaseUser = res.user ?: throw Exception("Login con proveedor fallido: no hay usuario")
+            Log.d(TAG, "loginConTokenProveedor OK uid=${firebaseUser.uid} provider=$proveedor email=${firebaseUser.email}")
+
+            // Asegurar documento en Firestore y recuperar datos como en login()
+            val docRef = firestore.collection("usuarios").document(firebaseUser.uid)
+            val doc = docRef.get().await()
+            if (!doc.exists()) {
+                val dataDefault = mapOf(
+                    "nombre" to (firebaseUser.displayName ?: ""),
+                    "edad" to null,
+                    "ciudad" to null,
+                    "email" to (firebaseUser.email ?: ""),
+                    "puntos" to 1000,
+                    "puntosReservados" to 0,
+                    "puntosRecompensa" to 0
+                )
+                docRef.set(dataDefault).await()
+            }
+            val reloaded = docRef.get().await()
+            val nombre = reloaded.getString("nombre") ?: (firebaseUser.displayName ?: "")
+            val edad = reloaded.getLong("edad")?.toInt()
+            val ciudad = reloaded.getString("ciudad")
+            val puntos = reloaded.getLong("puntos")?.toInt() ?: 0
+            val puntosRecompensa = reloaded.getLong("puntosRecompensa")?.toInt() ?: 0
+            val user = Usuario(id = firebaseUser.uid, nombre = nombre, edad = edad, ciudad = ciudad, email = firebaseUser.email ?: "", puntos = puntos, puntosRecompensa = puntosRecompensa)
+            _usuarioCache = user
+            Result.success(user)
+        } catch (e: Exception) {
+            Log.e(TAG, "loginConTokenProveedor error", e)
+            Result.failure(Exception(e.message ?: "Error login proveedor"))
+        }
+    }
+
     override suspend fun logout() {
+        _usuarioCache = null
         auth.signOut()
     }
 
     override fun usuarioActual(): Usuario? {
         val u = auth.currentUser ?: return null
-        // Nota: datos extra (nombre, edad, ciudad) no se devuelven aquí sin consultar Firestore
         Log.d(TAG, "usuarioActual uid=${u.uid} email=${u.email}")
-        return Usuario(id = u.uid, nombre = u.displayName ?: "", edad = null, ciudad = null, email = u.email ?: "")
+        // Devolver caché si coincide con el usuario autenticado (tiene puntos y puntosRecompensa reales)
+        return _usuarioCache?.takeIf { it.id == u.uid }
+            ?: Usuario(id = u.uid, nombre = u.displayName ?: "", edad = null, ciudad = null, email = u.email ?: "")
     }
 
     override fun observarUsuarios(): Flow<List<Usuario>> = callbackFlow {
@@ -121,8 +169,15 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 val email = doc.getString("email") ?: ""
                 val puntos = doc.getLong("puntos")?.toInt() ?: 0
                 val puntosReservados = doc.getLong("puntosReservados")?.toInt() ?: 0
-                Usuario(id = id, nombre = nombre, edad = edad, ciudad = ciudad, email = email, puntos = puntos)
+                val puntosRecompensa = doc.getLong("puntosRecompensa")?.toInt() ?: 0
+                Usuario(id = id, nombre = nombre, edad = edad, ciudad = ciudad, email = email,
+                    puntos = puntos, puntosReservados = puntosReservados, puntosRecompensa = puntosRecompensa)
             } ?: emptyList()
+            // Actualizar caché del usuario actual con los datos frescos de Firestore
+            val uidActual = auth.currentUser?.uid
+            if (uidActual != null) {
+                list.find { it.id == uidActual }?.let { _usuarioCache = it }
+            }
             trySend(list)
         }
         awaitClose { listener.remove() }

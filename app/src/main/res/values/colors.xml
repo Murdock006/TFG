@@ -13,7 +13,7 @@
     <color name="fondo">#FFFFFF</color>
     <color name="superficie">#FFFFFF</color>
     <color name="superficie_variant">#F5F5F5</color>
-    <color name="tarjetaPrincipal">#A2A1A1</color>
+    <color name="tarjetaPrincipal">#6F969696</color>
 
     <!-- Texto -->
     <color name="texto_principal">#000000</color>
@@ -40,6 +40,9 @@
     <!-- Alias retrocompatibilidad para recursos antiguos -->
     <color name="light_blue_600">#000000</color>
     <color name="light_blue_900">#000000</color>
-    <color name="light_blue_A200">#BDBDBD</color>
+    <color name="light_blue_A200">#E0E0E0</color>
     <color name="light_blue_A400">#9E9E9E</color>
+    <color name="google_text">#5F6368</color>
+    <color name="google_ripple">#E8EAED</color>
+    <color name="google_stroke">#DADCE0</color>
 </resources>

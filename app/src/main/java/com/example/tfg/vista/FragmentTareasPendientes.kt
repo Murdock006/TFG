@@ -11,6 +11,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.tfg.databinding.FragmentTareasPendientesBinding
 import com.example.tfg.modelo.Tarea
 import com.example.tfg.service.LocalizadorServicios
+import com.example.tfg.R
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class FragmentTareasPendientes : Fragment() {
@@ -20,6 +23,10 @@ class FragmentTareasPendientes : Fragment() {
     private val parejaVM: com.example.tfg.viewmodel.ParejaViewModel by activityViewModels()
 
     private val adapter by lazy { TareasHomeAdapter(this, parejaVM, viewLifecycleOwner.lifecycleScope) }
+
+    // Job para la suscripción a tareas, se cancela y reinicia cuando cambia el grupo
+    private var tareasJob: Job? = null
+    private var grupoActualId: String? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentTareasPendientesBinding.inflate(inflater, container, false)
@@ -37,19 +44,52 @@ class FragmentTareasPendientes : Fragment() {
         binding.btnAsignadas.setOnClickListener { mostrarAsignadas() }
         binding.btnHistorial.setOnClickListener { mostrarHistorial() }
 
+        // estado inicial
+        aplicarEstadoBotones(selected = "pendientes")
+
         // observar usuarios para mostrar nombres correctamente
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 LocalizadorServicios.repositorioAuth.observarUsuarios().collect { lista ->
                     adapter.updateUsuarios(lista)
                 }
-            } catch (_: Exception) { /* ignore */ }
+            } catch (_: Exception) { }
         }
 
-        // observar tareas y actualizar vista según modo actual
+        // observar el grupo: mostrar/ocultar UI y recargar tareas cuando cambie
         viewLifecycleOwner.lifecycleScope.launch {
+            parejaVM.grupo.collectLatest { grupo ->
+                val nuevoGrupoId = grupo?.id
+                if (nuevoGrupoId != grupoActualId) {
+                    grupoActualId = nuevoGrupoId
+                    // reiniciar la suscripción a tareas con el nuevo grupo
+                    tareasJob?.cancel()
+                    adapter.updateItems(emptyList())
+                }
+
+                if (grupo == null) {
+                    // Sin grupo: ocultar tabs y lista, mostrar mensaje
+                    binding.layoutBotonesTabs.visibility = View.GONE
+                    binding.rvTareasPendientes.visibility = View.GONE
+                    binding.layoutSinGrupo.visibility = View.VISIBLE
+                } else {
+                    // Con grupo: mostrar tabs y lista
+                    binding.layoutBotonesTabs.visibility = View.VISIBLE
+                    binding.rvTareasPendientes.visibility = View.VISIBLE
+                    binding.layoutSinGrupo.visibility = View.GONE
+
+                    // suscribir tareas del grupo si no hay suscripción activa
+                    if (tareasJob == null || tareasJob?.isActive == false) {
+                        suscribirTareas()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun suscribirTareas() {
+        tareasJob = viewLifecycleOwner.lifecycleScope.launch {
             LocalizadorServicios.repositorioTarea.observarTareas().collect { list ->
-                // inicialmente mostrar pendientes
                 actualizarListado(list)
             }
         }
@@ -58,14 +98,63 @@ class FragmentTareasPendientes : Fragment() {
     private var modoHistorial: Boolean = false
     private var modoAsignadas: Boolean = false
 
+    private fun aplicarEstadoBotones(selected: String) {
+        val normalBg = resources.getDrawable(R.drawable.btn_outline_black, requireContext().theme)
+        binding.btnPendientes.background = normalBg
+        binding.btnAsignadas.background = normalBg
+        binding.btnHistorial.background = normalBg
+
+        binding.btnPendientes.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
+        binding.btnAsignadas.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
+        binding.btnHistorial.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
+
+        when (selected) {
+            "pendientes" -> {
+                binding.btnPendientes.backgroundTintList = null
+                binding.btnPendientes.setBackgroundResource(R.drawable.btn_tab_selected)
+                binding.btnPendientes.setTextColor(resources.getColor(android.R.color.white, requireContext().theme))
+                binding.btnAsignadas.backgroundTintList = null
+                binding.btnAsignadas.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
+                binding.btnHistorial.backgroundTintList = null
+                binding.btnHistorial.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
+            }
+            "asignadas" -> {
+                binding.btnAsignadas.backgroundTintList = null
+                binding.btnAsignadas.setBackgroundResource(R.drawable.btn_tab_selected)
+                binding.btnAsignadas.setTextColor(resources.getColor(android.R.color.white, requireContext().theme))
+                binding.btnPendientes.backgroundTintList = null
+                binding.btnPendientes.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
+                binding.btnHistorial.backgroundTintList = null
+                binding.btnHistorial.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
+            }
+            "historial" -> {
+                binding.btnHistorial.backgroundTintList = null
+                binding.btnHistorial.setBackgroundResource(R.drawable.btn_tab_selected)
+                binding.btnHistorial.setTextColor(resources.getColor(android.R.color.white, requireContext().theme))
+                binding.btnPendientes.backgroundTintList = null
+                binding.btnPendientes.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
+                binding.btnAsignadas.backgroundTintList = null
+                binding.btnAsignadas.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
+            }
+        }
+        if (selected != "pendientes") {
+            binding.btnPendientes.backgroundTintList = null
+            binding.btnPendientes.setBackgroundResource(R.drawable.btn_outline_black)
+        }
+        if (selected != "asignadas") {
+            binding.btnAsignadas.backgroundTintList = null
+            binding.btnAsignadas.setBackgroundResource(R.drawable.btn_outline_black)
+        }
+        if (selected != "historial") {
+            binding.btnHistorial.backgroundTintList = null
+            binding.btnHistorial.setBackgroundResource(R.drawable.btn_outline_black)
+        }
+    }
+
     private fun mostrarPendientes() {
         modoHistorial = false
         modoAsignadas = false
-        // cambiar estado visual de botones
-        binding.btnPendientes.isEnabled = false
-        binding.btnAsignadas.isEnabled = true
-        binding.btnHistorial.isEnabled = true
-        // forzar reconsulta (obs ya activa) -> simplemente filtrar la última lista
+        aplicarEstadoBotones(selected = "pendientes")
         viewLifecycleOwner.lifecycleScope.launch {
             val list = LocalizadorServicios.repositorioTarea.obtenerTareas().getOrNull() ?: emptyList()
             actualizarListado(list)
@@ -75,9 +164,7 @@ class FragmentTareasPendientes : Fragment() {
     private fun mostrarAsignadas() {
         modoHistorial = false
         modoAsignadas = true
-        binding.btnPendientes.isEnabled = true
-        binding.btnAsignadas.isEnabled = false
-        binding.btnHistorial.isEnabled = true
+        aplicarEstadoBotones(selected = "asignadas")
         viewLifecycleOwner.lifecycleScope.launch {
             val list = LocalizadorServicios.repositorioTarea.obtenerTareas().getOrNull() ?: emptyList()
             actualizarListado(list)
@@ -87,9 +174,7 @@ class FragmentTareasPendientes : Fragment() {
     private fun mostrarHistorial() {
         modoHistorial = true
         modoAsignadas = false
-        binding.btnPendientes.isEnabled = true
-        binding.btnAsignadas.isEnabled = true
-        binding.btnHistorial.isEnabled = false
+        aplicarEstadoBotones(selected = "historial")
         viewLifecycleOwner.lifecycleScope.launch {
             val list = LocalizadorServicios.repositorioTarea.obtenerTareas().getOrNull() ?: emptyList()
             actualizarListado(list)
@@ -98,19 +183,35 @@ class FragmentTareasPendientes : Fragment() {
 
     private fun actualizarListado(list: List<Tarea>) {
         val uid = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
+        val grupoId = grupoActualId
+
+        // Si no hay grupo, no mostrar nada (la UI ya muestra el mensaje de sin grupo)
+        if (grupoId.isNullOrBlank()) {
+            adapter.updateItems(emptyList())
+            return
+        }
+
+        // Filtrar solo tareas que pertenezcan al grupo actual
+        val tareasDelGrupo = list.filter { it.grupoId == grupoId }
+
         val filtrado = when {
             modoAsignadas -> {
-                // mostrar todas las tareas creadas por el usuario (asignadas por él), sin filtrar por estado
-                list.filter { it.creadoPor == uid }
+                // Tareas creadas/asignadas por el usuario dentro de su grupo
+                tareasDelGrupo.filter { it.creadoPor == uid }
             }
             modoHistorial -> {
-                // historial: tareas completadas, confirmadas o reclamadas donde soy creador o asignado
-                list.filter { (it.creadoPor == uid || it.asignadoA == uid) && (it.estado == "completada" || it.estado == "confirmada" || it.estado == "reclamada") }
+                // Historial: tareas completadas, confirmadas o reclamadas en el grupo
+                tareasDelGrupo.filter {
+                    (it.creadoPor == uid || it.asignadoA == uid) &&
+                    (it.estado == "completada" || it.estado == "confirmada" || it.estado == "reclamada")
+                }
             }
             else -> {
-                // pendientes: tareas asignadas a mi y en estado pendiente
-                // además incluir tareas que yo he creado y están pendientes de confirmación (para que el creador pueda confirmar)
-                list.filter { (it.asignadoA == uid && it.estado == "pendiente") || (it.creadoPor == uid && it.estado == "pendiente_confirmacion") }
+                // Pendientes: tareas asignadas a mi en estado pendiente, o creadas por mi pendientes de confirmación
+                tareasDelGrupo.filter {
+                    (it.asignadoA == uid && it.estado == "pendiente") ||
+                    (it.creadoPor == uid && it.estado == "pendiente_confirmacion")
+                }
             }
         }
         adapter.updateItems(filtrado)
@@ -118,6 +219,8 @@ class FragmentTareasPendientes : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        tareasJob?.cancel()
         _binding = null
     }
 }
+

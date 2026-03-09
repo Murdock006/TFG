@@ -118,4 +118,24 @@ class AuthRepositorioInMemory : AuthRepositorio {
             Result.success(totalAñadido)
         }
     }
+
+    // Implementación simulada para login con token de proveedor (ej. Google)
+    override suspend fun loginConTokenProveedor(idToken: String, proveedor: String): Result<Usuario> {
+        return withContext(Dispatchers.Default) {
+            // Si el token contiene un '@' lo interpretamos como email (prueba local).
+            val email = if (idToken.contains('@')) idToken else "user_${UUID.randomUUID()}@${proveedor}.local"
+            val existente = usuarios.find { it.email == email }
+            if (existente != null) {
+                usuarioLogueado = existente
+                usuariosFlow.value = usuarios.toList()
+                Result.success(existente)
+            } else {
+                val nuevo = Usuario(id = UUID.randomUUID().toString(), nombre = "Usuario ${proveedor.capitalize()}", edad = null, ciudad = null, email = email, puntos = 1000)
+                usuarios.add(nuevo)
+                usuarioLogueado = nuevo
+                usuariosFlow.value = usuarios.toList()
+                Result.success(nuevo)
+            }
+        }
+    }
 }

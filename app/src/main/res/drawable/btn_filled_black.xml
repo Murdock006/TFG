@@ -10,8 +10,8 @@
     <!-- botón negro con borde -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/primario" />
-            <corners android:radius="10dp" />
+            <solid android:color="#000000" />
+            <corners android:radius="12dp" />
             <padding android:left="12dp" android:top="8dp" android:right="12dp" android:bottom="8dp" />
         </shape>
     </item>

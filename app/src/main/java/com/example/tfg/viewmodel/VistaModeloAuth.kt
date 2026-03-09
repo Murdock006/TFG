@@ -75,4 +75,22 @@ class VistaModeloAuth(
     fun logout() {
         viewModelScope.launch { try { repositorio.logout() } catch (_: Exception) { } ; _usuario.value = null }
     }
+
+    // Nuevo: login usando token de proveedor externo (ej. Google idToken)
+    fun loginConTokenProveedor(idToken: String, proveedor: String = "google") {
+        viewModelScope.launch {
+            try {
+                val res = repositorio.loginConTokenProveedor(idToken, proveedor)
+                if (res.isSuccess) {
+                    _usuario.value = res.getOrNull()
+                    _error.value = null
+                } else {
+                    val ex = res.exceptionOrNull()
+                    _error.value = "Login con proveedor fallido: ${ex?.message}"
+                }
+            } catch (e: Exception) {
+                _error.value = "Login con proveedor fallido: ${e.message}"
+            }
+        }
+    }
 }

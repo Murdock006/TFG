@@ -22,6 +22,8 @@ import com.example.tfg.service.LocalizadorServicios
 import com.example.tfg.modelo.Tarea
 import com.example.tfg.modelo.Usuario
 import com.example.tfg.repositorio.CategoriasRepositorio
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 
@@ -32,6 +34,9 @@ class FragmentPgPrincipal : Fragment() {
     private val parejaVM: ParejaViewModel by activityViewModels()
     // cache de usuarios para resolver nombres en adapters
     private var usuariosCache: List<Usuario> = emptyList()
+    // control de suscripción de tareas recientes por grupo
+    private var tareasHomeJob: Job? = null
+    private var grupoIdActual: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -158,10 +163,49 @@ class FragmentPgPrincipal : Fragment() {
         val tareaAdapter = TareasHomeAdapter(this, parejaVM, viewLifecycleOwner.lifecycleScope)
         binding.rvTareasHome.adapter = tareaAdapter
 
-        // observar tareas y poblar recientes (top 5)
+        // observar el grupo y gestionar tareas recientes con la misma lógica que FragmentTareasPendientes
         viewLifecycleOwner.lifecycleScope.launch {
-            LocalizadorServicios.repositorioTarea.observarTareas().collect { list ->
-                tareaAdapter.updateItems(list.sortedByDescending { it.fechaCreada?.seconds ?: 0L }.take(5))
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                parejaVM.grupo.collectLatest { grupo ->
+                    val nuevoGrupoId = grupo?.id
+                    if (nuevoGrupoId != grupoIdActual) {
+                        grupoIdActual = nuevoGrupoId
+                        tareasHomeJob?.cancel()
+                        tareasHomeJob = null
+                        tareaAdapter.updateItems(emptyList())
+                    }
+
+                    if (grupo == null) {
+                        // Sin grupo: ocultar lista y mostrar mensaje
+                        binding.rvTareasHome.visibility = View.GONE
+                        binding.tvSinTareasRecientes.visibility = View.VISIBLE
+                        binding.tvSinTareasRecientes.text = "Únete a un grupo para ver tareas recientes"
+                    } else {
+                        // Con grupo: suscribir tareas si no hay suscripción activa
+                        binding.tvSinTareasRecientes.visibility = View.GONE
+                        binding.rvTareasHome.visibility = View.VISIBLE
+                        if (tareasHomeJob == null || tareasHomeJob?.isActive == false) {
+                            tareasHomeJob = viewLifecycleOwner.lifecycleScope.launch {
+                                LocalizadorServicios.repositorioTarea.observarTareas().collect { list ->
+                                    // Filtrar solo tareas del grupo actual y mostrar las 5 más recientes
+                                    val tareasDelGrupo = list
+                                        .filter { it.grupoId == grupoIdActual }
+                                        .sortedByDescending { it.fechaCreada?.seconds ?: 0L }
+                                        .take(5)
+                                    tareaAdapter.updateItems(tareasDelGrupo)
+                                    if (tareasDelGrupo.isEmpty()) {
+                                        binding.rvTareasHome.visibility = View.GONE
+                                        binding.tvSinTareasRecientes.visibility = View.VISIBLE
+                                        binding.tvSinTareasRecientes.text = "No hay tareas recientes en este grupo"
+                                    } else {
+                                        binding.rvTareasHome.visibility = View.VISIBLE
+                                        binding.tvSinTareasRecientes.visibility = View.GONE
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 

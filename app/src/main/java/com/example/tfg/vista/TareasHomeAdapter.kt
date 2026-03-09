@@ -102,8 +102,17 @@ class TareasHomeAdapter(
             holder.tvAsignado.visibility = View.VISIBLE
             holder.tvAsignado.text = "Cargando..."
             scope.launch {
-                val nombre = obtenerNombreUsuario(t.asignadoA)
-                holder.tvAsignado.text = if (usuarioId == t.asignadoA) "Te la asignó: $nombre" else "Asignado a: $nombre"
+                // "Te la asignó" → nombre del CREADOR (quien asignó)
+                // "Asignado a"   → nombre del ASIGNADO (quien la recibe)
+                if (usuarioId == t.asignadoA) {
+                    // Soy el receptor: mostrar quién me la asignó (creadoPor)
+                    val nombreCreador = obtenerNombreUsuario(t.creadoPor)
+                    holder.tvAsignado.text = "Te la asignó: $nombreCreador"
+                } else {
+                    // Soy el creador o un observador: mostrar a quién está asignada
+                    val nombreAsignado = obtenerNombreUsuario(t.asignadoA)
+                    holder.tvAsignado.text = "Asignado a: $nombreAsignado"
+                }
             }
         }
 
@@ -125,8 +134,8 @@ class TareasHomeAdapter(
                             }
                         }
                     }
-                } else if (!usuarioId.isBlank() && usuarioId == t.creadoPor) {
-                    // Si soy el creador -> permitir asignar/reasignar desde la lista
+                } else if (!usuarioId.isBlank() && usuarioId == t.creadoPor && t.asignadoA.isNullOrBlank()) {
+                    // Si soy el creador Y la tarea AÚN NO tiene asignado → permitir asignar
                     holder.btnAccion.visibility = View.VISIBLE
                     holder.btnAccion.isEnabled = true
                     holder.btnAccion.text = "Asignar"

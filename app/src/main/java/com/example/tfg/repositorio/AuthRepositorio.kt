@@ -18,4 +18,7 @@ interface AuthRepositorio {
 
     // sumar puntos aplicando bonificaciones por racha (devuelve puntos totales añadidos)
     suspend fun sumarPuntosConBonificacion(usuarioId: String, basePuntos: Int): Result<Int>
+
+    // Soporte para iniciar sesión usando token de proveedor externo (ej. Google -> idToken)
+    suspend fun loginConTokenProveedor(idToken: String, proveedor: String = "google"): Result<Usuario>
 }

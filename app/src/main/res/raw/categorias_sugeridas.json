@@ -8,12 +8,22 @@
       "icono": "ic_cocina",
       "orden": 1,
       "tareas": [
-        { "id": "hacer_cena", "titulo": "Hacer la cena", "descripcion": "Preparar la cena", "dificultad": "FACIL", "puntos": 50 },
+        { "id": "hacer_cena", "titulo": "Hacer la cena", "descripcion": "Preparar la cena para todos", "dificultad": "FACIL", "puntos": 50 },
         { "id": "hacer_desayuno", "titulo": "Hacer el desayuno", "descripcion": "Preparar el desayuno", "dificultad": "FACIL", "puntos": 50 },
+        { "id": "hacer_comida", "titulo": "Hacer la comida", "descripcion": "Preparar la comida del mediodía", "dificultad": "MEDIA", "puntos": 80 },
         { "id": "lavar_platos", "titulo": "Lavar los platos", "descripcion": "Lavar y guardar los platos", "dificultad": "MEDIA", "puntos": 100 },
+        { "id": "poner_lavavajillas", "titulo": "Poner el lavavajillas", "descripcion": "Cargar y poner el lavavajillas", "dificultad": "FACIL", "puntos": 40 },
+        { "id": "vaciar_lavavajillas", "titulo": "Vaciar el lavavajillas", "descripcion": "Vaciar y guardar los platos limpios", "dificultad": "FACIL", "puntos": 35 },
         { "id": "hacer_compra", "titulo": "Hacer la compra", "descripcion": "Lista y compra de alimentos", "dificultad": "DIFICIL", "puntos": 200 },
-        { "id": "organizar_despensa", "titulo": "Organizar despensa", "descripcion": "Revisar fechas y ordenar alimentos", "dificultad": "FACIL", "puntos": 40 },
-        { "id": "preparar_batch_cocina", "titulo": "Preparar batch de comida", "descripcion": "Cocinar porciones para la semana", "dificultad": "MEDIA", "puntos": 130 }
+        { "id": "compra_online", "titulo": "Hacer la compra online", "descripcion": "Pedir la compra por internet", "dificultad": "FACIL", "puntos": 60 },
+        { "id": "organizar_despensa", "titulo": "Organizar la despensa", "descripcion": "Revisar fechas y ordenar alimentos", "dificultad": "FACIL", "puntos": 40 },
+        { "id": "preparar_batch_cocina", "titulo": "Batch cooking semanal", "descripcion": "Cocinar porciones para toda la semana", "dificultad": "DIFICIL", "puntos": 180 },
+        { "id": "limpiar_encimera", "titulo": "Limpiar la encimera", "descripcion": "Limpiar y desinfectar la encimera", "dificultad": "FACIL", "puntos": 30 },
+        { "id": "limpiar_microondas", "titulo": "Limpiar el microondas", "descripcion": "Limpiar por dentro y por fuera", "dificultad": "FACIL", "puntos": 40 },
+        { "id": "limpiar_nevera", "titulo": "Limpiar la nevera", "descripcion": "Vaciar, limpiar y recolocar alimentos", "dificultad": "MEDIA", "puntos": 120 },
+        { "id": "preparar_tupper", "titulo": "Preparar tuppers para la semana", "descripcion": "Preparar comidas en recipientes para llevar", "dificultad": "MEDIA", "puntos": 100 },
+        { "id": "hacer_bizcocho", "titulo": "Hacer un bizcocho o postre", "descripcion": "Hornear algo dulce para casa", "dificultad": "MEDIA", "puntos": 90 },
+        { "id": "pedir_comida", "titulo": "Gestionar pedido a domicilio", "descripcion": "Pedir comida a domicilio y recogerla", "dificultad": "FACIL", "puntos": 30 }
       ]
     },
     {
@@ -24,11 +34,22 @@
       "icono": "ic_limpieza",
       "orden": 2,
       "tareas": [
-        { "id": "barrer_fregar", "titulo": "Barrer y fregar el suelo", "descripcion": "Barrido y fregado completo", "dificultad": "MEDIA", "puntos": 120 },
+        { "id": "barrer_fregar", "titulo": "Barrer y fregar el suelo", "descripcion": "Barrido y fregado completo de suelos", "dificultad": "MEDIA", "puntos": 120 },
+        { "id": "aspirar", "titulo": "Aspirar toda la casa", "descripcion": "Aspirar suelos, alfombras y rincones", "dificultad": "MEDIA", "puntos": 100 },
         { "id": "limpiar_bano", "titulo": "Limpiar baño a fondo", "descripcion": "Limpieza completa del baño", "dificultad": "DIFICIL", "puntos": 200 },
-        { "id": "sacar_basura", "titulo": "Sacar la basura", "descripcion": "Sacar bolsas y limpiar cubo", "dificultad": "FACIL", "puntos": 40 },
+        { "id": "limpiar_bano_rapido", "titulo": "Limpiar baño rápido", "descripcion": "Limpieza básica del baño", "dificultad": "FACIL", "puntos": 60 },
+        { "id": "sacar_basura", "titulo": "Sacar la basura", "descripcion": "Sacar bolsas y limpiar el cubo", "dificultad": "FACIL", "puntos": 40 },
+        { "id": "reciclar", "titulo": "Llevar el reciclaje al contenedor", "descripcion": "Cartón, plástico y vidrio al contenedor", "dificultad": "FACIL", "puntos": 35 },
         { "id": "limpiar_ventanas", "titulo": "Limpiar ventanas", "descripcion": "Limpiar cristales y marcos", "dificultad": "MEDIA", "puntos": 90 },
-        { "id": "limpiar_cocina_profundo", "titulo": "Limpieza profunda cocina", "descripcion": "Limpiar horno y campana", "dificultad": "DIFICIL", "puntos": 220 }
+        { "id": "limpiar_cocina_profundo", "titulo": "Limpieza profunda de cocina", "descripcion": "Limpiar horno, campana y azulejos", "dificultad": "DIFICIL", "puntos": 220 },
+        { "id": "quitar_polvo", "titulo": "Quitar el polvo", "descripcion": "Limpiar polvo de muebles y estanterías", "dificultad": "FACIL", "puntos": 50 },
+        { "id": "limpiar_salon", "titulo": "Limpiar y ordenar el salón", "descripcion": "Ordenar, limpiar y ventilar el salón", "dificultad": "MEDIA", "puntos": 80 },
+        { "id": "limpiar_dormitorio", "titulo": "Limpiar el dormitorio", "descripcion": "Ordenar y limpiar el dormitorio", "dificultad": "FACIL", "puntos": 55 },
+        { "id": "hacer_cama", "titulo": "Hacer la cama", "descripcion": "Hacer la cama con sábanas limpias o estiradas", "dificultad": "FACIL", "puntos": 20 },
+        { "id": "cambiar_sabanas", "titulo": "Cambiar las sábanas", "descripcion": "Cambiar y poner sábanas limpias", "dificultad": "FACIL", "puntos": 50 },
+        { "id": "limpiar_terraza", "titulo": "Limpiar la terraza o balcón", "descripcion": "Barrer y limpiar la terraza", "dificultad": "FACIL", "puntos": 45 },
+        { "id": "desinfectar_superficies", "titulo": "Desinfectar superficies", "descripcion": "Limpiar con desinfectante zonas de contacto", "dificultad": "FACIL", "puntos": 30 },
+        { "id": "ordenar_trastero", "titulo": "Ordenar el trastero o armario", "descripcion": "Reorganizar y tirar lo que no sirve", "dificultad": "DIFICIL", "puntos": 200 }
       ]
     },
     {
@@ -39,10 +60,17 @@
       "icono": "ic_ropa",
       "orden": 3,
       "tareas": [
-        { "id": "poner_lavadora", "titulo": "Poner lavadora", "descripcion": "Cargar y programar la lavadora", "dificultad": "FACIL", "puntos": 60 },
-        { "id": "planchar_camisas", "titulo": "Planchar dos camisas", "descripcion": "Planchar dos camisas", "dificultad": "MEDIA", "puntos": 90 },
-        { "id": "doblar_repartir", "titulo": "Doblar y repartir ropa", "descripcion": "Doblar y repartir la ropa limpia", "dificultad": "FACIL", "puntos": 50 },
-        { "id": "ordenar_armario", "titulo": "Ordenar armario", "descripcion": "Clasificar y ordenar la ropa del armario", "dificultad": "MEDIA", "puntos": 100 }
+        { "id": "poner_lavadora", "titulo": "Poner la lavadora", "descripcion": "Cargar y programar la lavadora", "dificultad": "FACIL", "puntos": 60 },
+        { "id": "tender_ropa", "titulo": "Tender la ropa", "descripcion": "Tender la ropa en el tendedero", "dificultad": "FACIL", "puntos": 50 },
+        { "id": "recoger_ropa_tendida", "titulo": "Recoger la ropa tendida", "descripcion": "Recoger la ropa seca del tendedero", "dificultad": "FACIL", "puntos": 30 },
+        { "id": "doblar_repartir", "titulo": "Doblar y repartir la ropa", "descripcion": "Doblar y guardar la ropa limpia", "dificultad": "FACIL", "puntos": 50 },
+        { "id": "planchar_camisas", "titulo": "Planchar ropa", "descripcion": "Planchar varias prendas", "dificultad": "MEDIA", "puntos": 90 },
+        { "id": "ordenar_armario", "titulo": "Ordenar el armario", "descripcion": "Clasificar y ordenar la ropa del armario", "dificultad": "MEDIA", "puntos": 100 },
+        { "id": "poner_secadora", "titulo": "Poner la secadora", "descripcion": "Cargar y poner la secadora", "dificultad": "FACIL", "puntos": 40 },
+        { "id": "lavar_mantas", "titulo": "Lavar mantas o edredones", "descripcion": "Lavar ropa de cama voluminosa", "dificultad": "MEDIA", "puntos": 80 },
+        { "id": "coser_ropa", "titulo": "Coser o reparar ropa", "descripcion": "Coser un botón o arreglar una prenda", "dificultad": "MEDIA", "puntos": 70 },
+        { "id": "llevar_tintoreria", "titulo": "Llevar ropa a la tintorería", "descripcion": "Llevar y recoger prendas en la tintorería", "dificultad": "FACIL", "puntos": 45 },
+        { "id": "clasificar_ropa_temporada", "titulo": "Cambio de armario", "descripcion": "Guardar ropa de una temporada y sacar la de la otra", "dificultad": "DIFICIL", "puntos": 160 }
       ]
     },
     {
@@ -53,9 +81,16 @@
       "icono": "ic_mascotas",
       "orden": 4,
       "tareas": [
-        { "id": "pasear_30min", "titulo": "Pasear 30 minutos", "descripcion": "Paseo de 30 minutos", "dificultad": "FACIL", "puntos": 70 },
+        { "id": "pasear_30min", "titulo": "Pasear 30 minutos", "descripcion": "Paseo de 30 minutos con la mascota", "dificultad": "FACIL", "puntos": 70 },
+        { "id": "pasear_largo", "titulo": "Paseo largo (1 hora)", "descripcion": "Paseo largo de más de una hora", "dificultad": "MEDIA", "puntos": 120 },
         { "id": "limpiar_arenero", "titulo": "Limpiar arenero / jaula", "descripcion": "Limpieza del arenero o jaula", "dificultad": "MEDIA", "puntos": 110 },
-        { "id": "dar_comida_mascota", "titulo": "Dar comida a la mascota", "descripcion": "Poner comida y agua", "dificultad": "FACIL", "puntos": 30 }
+        { "id": "dar_comida_mascota", "titulo": "Dar comida y agua", "descripcion": "Poner comida y agua fresca", "dificultad": "FACIL", "puntos": 30 },
+        { "id": "baniar_mascota", "titulo": "Bañar a la mascota", "descripcion": "Bañar y secar a la mascota", "dificultad": "MEDIA", "puntos": 130 },
+        { "id": "cepillar_mascota", "titulo": "Cepillar a la mascota", "descripcion": "Cepillar el pelo de la mascota", "dificultad": "FACIL", "puntos": 40 },
+        { "id": "veterinario", "titulo": "Llevar al veterinario", "descripcion": "Ir a la visita veterinaria", "dificultad": "DIFICIL", "puntos": 180 },
+        { "id": "comprar_comida_mascota", "titulo": "Comprar comida para la mascota", "descripcion": "Comprar pienso, arena u otros productos", "dificultad": "FACIL", "puntos": 50 },
+        { "id": "limpiar_cama_mascota", "titulo": "Limpiar la cama de la mascota", "descripcion": "Lavar y secar la cama o mantas", "dificultad": "FACIL", "puntos": 60 },
+        { "id": "cortarle_unas_mascota", "titulo": "Cortar las uñas", "descripcion": "Cortar las uñas de la mascota", "dificultad": "MEDIA", "puntos": 80 }
       ]
     },
     {
@@ -68,19 +103,31 @@
       "tareas": [
         { "id": "ir_farmacia", "titulo": "Ir a la farmacia", "descripcion": "Comprar en farmacia lo necesario", "dificultad": "FACIL", "puntos": 50 },
         { "id": "llevar_taller", "titulo": "Llevar el coche al taller", "descripcion": "Conducir al taller y gestionar entrega", "dificultad": "DIFICIL", "puntos": 180 },
-        { "id": "recoger_paquete", "titulo": "Recoger paquete", "descripcion": "Ir a paquetería a recoger un paquete", "dificultad": "FACIL", "puntos": 45 }
+        { "id": "recoger_paquete", "titulo": "Recoger paquete", "descripcion": "Ir a paquetería a recoger un paquete", "dificultad": "FACIL", "puntos": 45 },
+        { "id": "banco_gestiones", "titulo": "Gestiones bancarias", "descripcion": "Ir al banco o gestionar algo online", "dificultad": "FACIL", "puntos": 50 },
+        { "id": "pagar_facturas", "titulo": "Pagar facturas", "descripcion": "Pagar facturas de luz, agua, internet…", "dificultad": "FACIL", "puntos": 35 },
+        { "id": "medico_cita", "titulo": "Pedir cita médica", "descripcion": "Pedir cita al médico o especialista", "dificultad": "FACIL", "puntos": 30 },
+        { "id": "llevar_ninos_colegio", "titulo": "Llevar a los niños al colegio", "descripcion": "Llevar y/o recoger a los niños", "dificultad": "FACIL", "puntos": 60 },
+        { "id": "correos", "titulo": "Ir a Correos", "descripcion": "Enviar o recoger un paquete en Correos", "dificultad": "FACIL", "puntos": 40 },
+        { "id": "reparacion_hogar", "titulo": "Gestionar reparación del hogar", "descripcion": "Llamar y coordinar con un técnico", "dificultad": "MEDIA", "puntos": 100 },
+        { "id": "tramites_admin", "titulo": "Trámites administrativos", "descripcion": "Gestiones en ayuntamiento, DGT u otras administraciones", "dificultad": "DIFICIL", "puntos": 160 },
+        { "id": "pasar_itv", "titulo": "Pasar la ITV", "descripcion": "Llevar el coche a pasar la ITV", "dificultad": "MEDIA", "puntos": 120 },
+        { "id": "llevar_basura_especial", "titulo": "Llevar residuos al punto limpio", "descripcion": "Llevar objetos grandes o residuos al punto limpio", "dificultad": "MEDIA", "puntos": 90 }
       ]
     },
     {
       "id": "personalizado",
       "nombre": "Personalizado",
-      "descripcion": "Crea tareas a medida",
+      "descripcion": "Crea tareas a medida para vuestro hogar",
       "colorHex": "#8D6E63",
       "icono": "ic_personalizado",
       "orden": 6,
       "tareas": [
-        { "id": "personalizada_ejemplo", "titulo": "Tarea personalizada ejemplo", "descripcion": "Crea y edita esta tarea", "dificultad": "MEDIA", "puntos": 150 },
-        { "id": "evento_especial", "titulo": "Preparar evento especial", "descripcion": "Ayudar a organizar una pequeña celebración", "dificultad": "DIFICIL", "puntos": 250 }
+        { "id": "personalizada_ejemplo", "titulo": "Tarea personalizada", "descripcion": "Crea y edita esta tarea a tu medida", "dificultad": "MEDIA", "puntos": 150 },
+        { "id": "evento_especial", "titulo": "Preparar evento especial", "descripcion": "Organizar una celebración o evento", "dificultad": "DIFICIL", "puntos": 250 },
+        { "id": "proyecto_hogar", "titulo": "Proyecto de mejora del hogar", "descripcion": "Montar mueble, pintar pared u otro proyecto", "dificultad": "DIFICIL", "puntos": 300 },
+        { "id": "gestion_seguros", "titulo": "Gestionar seguros o contratos", "descripcion": "Revisar, contratar o cancelar seguros", "dificultad": "MEDIA", "puntos": 120 },
+        { "id": "planificar_vacaciones", "titulo": "Planificar vacaciones", "descripcion": "Buscar y reservar alojamiento y viajes", "dificultad": "MEDIA", "puntos": 140 }
       ]
     }
   ]

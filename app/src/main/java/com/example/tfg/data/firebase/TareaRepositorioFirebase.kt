@@ -33,7 +33,14 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 fechaProgramada = data["fechaProgramada"] as? Timestamp,
                 fechaReclamada = data["fechaReclamada"] as? Timestamp,
                 reclamadoPor = data["reclamadoPor"] as? String,
-                motivoReclamo = data["motivoReclamo"] as? String
+                motivoReclamo = data["motivoReclamo"] as? String,
+                esEmergencia = data["esEmergencia"] as? Boolean ?: false,
+                multiplicadorPuntos = (data["multiplicadorPuntos"] as? Double) ?: (data["multiplicadorPuntos"] as? Long)?.toDouble() ?: 1.0,
+                esRecurrente = data["esRecurrente"] as? Boolean ?: false,
+                tipoRecurrencia = data["tipoRecurrencia"] as? String,
+                rotarMiembros = data["rotarMiembros"] as? Boolean ?: false,
+                minutosAntes = (data["minutosAntes"] as? Long)?.toInt() ?: (data["minutosAntes"] as? Int) ?: 30,
+                esImportante = data["esImportante"] as? Boolean ?: false
             )
         } catch (e: Exception) {
             null
@@ -63,7 +70,14 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 "estado" to tarea.estado,
                 "requiereConfirmacion" to tarea.requiereConfirmacion,
                 "fechaCreada" to (tarea.fechaCreada ?: Timestamp.now()),
-                "fechaProgramada" to tarea.fechaProgramada
+                "fechaProgramada" to tarea.fechaProgramada,
+                "esEmergencia" to tarea.esEmergencia,
+                "multiplicadorPuntos" to tarea.multiplicadorPuntos,
+                "esRecurrente" to tarea.esRecurrente,
+                "tipoRecurrencia" to tarea.tipoRecurrencia,
+                "rotarMiembros" to tarea.rotarMiembros,
+                "minutosAntes" to tarea.minutosAntes,
+                "esImportante" to tarea.esImportante
             )
             val ref = firestore.collection(coleccion).add(map).await()
             val nuevo = tarea.copy(id = ref.id, fechaCreada = (map["fechaCreada"] as? Timestamp))
@@ -187,7 +201,14 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 "fechaProgramada" to tarea.fechaProgramada,
                 "fechaReclamada" to tarea.fechaReclamada,
                 "reclamadoPor" to tarea.reclamadoPor,
-                "motivoReclamo" to tarea.motivoReclamo
+                "motivoReclamo" to tarea.motivoReclamo,
+                "esEmergencia" to tarea.esEmergencia,
+                "multiplicadorPuntos" to tarea.multiplicadorPuntos,
+                "esRecurrente" to tarea.esRecurrente,
+                "tipoRecurrencia" to tarea.tipoRecurrencia,
+                "rotarMiembros" to tarea.rotarMiembros,
+                "minutosAntes" to tarea.minutosAntes,
+                "esImportante" to tarea.esImportante
             )
             // reestructurar la transacción: leer TODO antes de escribir y usar las mismas DocumentReference
             firestore.runTransaction { t ->
@@ -335,15 +356,22 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 // Leer antes de escribir
                 val ejecSnap = t.get(ejecRef)
 
+                // 10% de los puntos va a puntosRecompensa
+                val incrementoRecompensa = (tareaTx.puntos * 0.10).toInt().coerceAtLeast(1)
+                val puntosRecompensaActuales = (ejecSnap.getLong("puntosRecompensa") ?: 0L).toInt()
+
                 // ahora aplicar escrituras
                 t.update(docRef, "estado", "confirmada")
 
                 if (!ejecSnap.exists()) {
-                    val datos = mapOf("puntos" to (tareaTx.puntos))
+                    val datos = mapOf("puntos" to tareaTx.puntos, "puntosRecompensa" to incrementoRecompensa)
                     t.set(ejecRef, datos)
                 } else {
                     val actuales = (ejecSnap.getLong("puntos") ?: 0L).toInt()
-                    t.update(ejecRef, "puntos", actuales + tareaTx.puntos)
+                    t.update(ejecRef, mapOf(
+                        "puntos"           to actuales + tareaTx.puntos,
+                        "puntosRecompensa" to puntosRecompensaActuales + incrementoRecompensa
+                    ))
                 }
 
                 null
@@ -360,48 +388,112 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
             val snap = docRef.get().await()
             if (!snap.exists()) return Result.failure(Exception("Tarea no encontrada"))
             val tarea = docToTarea(snap) ?: return Result.failure(Exception("Tarea inválida"))
-            if (tarea.estado != "pendiente_confirmacion" && tarea.estado != "completada") return Result.failure(Exception("La tarea no está en estado pendiente de confirmación"))
+            if (tarea.estado != "pendiente_confirmacion" && tarea.estado != "completada")
+                return Result.failure(Exception("La tarea no está pendiente de confirmación"))
+
+            val ejecUid = tarea.asignadoA ?: return Result.failure(Exception("Tarea sin asignado"))
+            val ejecRef = firestore.collection("usuarios").document(ejecUid)
+            val creadorUid = tarea.creadoPor
+            val creadorRef = if (!creadorUid.isNullOrBlank()) firestore.collection("usuarios").document(creadorUid) else null
 
             firestore.runTransaction { t ->
                 val snapTx = t.get(docRef)
                 val tareaTx = docToTarea(snapTx) ?: throw Exception("Tarea inválida en transacción")
-                if (tareaTx.estado != "pendiente_confirmacion" && tareaTx.estado != "completada") throw Exception("La tarea no está en estado correcto para confirmar")
+                if (tareaTx.estado != "pendiente_confirmacion" && tareaTx.estado != "completada")
+                    throw Exception("Estado incorrecto para confirmar")
 
-                val ejecUid = tareaTx.asignadoA ?: throw Exception("Tarea sin asignado")
-                val ejecRef = firestore.collection("usuarios").document(ejecUid)
-                val creadorUid = tareaTx.creadoPor
-                val creadorRef = if (!creadorUid.isNullOrBlank()) firestore.collection("usuarios").document(creadorUid) else null
-
-                // lecturas
                 val ejecSnap = t.get(ejecRef)
                 val creadorSnap = creadorRef?.let { t.get(it) }
 
-                // escrituras
-                t.update(docRef, "estado", "confirmada")
+                // --- Calcular puntos finales con multiplicador y racha ---
+                val rachaActual = (ejecSnap.getLong("rachaDias") ?: 0L).toInt()
+                val bonificacionRacha = if (rachaActual > 0 && rachaActual % 7 == 0) 0.10 else 0.0
+                val multiplicador = tareaTx.multiplicadorPuntos.coerceAtLeast(1.0)
+                val puntosBase = (tareaTx.puntos * multiplicador).toInt()
+                val puntosFinales = (puntosBase * (1.0 + bonificacionRacha)).toInt()
+                // 10% de los puntos ganados va a puntosRecompensa (redondeado, mínimo 1)
+                val incrementoRecompensa = (puntosFinales * 0.10).toInt().coerceAtLeast(1)
 
+                // --- Actualizar ejecutor ---
+                val puntosActualesEjec = (ejecSnap.getLong("puntos") ?: 0L).toInt()
+                val puntosRecompensaActuales = (ejecSnap.getLong("puntosRecompensa") ?: 0L).toInt()
+                val nuevaRacha = rachaActual + 1
+                t.update(docRef, "estado", "confirmada")
                 if (!ejecSnap.exists()) {
-                    t.set(ejecRef, mapOf("puntos" to tareaTx.puntos))
+                    t.set(ejecRef, mapOf("puntos" to puntosFinales, "rachaDias" to nuevaRacha, "puntosRecompensa" to incrementoRecompensa))
                 } else {
-                    val actuales = (ejecSnap.getLong("puntos") ?: 0L).toInt()
-                    t.update(ejecRef, "puntos", actuales + tareaTx.puntos)
+                    t.update(ejecRef, mapOf(
+                        "puntos"           to puntosActualesEjec + puntosFinales,
+                        "rachaDias"        to nuevaRacha,
+                        "puntosRecompensa" to puntosRecompensaActuales + incrementoRecompensa
+                    ))
                 }
 
-                if (creadorRef != null) {
-                    if (!creadorSnap!!.exists()) {
-                        t.set(creadorRef, mapOf("puntosReservados" to 0))
-                    } else {
-                        val reservados = (creadorSnap.getLong("puntosReservados") ?: 0L).toInt()
-                        val nuevoReservados = (reservados - tareaTx.puntos).coerceAtLeast(0)
-                        t.update(creadorRef, "puntosReservados", nuevoReservados)
-                    }
+                // --- Liberar puntos reservados del creador ---
+                if (creadorRef != null && creadorSnap != null) {
+                    val reservados = (creadorSnap.getLong("puntosReservados") ?: 0L).toInt()
+                    t.update(creadorRef, "puntosReservados", (reservados - tareaTx.puntos).coerceAtLeast(0))
                 }
 
                 null
             }.await()
 
+            // --- Crear siguiente tarea si es recurrente (fuera de la transacción) ---
+            if (tarea.esRecurrente && !tarea.tipoRecurrencia.isNullOrBlank()) {
+                try {
+                    val siguienteFecha = calcularSiguienteFecha(tarea.fechaProgramada, tarea.tipoRecurrencia!!)
+                    // Rotar miembro si aplica
+                    val siguienteAsignado = if (tarea.rotarMiembros && !tarea.creadoPor.isNullOrBlank() && tarea.asignadoA != tarea.creadoPor) {
+                        tarea.creadoPor
+                    } else if (tarea.rotarMiembros) {
+                        tarea.asignadoA
+                    } else {
+                        tarea.asignadoA
+                    }
+                    val nuevaTarea = tarea.copy(
+                        id = "",
+                        estado = "pendiente",
+                        fechaCreada = Timestamp.now(),
+                        fechaProgramada = siguienteFecha,
+                        asignadoA = siguienteAsignado,
+                        multiplicadorPuntos = 1.0,
+                        esEmergencia = false
+                    )
+                    crearTarea(nuevaTarea)
+                } catch (_: Exception) { /* no bloquear si falla la recurrencia */ }
+            }
+
+            // --- Programar recordatorio si tiene fecha y minutos ---
+            try {
+                val contexto = com.example.tfg.TFGApplication.appContext
+                if (contexto != null && tarea.fechaProgramada != null) {
+                    val triggerMs = tarea.fechaProgramada.toDate().time - (tarea.minutosAntes * 60 * 1000L)
+                    if (triggerMs > System.currentTimeMillis()) {
+                        com.example.tfg.service.NotificationScheduler.scheduleReminder(
+                            contexto, tarea.id,
+                            "Recordatorio: ${tarea.titulo}",
+                            "Tarea programada en ${tarea.minutosAntes} min",
+                            triggerMs
+                        )
+                    }
+                }
+            } catch (_: Exception) { }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /** Calcula la siguiente fecha programada según tipo de recurrencia */
+    private fun calcularSiguienteFecha(fechaBase: Timestamp?, tipo: String): Timestamp {
+        val cal = java.util.Calendar.getInstance()
+        if (fechaBase != null) cal.time = fechaBase.toDate()
+        when (tipo.lowercase()) {
+            "diaria"   -> cal.add(java.util.Calendar.DAY_OF_MONTH, 1)
+            "semanal"  -> cal.add(java.util.Calendar.WEEK_OF_YEAR, 1)
+            "mensual"  -> cal.add(java.util.Calendar.MONTH, 1)
+        }
+        return Timestamp(cal.time)
     }
 }

@@ -109,10 +109,34 @@
                 style="@style/Widget.TFG.Boton.Relleno"
                 android:text="@string/iniciar_sesion"
                 android:layout_marginTop="16dp"
-                android:layout_marginBottom="24dp" />
+                android:layout_marginBottom="12dp" />
 
-        </LinearLayout>
+            <!-- Botón para Google Sign-In -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGoogle"
+                style="@style/Widget.TFG.Boton.Google"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:contentDescription="Iniciar sesión con Google"
+                android:text="Continuar con Google"
+                android:textColor="@color/google_text"
+                app:icon="@drawable/googleg_standard_color_18"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp" />
 
-    </androidx.core.widget.NestedScrollView>
+            <TextView
+                android:id="@+id/tvUsuarioInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/texto_principal"
+                android:textSize="14sp"
+                android:visibility="gone"
+                android:text="" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+         </LinearLayout>
+
+     </androidx.core.widget.NestedScrollView>
+
+ </androidx.constraintlayout.widget.ConstraintLayout>

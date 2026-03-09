@@ -172,15 +172,48 @@ class FragmentTareas : Fragment() {
             }
 
             var fechaProgramadaTs: com.google.firebase.Timestamp? = null
+            var esEmergenciaLocal = false
+            var esImportanteLocal = false
+            var tipoRecurrenciaLocal: String? = null
+            var esRecurrenteLocal = false
+
             b.btnElegirFecha.setOnClickListener {
                 val hoy = java.util.Calendar.getInstance()
-                val dp = DatePickerDialog(requireContext(), { _, year, month, day ->
-                    val cal = java.util.Calendar.getInstance()
-                    cal.set(year, month, day, 12, 0, 0)
-                    fechaProgramadaTs = com.google.firebase.Timestamp(cal.time)
-                    b.tvFechaProgramada.text = "Fecha: ${day}/${month+1}/${year}"
-                }, hoy.get(java.util.Calendar.YEAR), hoy.get(java.util.Calendar.MONTH), hoy.get(java.util.Calendar.DAY_OF_MONTH))
-                dp.show()
+                DatePickerDialog(requireContext(), { _, year, month, day ->
+                    android.app.TimePickerDialog(requireContext(), { _, h, min ->
+                        val cal = java.util.Calendar.getInstance()
+                        cal.set(year, month, day, h, min, 0)
+                        fechaProgramadaTs = com.google.firebase.Timestamp(cal.time)
+                        b.tvFechaProgramada.text = "📅 ${day}/${month+1}/${year}  ⏰ ${"%02d".format(h)}:${"%02d".format(min)}"
+                    }, hoy.get(java.util.Calendar.HOUR_OF_DAY), hoy.get(java.util.Calendar.MINUTE), true).show()
+                }, hoy.get(java.util.Calendar.YEAR), hoy.get(java.util.Calendar.MONTH), hoy.get(java.util.Calendar.DAY_OF_MONTH)).show()
+            }
+
+            // Opciones extra: recurrencia, emergencia, importante
+            b.btnOpcionesExtra.setOnClickListener {
+                val opts = arrayOf(
+                    if (esImportanteLocal) "✅ Importante (activo)" else "⭐ Marcar como importante",
+                    if (esEmergenciaLocal) "✅ Emergencia ×1.5 (activo)" else "🚨 Activar emergencia (×1.5 pts)",
+                    "🔁 Recurrencia: ${tipoRecurrenciaLocal ?: "ninguna"}"
+                )
+                androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Opciones extra")
+                    .setItems(opts) { _, i ->
+                        when (i) {
+                            0 -> { esImportanteLocal = !esImportanteLocal; Toast.makeText(requireContext(), if (esImportanteLocal) "Marcada como importante" else "Importante desactivado", Toast.LENGTH_SHORT).show() }
+                            1 -> { esEmergenciaLocal = !esEmergenciaLocal; Toast.makeText(requireContext(), if (esEmergenciaLocal) "Emergencia activada ×1.5" else "Emergencia desactivada", Toast.LENGTH_SHORT).show() }
+                            2 -> {
+                                val tipos = arrayOf("Ninguna", "Diaria", "Semanal", "Mensual")
+                                androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                                    .setTitle("Tipo de recurrencia")
+                                    .setItems(tipos) { _, ti ->
+                                        tipoRecurrenciaLocal = if (ti == 0) null else tipos[ti].lowercase()
+                                        esRecurrenteLocal = ti != 0
+                                        Toast.makeText(requireContext(), "Recurrencia: ${tipoRecurrenciaLocal ?: "ninguna"}", Toast.LENGTH_SHORT).show()
+                                    }.show()
+                            }
+                        }
+                    }.show()
             }
 
             b.btnCrearTarea.setOnClickListener {
@@ -193,8 +226,17 @@ class FragmentTareas : Fragment() {
                 val dificultad = when (dificultadStr) { "Fácil" -> 1; "Media" -> 2; else -> 3 }
                 val asignIdx = b.spAsignarA.selectedItemPosition
                 val asignadoUid = if (asignIdx > 0 && asignIdx < miembrosParaSpinner.size) miembrosParaSpinner[asignIdx].second else null
+                val multiplicador = if (esEmergenciaLocal) 1.5 else 1.0
 
-                val tarea = Tarea(titulo = titulo, puntos = puntos, creadoPor = creadorId, categoria = categoria, dificultad = dificultad, asignadoA = asignadoUid, fechaProgramada = fechaProgramadaTs)
+                val tarea = Tarea(
+                    titulo = titulo, puntos = puntos, creadoPor = creadorId,
+                    categoria = categoria, dificultad = dificultad, asignadoA = asignadoUid,
+                    fechaProgramada = fechaProgramadaTs,
+                    esEmergencia = esEmergenciaLocal, multiplicadorPuntos = multiplicador,
+                    esRecurrente = esRecurrenteLocal, tipoRecurrencia = tipoRecurrenciaLocal,
+                    esImportante = esImportanteLocal,
+                    grupoId = parejaVM.grupo.value?.id
+                )
                 lifecycleScope.launch {
                     val res = LocalizadorServicios.repositorioTarea.crearTarea(tarea)
                     if (res.isSuccess) {
@@ -504,7 +546,9 @@ class FragmentTareas : Fragment() {
                             val elegidoUid = opciones[idx].second.ifBlank { null }
                             val creador = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                             val dificultadInt = when (sug.dificultad.lowercase()) { "fácil", "facil" -> 1; "media" -> 2; else -> 3 }
-                            val tarea = Tarea(titulo = sug.titulo, descripcion = sug.descripcion, categoria = categoriaId, dificultad = dificultadInt, puntos = sug.puntos, creadoPor = creador, asignadoA = elegidoUid, grupoId = parejaVM.grupo.value?.id)
+                            // Las tareas preestablecidas se asignan para hoy si no se elige fecha
+                            val hoy = com.google.firebase.Timestamp.now()
+                            val tarea = Tarea(titulo = sug.titulo, descripcion = sug.descripcion, categoria = categoriaId, dificultad = dificultadInt, puntos = sug.puntos, creadoPor = creador, asignadoA = elegidoUid, grupoId = parejaVM.grupo.value?.id, fechaProgramada = hoy)
                             Log.d(TAG, "Creando tarea desde sugerida: titulo=${tarea.titulo} asignadoA=${tarea.asignadoA}")
                             val res = LocalizadorServicios.repositorioTarea.crearTarea(tarea)
                             if (res.isSuccess) {
