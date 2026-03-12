@@ -1,34 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/cardRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
-    app:cardCornerRadius="10dp"
-    app:cardUseCompatPadding="true"
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginVertical="5dp"
+    app:cardCornerRadius="12dp"
     app:cardElevation="4dp"
-    android:layout_marginTop="20dp"
-    android:foregroundTintMode="src_over"
-    app:cardBackgroundColor="@color/superficie_variant">
+    app:cardBackgroundColor="@color/white"
+    app:strokeColor="@color/divisor"
+    app:strokeWidth="1dp"
+    app:rippleColor="#1A000000">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp"
+        android:padding="12dp"
         android:gravity="center_vertical"
-        android:background="@drawable/bg_item_tarea"
         android:foreground="?attr/selectableItemBackground">
 
+        <!-- Barra indicador de dificultad (izquierda) -->
         <View
             android:id="@+id/vIndicator"
-            android:layout_width="6dp"
+            android:layout_width="5dp"
             android:layout_height="match_parent"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="10dp"
+            android:minHeight="48dp"
             android:background="@color/primario"
             android:contentDescription="" />
 
+        <!-- Contenido texto -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -42,7 +46,7 @@
                 android:text="@string/titulo_tarea_ejemplo"
                 android:textColor="@color/texto_principal"
                 android:textStyle="bold"
-                android:textSize="16sp"
+                android:textSize="15sp"
                 android:contentDescription="@string/titulo_tarea_ejemplo" />
 
             <TextView
@@ -50,7 +54,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/dificultad_facil"
-                android:textColor="@color/texto_secundario"
+                android:textColor="@color/gris"
                 android:textSize="12sp"
                 android:layout_marginTop="2dp" />
 
@@ -61,28 +65,36 @@
                 android:text="@string/meta_tarea_ejemplo"
                 android:textColor="@color/texto_secundario"
                 android:textSize="12sp"
-                android:layout_marginTop="4dp" />
+                android:layout_marginTop="3dp" />
 
             <TextView
                 android:id="@+id/tvAsignado"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/asignado_por_defecto"
-                android:textColor="@color/texto_secundario"
-                android:textSize="12sp"
-                android:layout_marginTop="4dp"
+                android:textColor="@color/gris"
+                android:textSize="11sp"
+                android:layout_marginTop="3dp"
                 android:visibility="gone" />
         </LinearLayout>
 
-        <Button
+        <!-- Botón acción -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAccionTarea"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            style="@style/Widget.TFG.Boton.Contorno"
-            android:text=""
+            android:layout_marginStart="8dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            app:cornerRadius="8dp"
+            app:strokeColor="@color/negro"
+            app:strokeWidth="1dp"
             android:textColor="@color/texto_principal"
+            android:textSize="12sp"
+            android:text=""
+            android:textAllCaps="false"
+            android:minHeight="36dp"
             android:contentDescription="" />
 
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

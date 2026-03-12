@@ -6,14 +6,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/fondo"
-    android:fitsSystemWindows="true"
     tools:context="com.example.tfg.vista.MainActivity">
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         app:defaultNavHost="true"
         app:navGraph="@navigation/nav_graph"
         app:layout_constraintTop_toTopOf="parent"
@@ -21,16 +20,28 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Línea divisora sobre la barra de navegación -->
+    <View
+        android:id="@+id/navDivisor"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/divisor"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
+        style="@style/Widget.TFG.BottomNav"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/gris_claro"
-        android:elevation="8dp"
-        app:itemBackground="@color/gris_claro"
+        android:background="@color/white"
+        app:itemBackground="@drawable/nav_item_bg"
         app:menu="@menu/menu"
         app:itemIconTint="@color/nav_item_color"
         app:itemTextColor="@color/nav_item_color"
+        app:itemIconSize="20dp"
+        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

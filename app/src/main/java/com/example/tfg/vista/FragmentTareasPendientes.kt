@@ -99,55 +99,22 @@ class FragmentTareasPendientes : Fragment() {
     private var modoAsignadas: Boolean = false
 
     private fun aplicarEstadoBotones(selected: String) {
-        val normalBg = resources.getDrawable(R.drawable.btn_outline_black, requireContext().theme)
-        binding.btnPendientes.background = normalBg
-        binding.btnAsignadas.background = normalBg
-        binding.btnHistorial.background = normalBg
+        val blanco = android.graphics.Color.WHITE
+        val negro  = 0xFF000000.toInt()
 
-        binding.btnPendientes.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
-        binding.btnAsignadas.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
-        binding.btnHistorial.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
+        // inactivo: borde gris, texto negro
+        binding.btnPendientes.setBackgroundResource(R.drawable.tab_inactivo)
+        binding.btnPendientes.setTextColor(negro)
+        binding.btnAsignadas.setBackgroundResource(R.drawable.tab_inactivo)
+        binding.btnAsignadas.setTextColor(negro)
+        binding.btnHistorial.setBackgroundResource(R.drawable.tab_inactivo)
+        binding.btnHistorial.setTextColor(negro)
 
+        // activo: fondo negro, texto blanco
         when (selected) {
-            "pendientes" -> {
-                binding.btnPendientes.backgroundTintList = null
-                binding.btnPendientes.setBackgroundResource(R.drawable.btn_tab_selected)
-                binding.btnPendientes.setTextColor(resources.getColor(android.R.color.white, requireContext().theme))
-                binding.btnAsignadas.backgroundTintList = null
-                binding.btnAsignadas.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
-                binding.btnHistorial.backgroundTintList = null
-                binding.btnHistorial.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
-            }
-            "asignadas" -> {
-                binding.btnAsignadas.backgroundTintList = null
-                binding.btnAsignadas.setBackgroundResource(R.drawable.btn_tab_selected)
-                binding.btnAsignadas.setTextColor(resources.getColor(android.R.color.white, requireContext().theme))
-                binding.btnPendientes.backgroundTintList = null
-                binding.btnPendientes.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
-                binding.btnHistorial.backgroundTintList = null
-                binding.btnHistorial.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
-            }
-            "historial" -> {
-                binding.btnHistorial.backgroundTintList = null
-                binding.btnHistorial.setBackgroundResource(R.drawable.btn_tab_selected)
-                binding.btnHistorial.setTextColor(resources.getColor(android.R.color.white, requireContext().theme))
-                binding.btnPendientes.backgroundTintList = null
-                binding.btnPendientes.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
-                binding.btnAsignadas.backgroundTintList = null
-                binding.btnAsignadas.setTextColor(resources.getColor(R.color.texto_principal, requireContext().theme))
-            }
-        }
-        if (selected != "pendientes") {
-            binding.btnPendientes.backgroundTintList = null
-            binding.btnPendientes.setBackgroundResource(R.drawable.btn_outline_black)
-        }
-        if (selected != "asignadas") {
-            binding.btnAsignadas.backgroundTintList = null
-            binding.btnAsignadas.setBackgroundResource(R.drawable.btn_outline_black)
-        }
-        if (selected != "historial") {
-            binding.btnHistorial.backgroundTintList = null
-            binding.btnHistorial.setBackgroundResource(R.drawable.btn_outline_black)
+            "pendientes" -> { binding.btnPendientes.setBackgroundResource(R.drawable.tab_activo); binding.btnPendientes.setTextColor(blanco) }
+            "asignadas"  -> { binding.btnAsignadas.setBackgroundResource(R.drawable.tab_activo);  binding.btnAsignadas.setTextColor(blanco) }
+            "historial"  -> { binding.btnHistorial.setBackgroundResource(R.drawable.tab_activo);  binding.btnHistorial.setTextColor(blanco) }
         }
     }
 

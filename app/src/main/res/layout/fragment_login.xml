@@ -8,6 +8,7 @@
     android:background="@color/fondo"
     tools:context="com.example.tfg.vista.FragmentLogin">
 
+    <!-- Logo superior -->
     <ImageView
         android:id="@+id/logo"
         android:layout_width="0dp"
@@ -20,15 +21,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_default="percent"
-        app:layout_constraintHeight_percent="0.35" />
+        app:layout_constraintHeight_percent="0.32" />
 
+    <!-- Zona de inputs en scroll -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/inputs_scroll"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
         app:layout_constraintTop_toBottomOf="@id/logo"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -39,49 +41,63 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="8dp"
-            android:paddingBottom="24dp"
-            android:background="@color/superficie">
+            android:paddingTop="16dp"
+            android:paddingBottom="32dp">
 
-            <EditText
-                android:id="@+id/usuario"
+            <!-- Campo email -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_rounded_card"
                 android:hint="@string/usuario_hint"
-                android:inputType="textPersonName"
-                android:layout_marginTop="8dp"
-                android:textColor="@color/texto_principal"
-                android:textColorHint="@color/texto_secundario"
-                android:autofillHints="username" />
+                app:boxBackgroundColor="#F5F5F5"
+                app:boxStrokeColor="@color/negro"
+                app:hintTextColor="@color/gris">
 
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/usuario"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"
+                    android:textColor="@color/texto_principal"
+                    android:textColorHint="@color/gris"
+                    android:autofillHints="username"
+                    android:imeOptions="flagNoExtractUi" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Campo contraseña -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/contraseiaLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/contrasena_hint"
-                app:endIconMode="password_toggle"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="12dp"
+                app:boxBackgroundColor="#F5F5F5"
+                app:boxStrokeColor="@color/negro"
+                app:hintTextColor="@color/gris"
+                app:endIconMode="password_toggle">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/textocontraseA"
-                    android:background="@drawable/bg_rounded_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
                     android:imeOptions="flagNoExtractUi"
                     android:textColor="@color/texto_principal"
-                    android:textColorHint="@color/texto_secundario"
+                    android:textColorHint="@color/gris"
                     android:autofillHints="password" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Registro -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="12dp">
+                android:layout_marginTop="14dp">
 
                 <TextView
                     android:id="@+id/sinRegistro"
@@ -89,35 +105,74 @@
                     android:layout_height="wrap_content"
                     android:text="@string/aun_no_registrado"
                     android:textColor="@color/texto_principal"
-                    android:textSize="16sp" />
+                    android:textSize="14sp" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/botonTransparente"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    style="@style/Widget.TFG.Boton.Contorno"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:cornerRadius="8dp"
+                    app:strokeColor="@color/rojo"
+                    app:strokeWidth="1dp"
                     android:text="@string/pincha_aqui"
                     android:textColor="@color/rojo"
+                    android:textAllCaps="false"
                     android:layout_marginStart="8dp" />
 
             </LinearLayout>
 
-            <Button
+            <!-- Botón iniciar sesión -->
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/iniciarSesion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/Widget.TFG.Boton.Relleno"
+                style="@style/Widget.MaterialComponents.Button"
+                app:cornerRadius="10dp"
+                android:backgroundTint="@color/negro"
                 android:text="@string/iniciar_sesion"
+                android:textColor="@color/white"
+                android:textAllCaps="false"
+                android:textSize="16sp"
                 android:layout_marginTop="16dp"
-                android:layout_marginBottom="12dp" />
+                android:paddingTop="14dp"
+                android:paddingBottom="14dp" />
 
-            <!-- Botón para Google Sign-In -->
+            <!-- Divisor -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="16dp">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="@color/divisor" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="  o  "
+                    android:textColor="@color/gris"
+                    android:textSize="13sp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="@color/divisor" />
+            </LinearLayout>
+
+            <!-- Botón Google -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnGoogle"
                 style="@style/Widget.TFG.Boton.Google"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
                 android:contentDescription="Iniciar sesión con Google"
                 android:text="Continuar con Google"
                 android:textColor="@color/google_text"
@@ -135,8 +190,8 @@
                 android:visibility="gone"
                 android:text="" />
 
-         </LinearLayout>
+        </LinearLayout>
 
-     </androidx.core.widget.NestedScrollView>
+    </androidx.core.widget.NestedScrollView>
 
- </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

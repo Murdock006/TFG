@@ -1,31 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:layout_marginTop="20dp"
-    android:paddingBottom="72dp"
+    android:fillViewport="false"
     android:background="@color/fondo">
 
-    <TextView
-        android:id="@+id/tv_perfil_titulo"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Perfil"
-        style="@style/TextAppearance.TFG.Titulo"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:orientation="vertical"
+        android:paddingTop="20dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="72dp">
 
-    <TextView
-        android:id="@+id/tv_perfil_info"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Información del perfil"
-        style="@style/TextAppearance.TFG.Cuerpo"
-        app:layout_constraintTop_toBottomOf="@id/tv_perfil_titulo"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp" />
+        <TextView
+            android:id="@+id/tv_perfil_titulo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Perfil"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/texto_principal"
+            android:layout_marginBottom="16dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/white"
+            app:strokeColor="@color/divisor"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:background="#F8F8F8">
+
+                <TextView
+                    android:id="@+id/tv_perfil_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Información del perfil"
+                    android:textSize="14sp"
+                    android:textColor="@color/texto_principal"
+                    android:lineSpacingExtra="4dp" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+</ScrollView>

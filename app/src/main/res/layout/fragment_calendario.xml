@@ -3,76 +3,123 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
+    android:paddingTop="20dp"
     android:background="@color/fondo">
 
-    <LinearLayout
-        android:id="@+id/llHeader"
+    <!-- Cabecera navegación semana -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardNavegacion"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="3dp"
+        app:cardBackgroundColor="@color/white"
+        app:strokeColor="@color/divisor"
+        app:strokeWidth="1dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <Button
-            android:id="@+id/btnPrevWeek"
-            style="@style/Widget.TFG.Boton.Contorno"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:text="&lt;" />
-
-        <TextView
-            android:id="@+id/tvFechaSeleccionada"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:id="@+id/llHeader"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:textColor="@color/texto_principal"
-            android:text="Hoy" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="8dp">
 
-        <Button
-            android:id="@+id/btnNextWeek"
-            style="@style/Widget.TFG.Boton.Contorno"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:text="&gt;" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPrevWeek"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                app:cornerRadius="8dp"
+                app:strokeColor="@color/negro"
+                app:strokeWidth="1dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:text="&lt;"
+                android:textColor="@color/texto_principal"
+                android:textAllCaps="false"
+                android:padding="0dp" />
 
-        <Button
-            android:id="@+id/btnElegirDia"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            style="@style/Widget.TFG.Boton.Contorno"
-            android:text="📅" />
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tvFechaSeleccionada"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/texto_principal"
+                android:text="Hoy" />
 
-    <!-- Resumen del día: num tareas, puntos disponibles, importantes -->
-    <TextView
-        android:id="@+id/tvResumenDia"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNextWeek"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                app:cornerRadius="8dp"
+                app:strokeColor="@color/negro"
+                app:strokeWidth="1dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:text="&gt;"
+                android:textColor="@color/texto_principal"
+                android:textAllCaps="false"
+                android:padding="0dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnElegirDia"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                app:cornerRadius="8dp"
+                app:strokeColor="@color/negro"
+                app:strokeWidth="1dp"
+                android:text="📅"
+                android:textColor="@color/texto_principal"
+                android:textAllCaps="false" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Resumen del día -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardResumen"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="center"
-        android:textSize="13sp"
-        android:textColor="@color/texto_secundario"
-        app:layout_constraintTop_toBottomOf="@id/llHeader"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        app:cardCornerRadius="10dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="#F5F5F5"
+        app:strokeColor="@color/divisor"
+        app:strokeWidth="1dp"
+        app:layout_constraintTop_toBottomOf="@id/cardNavegacion"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvResumenDia"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:gravity="center"
+            android:textSize="13sp"
+            android:textColor="@color/texto_secundario" />
+    </com.google.android.material.card.MaterialCardView>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvTareasDia"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/tvResumenDia"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintTop_toBottomOf="@id/cardResumen"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         android:clipToPadding="false"
-        android:paddingBottom="80dp" />
+        android:paddingBottom="72dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,137 +1,307 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="20dp"
-    android:fillViewport="true"
-    android:background="@android:color/white">
+    android:fillViewport="false"
+    android:background="@color/fondo">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingTop="20dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="76dp">
 
         <TextView
             android:id="@+id/tvTituloPareja"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Perfil de pareja"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
+            android:textColor="@color/texto_principal"
+            android:layout_marginBottom="16dp" />
 
-        <TextView
-            android:id="@+id/tvTusPuntos"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0"
-            android:textSize="18sp"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:id="@+id/tvPuntosReservados"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Reservados: 0"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:id="@+id/tvPuntosCompanero"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0"
-            android:textSize="18sp"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:id="@+id/tvNombreGrupoSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="-"
-            android:layout_marginBottom="12dp" />
-
-        <Button
-            android:id="@+id/btnCrearGrupo"
+        <!-- Tarjeta puntos -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Crear grupo"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/white"
+            app:strokeColor="@color/divisor"
+            app:strokeWidth="1dp">
 
-        <Button
-            android:id="@+id/btnGenerarInvitacion"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="#F8F8F8">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tus puntos"
+                    android:textSize="12sp"
+                    android:textColor="@color/gris" />
+
+                <TextView
+                    android:id="@+id/tvTusPuntos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/negro"
+                    android:layout_marginBottom="2dp" />
+
+                <TextView
+                    android:id="@+id/tvPuntosReservados"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Reservados: 0"
+                    android:textSize="12sp"
+                    android:textColor="@color/gris"
+                    android:layout_marginBottom="10dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/divisor"
+                    android:layout_marginBottom="10dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Puntos compañero/a"
+                    android:textSize="12sp"
+                    android:textColor="@color/gris" />
+
+                <TextView
+                    android:id="@+id/tvPuntosCompanero"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/negro"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/tvNombreGrupoSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="-"
+                    android:textSize="13sp"
+                    android:textColor="@color/texto_secundario" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Tarjeta crear / unirse al grupo -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Generar invitación"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/white"
+            app:strokeColor="@color/divisor"
+            app:strokeWidth="1dp">
 
-        <TextView
-            android:id="@+id/tvCodigo"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Gestión del grupo"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/texto_principal"
+                    android:layout_marginBottom="12dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCrearGrupo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.MaterialComponents.Button"
+                    app:cornerRadius="10dp"
+                    android:backgroundTint="@color/negro"
+                    android:text="Crear grupo"
+                    android:textColor="@color/white"
+                    android:textAllCaps="false"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGenerarInvitacion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:cornerRadius="10dp"
+                    app:strokeColor="@color/negro"
+                    app:strokeWidth="1dp"
+                    android:text="Generar invitación"
+                    android:textColor="@color/texto_principal"
+                    android:textAllCaps="false"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#F5F5F5"
+                    app:strokeColor="@color/divisor"
+                    app:strokeWidth="1dp">
+                    <TextView
+                        android:id="@+id/tvCodigo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Código: -"
+                        android:padding="12dp"
+                        android:textSize="14sp"
+                        android:textColor="@color/texto_principal" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Introduce código de invitación"
+                    android:layout_marginBottom="8dp"
+                    app:boxBackgroundColor="#F5F5F5"
+                    app:boxStrokeColor="@color/negro"
+                    app:hintTextColor="@color/gris">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etCodigoAceptar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="flagNoExtractUi"
+                        android:inputType="text"
+                        android:textColor="@color/texto_principal"
+                        android:textColorHint="@color/gris" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAceptarInvitacion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.MaterialComponents.Button"
+                    app:cornerRadius="10dp"
+                    android:backgroundTint="@color/negro"
+                    android:text="Aceptar invitación"
+                    android:textColor="@color/white"
+                    android:textAllCaps="false"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSalirGrupoTop"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:cornerRadius="10dp"
+                    app:strokeColor="@color/rojo"
+                    app:strokeWidth="1dp"
+                    android:text="Salir del grupo"
+                    android:textColor="@color/rojo"
+                    android:textAllCaps="false"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Tarjeta info del grupo (visible cuando hay grupo) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardInfoGrupo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Código: -"
-            android:layout_marginBottom="8dp" />
-
-        <EditText
-            android:id="@+id/etCodigoAceptar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Introduce código"
-            android:layout_marginBottom="8dp" />
-
-        <Button
-            android:id="@+id/btnAceptarInvitacion"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Aceptar invitación"
-            android:layout_marginBottom="12dp" />
-
-        <Button
-            android:id="@+id/btnSalirGrupoTop"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Salir"
+            android:layout_marginBottom="12dp"
             android:visibility="gone"
-            android:layout_marginBottom="12dp" />
+            app:cardCornerRadius="14dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/white"
+            app:strokeColor="@color/negro"
+            app:strokeWidth="1dp">
 
-        <TextView
-            android:id="@+id/tvGroupName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Nombre del grupo"
-            android:textStyle="bold"
-            android:visibility="gone"
-            android:layout_marginBottom="4dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvGroupMembers"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Miembros: 0"
-            android:visibility="gone"
-            android:layout_marginBottom="8dp" />
+                <TextView
+                    android:id="@+id/tvGroupName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre del grupo"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/texto_principal"
+                    android:layout_marginBottom="4dp" />
 
-        <Button
-            android:id="@+id/btnAbrirGrupo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Abrir"
-            android:visibility="gone"
-            android:layout_marginBottom="8dp" />
+                <TextView
+                    android:id="@+id/tvGroupMembers"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Miembros: 0"
+                    android:textSize="13sp"
+                    android:textColor="@color/texto_secundario"
+                    android:layout_marginBottom="12dp" />
 
-        <Button
-            android:id="@+id/btnEditarNombre"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Guardar"
-            android:visibility="gone"
-            android:layout_marginBottom="12dp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAbrirGrupo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        app:cornerRadius="8dp"
+                        app:strokeColor="@color/negro"
+                        app:strokeWidth="1dp"
+                        android:text="Abrir"
+                        android:textColor="@color/texto_principal"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="6dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnEditarNombre"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        style="@style/Widget.MaterialComponents.Button"
+                        app:cornerRadius="8dp"
+                        android:backgroundTint="@color/negro"
+                        android:text="Guardar"
+                        android:textColor="@color/white"
+                        android:textAllCaps="false" />
+
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Miembros del grupo -->
         <TextView
             android:id="@+id/tvMiembrosTitulo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Miembros del grupo"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/texto_principal"
             android:visibility="gone"
             android:layout_marginBottom="8dp" />
 
@@ -139,8 +309,10 @@
             android:id="@+id/rvMiembros"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone" />
+            android:visibility="gone"
+            android:nestedScrollingEnabled="false" />
 
+        <!-- Contenedores ocultos (retrocompatibilidad) -->
         <FrameLayout
             android:id="@+id/bottomContainer"
             android:layout_width="match_parent"

@@ -4,17 +4,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingTop="50dp"
-    android:paddingBottom="80dp"
     android:fillViewport="true"
-    android:clipToPadding="false"
     android:background="@color/fondo">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingTop="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="72dp">
 
         <!-- Título -->
         <ImageView
@@ -30,24 +30,28 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="20dp"
             android:gravity="center"
             android:weightSum="2">
 
             <!-- Tarjeta Usuario -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_margin="8dp"
-                style="@style/Widget.TFG.Tarjeta">
+                android:layout_margin="6dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="5dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeColor="@color/negro"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="12dp"
-                    android:background="@color/tarjetaPrincipal">
+                    android:padding="14dp"
+                    android:background="#F8F8F8">
 
                     <TextView
                         android:text="@string/tus_puntos"
@@ -55,47 +59,54 @@
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
                         android:textColor="@color/texto_principal"
-                        android:textSize="14sp" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/puntosUsuario"
                         android:text="@string/cargando"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
-                        android:textSize="20sp"
-                        android:textColor="@color/texto_principal" />
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/negro"
+                        android:layout_marginTop="4dp" />
 
                     <TextView
                         android:id="@+id/puntosReservados"
                         android:text="@string/reservados_format"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="12sp"
-                        android:textColor="@color/texto_secundario" />
+                        android:textSize="11sp"
+                        android:textColor="@color/gris"
+                        android:layout_marginTop="2dp" />
 
                     <TextView
                         android:text="@string/comprar_puntos"
-                        android:textSize="12sp"
+                        android:textSize="11sp"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
-                        android:textColor="@color/texto_secundario" />
+                        android:textColor="@color/gris" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Tarjeta Compañero -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_margin="8dp"
-                style="@style/Widget.TFG.Tarjeta">
+                android:layout_margin="6dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="5dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeColor="@color/negro"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="12dp"
-                    android:background="@color/tarjetaPrincipal">
+                    android:padding="14dp"
+                    android:background="#F8F8F8">
 
                     <TextView
                         android:text="@string/tu_companero"
@@ -103,7 +114,7 @@
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
                         android:textColor="@color/texto_principal"
-                        android:textSize="14sp" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/nombreGrupo"
@@ -111,33 +122,36 @@
                         android:layout_height="wrap_content"
                         android:text="@string/guion"
                         android:textColor="@color/texto_principal"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:layout_marginTop="4dp" />
 
                     <TextView
                         android:id="@+id/puntosCompanero"
                         android:text="@string/cero"
-                        android:textSize="20sp"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/negro"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
-                        android:textColor="@color/texto_principal" />
+                        android:layout_marginTop="4dp" />
 
                     <TextView
                         android:id="@+id/miembrosCount"
                         android:text="@string/miembros_format"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="12sp"
-                        android:textColor="@color/texto_secundario" />
+                        android:textSize="11sp"
+                        android:textColor="@color/gris"
+                        android:layout_marginTop="2dp" />
 
                     <TextView
                         android:text="@string/vincula_pareja"
-                        android:textSize="12sp"
-                        android:textColor="@color/texto_secundario"
+                        android:textSize="11sp"
+                        android:textColor="@color/gris"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"/>
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
@@ -148,9 +162,10 @@
             android:layout_height="wrap_content"
             android:text="@string/asignar_tareas"
             android:textStyle="bold"
-            android:textSize="18sp"
+            android:textSize="17sp"
             android:textColor="@color/texto_principal"
-            android:layout_marginTop="32dp" />
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="4dp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -159,25 +174,29 @@
             android:id="@+id/textViewResultados"
             android:textColor="@color/texto_principal" />
 
-        <!-- Categorías (lista vertical: una tarjeta por fila) -->
+        <!-- Categorías -->
         <LinearLayout
             android:id="@+id/bloqueCategorias"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Ejemplo de categoría (cocina) -->
-            <androidx.cardview.widget.CardView
+            <!-- Cocina -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                style="@style/Widget.TFG.Tarjeta">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeColor="@color/divisor"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:gravity="center_vertical">
 
                     <Button
@@ -199,20 +218,24 @@
                         android:layout_marginStart="8dp" />
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Ropa -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                style="@style/Widget.TFG.Tarjeta">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeColor="@color/divisor"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:gravity="center_vertical">
 
                     <Button
@@ -234,20 +257,24 @@
                         android:layout_marginStart="8dp" />
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Limpieza -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                style="@style/Widget.TFG.Tarjeta">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeColor="@color/divisor"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:gravity="center_vertical">
 
                     <Button
@@ -269,20 +296,24 @@
                         android:layout_marginStart="8dp" />
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Mascotas -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                style="@style/Widget.TFG.Tarjeta">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeColor="@color/divisor"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:gravity="center_vertical">
 
                     <Button
@@ -304,20 +335,24 @@
                         android:layout_marginStart="8dp" />
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Recados -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                style="@style/Widget.TFG.Tarjeta">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeColor="@color/divisor"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:gravity="center_vertical">
 
                     <Button
@@ -339,19 +374,23 @@
                         android:layout_marginStart="8dp" />
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Personalizado -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/Widget.TFG.Tarjeta">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeColor="@color/divisor"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:gravity="center_vertical">
 
                     <Button
@@ -374,7 +413,7 @@
                         android:layout_marginStart="8dp" />
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
@@ -385,7 +424,7 @@
             android:text="@string/tareas_recientes"
             android:textStyle="bold"
             android:layout_marginTop="24dp"
-            android:textSize="16sp"
+            android:textSize="17sp"
             android:textColor="@color/texto_principal" />
 
         <TextView

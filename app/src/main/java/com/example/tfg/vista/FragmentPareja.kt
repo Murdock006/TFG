@@ -11,6 +11,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
+import com.google.android.material.card.MaterialCardView
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -55,6 +56,7 @@ class FragmentPareja : Fragment() {
     private lateinit var tvGroupName: TextView
     private lateinit var tvGroupMembers: TextView
     private lateinit var tvMiembrosTitulo: TextView
+    private lateinit var cardInfoGrupo: MaterialCardView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -81,6 +83,7 @@ class FragmentPareja : Fragment() {
         tvGroupName = rootView.findViewById(com.example.tfg.R.id.tvGroupName)
         tvGroupMembers = rootView.findViewById(com.example.tfg.R.id.tvGroupMembers)
         tvMiembrosTitulo = rootView.findViewById(com.example.tfg.R.id.tvMiembrosTitulo)
+        cardInfoGrupo = rootView.findViewById(com.example.tfg.R.id.cardInfoGrupo)
 
         return rootView
     }
@@ -303,7 +306,7 @@ class FragmentPareja : Fragment() {
 
     private fun mostrarUIGrupo(activo: Boolean) {
         if (activo) {
-            // mostrar info del grupo visible y RecyclerView miembros
+            cardInfoGrupo.visibility = View.VISIBLE
             tvGroupName.visibility = View.VISIBLE
             tvGroupMembers.visibility = View.VISIBLE
             btnAbrirGrupo.visibility = View.VISIBLE
@@ -312,11 +315,12 @@ class FragmentPareja : Fragment() {
             tvMiembrosTitulo.visibility = View.VISIBLE
             rvMiembros.visibility = View.VISIBLE
         } else {
+            cardInfoGrupo.visibility = View.GONE
             tvGroupName.visibility = View.GONE
             tvGroupMembers.visibility = View.GONE
             btnAbrirGrupo.visibility = View.GONE
             btnEditarNombre.visibility = View.GONE
-            btnSalirGrupoTop.visibility = View.VISIBLE
+            btnSalirGrupoTop.visibility = View.GONE
             tvMiembrosTitulo.visibility = View.GONE
             rvMiembros.visibility = View.GONE
         }
@@ -397,18 +401,38 @@ class FragmentPareja : Fragment() {
 
     private inner class MiembrosAdapter : RecyclerView.Adapter<MiembrosAdapter.VH>() {
         private var items: List<Pair<String,String>> = emptyList()
+        // Almacenar también puntos por uid para mostrar en el badge
+        private var puntosMap: Map<String,Int> = emptyMap()
+
         fun setItems(list: List<Pair<String,String>>) { items = list; notifyDataSetChanged() }
-        inner class VH(val tv: TextView) : RecyclerView.ViewHolder(tv)
+        fun setPuntosMap(map: Map<String,Int>) { puntosMap = map; notifyDataSetChanged() }
+
+        inner class VH(val root: View) : RecyclerView.ViewHolder(root) {
+            val tvAvatar: TextView   = root.findViewById(com.example.tfg.R.id.tvMiembroAvatar)
+            val tvNombre: TextView   = root.findViewById(com.example.tfg.R.id.tvMiembroNombre)
+            val tvEmail: TextView    = root.findViewById(com.example.tfg.R.id.tvMiembroEmail)
+            val tvPuntos: TextView   = root.findViewById(com.example.tfg.R.id.tvMiembroPuntos)
+        }
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-            val tv = TextView(parent.context)
-            val pad = (16 * parent.context.resources.displayMetrics.density).toInt()
-            tv.setPadding(pad,pad,pad,pad)
-            return VH(tv)
+            val v = android.view.LayoutInflater.from(parent.context)
+                .inflate(com.example.tfg.R.layout.item_miembro, parent, false)
+            return VH(v)
         }
+
         override fun onBindViewHolder(holder: VH, position: Int) {
-            val (nombre, rol) = items[position]
-            holder.tv.text = "$nombre — $rol"
+            val (nombreCompleto, rol) = items[position]
+            // nombreCompleto tiene formato "Nombre (email)" o solo email/uid
+            val partes = nombreCompleto.split("(")
+            val nombre = partes[0].trim()
+            val email  = if (partes.size > 1) partes[1].trimEnd(')').trim() else ""
+            val inicial = nombre.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+            holder.tvAvatar.text  = inicial
+            holder.tvNombre.text  = nombre.ifBlank { email }
+            holder.tvEmail.text   = if (email.isNotBlank()) "$email • $rol" else rol
+            holder.tvPuntos.text  = "0 pts"  // valor por defecto; se actualizará con puntosMap si se pasa
         }
+
         override fun getItemCount(): Int = items.size
     }
 }

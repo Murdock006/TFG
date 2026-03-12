@@ -1,81 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:layout_marginTop="20dp"
+    android:fillViewport="false"
     android:background="@color/fondo">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingTop="20dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="72dp">
 
-        <TextView
-            android:id="@+id/tvDetalleTitulo"
+        <!-- Tarjeta detalle principal -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="@color/texto_principal"
-            android:text="Título" />
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="5dp"
+            app:cardBackgroundColor="@color/white"
+            app:strokeColor="@color/divisor"
+            app:strokeWidth="1dp">
 
-        <TextView
-            android:id="@+id/tvDetalleMeta"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@color/texto_secundario"
-            android:text="50 pts · Fácil · Pendiente" />
-
-        <TextView
-            android:id="@+id/tvDetalleAsignado"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@color/texto_secundario"
-            android:text="" />
-
-        <TextView
-            android:id="@+id/tvDetalleDescripcion"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:textColor="@color/texto_principal"
-            android:text="Descripción..." />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp"
-            android:gravity="end">
-
-            <Button
-                android:id="@+id/btnDetalleAsignar"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/Widget.TFG.Boton.Contorno"
-                android:text="Asignar"
-                android:visibility="gone" />
+                android:orientation="vertical"
+                android:padding="20dp" android:paddingBottom="76dp">
 
-            <Button
-                android:id="@+id/btnDetalleAccion"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/tvDetalleTitulo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/texto_principal"
+                    android:text="Título" />
+
+                <TextView
+                    android:id="@+id/tvDetalleMeta"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/texto_secundario"
+                    android:textSize="14sp"
+                    android:text="50 pts · Fácil · Pendiente" />
+
+                <TextView
+                    android:id="@+id/tvDetalleAsignado"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="@color/gris"
+                    android:textSize="13sp"
+                    android:text="" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/divisor"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:id="@+id/tvDetalleDescripcion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/texto_principal"
+                    android:textSize="14sp"
+                    android:text="Descripción..." />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Tarjeta acciones -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="3dp"
+            app:cardBackgroundColor="@color/white"
+            app:strokeColor="@color/divisor"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/Widget.TFG.Boton.Relleno"
-                android:text="Acción" />
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:gravity="end" android:paddingBottom="76dp">
 
-            <Button
-                android:id="@+id/btnDetalleMas"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                style="@style/Widget.TFG.Boton.Contorno"
-                android:text="Más" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDetalleAsignar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:cornerRadius="8dp"
+                    app:strokeColor="@color/negro"
+                    app:strokeWidth="1dp"
+                    android:text="Asignar"
+                    android:textColor="@color/texto_principal"
+                    android:textAllCaps="false"
+                    android:layout_marginEnd="8dp"
+                    android:visibility="gone" />
 
-        </LinearLayout>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDetalleAccion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.MaterialComponents.Button"
+                    app:cornerRadius="8dp"
+                    android:backgroundTint="@color/negro"
+                    android:text="Acción"
+                    android:textColor="@color/white"
+                    android:textAllCaps="false"
+                    android:layout_marginEnd="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDetalleMas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:cornerRadius="8dp"
+                    app:strokeColor="@color/negro"
+                    app:strokeWidth="1dp"
+                    android:text="Más"
+                    android:textColor="@color/texto_principal"
+                    android:textAllCaps="false" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 
 </ScrollView>
+

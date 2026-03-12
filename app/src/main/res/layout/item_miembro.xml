@@ -1,28 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="8dp"
-    android:layout_marginTop="20dp"
+    android:padding="12dp"
     android:gravity="center_vertical"
-    android:background="@drawable/bg_rounded_card">
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginVertical="4dp"
+    android:background="@drawable/bg_item_miembro">
 
+    <!-- Avatar inicial -->
     <TextView
-        android:id="@+id/tvMiembroNombre"
+        android:id="@+id/tvMiembroAvatar"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="A"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:background="@drawable/bg_avatar_miembro"
+        android:layout_marginEnd="12dp" />
+
+    <LinearLayout
         android:layout_width="0dp"
-        android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:text="Nombre"
-        style="@style/TextAppearance.TFG.Cuerpo"
-        android:textSize="14sp" />
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvMiembroNombre"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nombre"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/texto_principal" />
+
+        <TextView
+            android:id="@+id/tvMiembroEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="12sp"
+            android:textColor="@color/gris" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tvMiembroPuntos"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="0"
-        style="@style/TextAppearance.TFG.Cuerpo"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:text="0 pts"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="@color/negro"
+        android:background="@drawable/bg_badge_puntos"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp" />
+
 </LinearLayout>

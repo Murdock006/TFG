@@ -2,17 +2,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/fragment_PgPrincipal"
         android:icon="@drawable/inicio"
-        android:title="INICIO"/>
+        android:title="Inicio"/>
     <item android:id="@+id/fragment_TareasPendientes"
         android:icon="@drawable/tareas"
-        android:title="TAREAS"/>
+        android:title="Tareas"/>
     <item android:id="@+id/fragment_Recompensas"
         android:icon="@drawable/recompensas"
-        android:title="RECOMPENSAS"/>
+        android:title="Recompensas"/>
     <item android:id="@+id/fragment_Pareja"
         android:icon="@drawable/perfil"
-        android:title="PERFIL"/>
+        android:title="Pareja"/>
     <item android:id="@+id/fragment_Calendario"
         android:icon="@drawable/calendario"
-        android:title="CALENDARIO"/>
+        android:title="Calendario"/>
 </menu>

@@ -1,34 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:layout_marginTop="20dp"
+    android:orientation="vertical"
+    android:paddingTop="20dp"
     android:background="@color/fondo">
 
-    <TextView
-        android:id="@+id/tvTituloTareas"
-        android:layout_width="0dp"
+    <!-- Cabecera -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tareas"
-        style="@style/TextAppearance.TFG.Titulo"
-        android:textStyle="bold"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="12dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="3dp"
+        app:cardBackgroundColor="@color/white"
+        app:strokeColor="@color/divisor"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvTituloTareas"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Tareas"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/texto_principal" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvTareas"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="12dp"
+        android:layout_height="match_parent"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="72dp"
         android:clipToPadding="false"
-        android:paddingBottom="12dp"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@id/tvTituloTareas"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

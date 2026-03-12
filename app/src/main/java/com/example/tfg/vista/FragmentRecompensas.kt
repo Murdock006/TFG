@@ -79,17 +79,23 @@ class FragmentRecompensas : Fragment() {
 
     private fun cambiarTab(tab: Tab) {
         tabActual = tab
-        // Resaltar tab activo
-        val activo   = requireContext().getColor(R.color.negro)
-        val inactivo = Color.TRANSPARENT
-        b.btnTabDisponibles.setBackgroundColor(if (tab == Tab.DISPONIBLES) activo else inactivo)
-        b.btnTabPendientes.setBackgroundColor(if (tab == Tab.PENDIENTES)  activo else inactivo)
-        b.btnTabHistorial.setBackgroundColor(if (tab == Tab.HISTORIAL)    activo else inactivo)
-        val colorTextoActivo   = Color.WHITE
-        val colorTextoInactivo = requireContext().getColor(R.color.texto_principal)
-        b.btnTabDisponibles.setTextColor(if (tab == Tab.DISPONIBLES) colorTextoActivo else colorTextoInactivo)
-        b.btnTabPendientes.setTextColor(if (tab == Tab.PENDIENTES)  colorTextoActivo else colorTextoInactivo)
-        b.btnTabHistorial.setTextColor(if (tab == Tab.HISTORIAL)    colorTextoActivo else colorTextoInactivo)
+        val blanco = android.graphics.Color.WHITE
+        val negro  = 0xFF000000.toInt()
+
+        // inactivo
+        b.btnTabDisponibles.setBackgroundResource(R.drawable.tab_inactivo)
+        b.btnTabDisponibles.setTextColor(negro)
+        b.btnTabPendientes.setBackgroundResource(R.drawable.tab_inactivo)
+        b.btnTabPendientes.setTextColor(negro)
+        b.btnTabHistorial.setBackgroundResource(R.drawable.tab_inactivo)
+        b.btnTabHistorial.setTextColor(negro)
+
+        // activo
+        when (tab) {
+            Tab.DISPONIBLES -> { b.btnTabDisponibles.setBackgroundResource(R.drawable.tab_activo); b.btnTabDisponibles.setTextColor(blanco) }
+            Tab.PENDIENTES  -> { b.btnTabPendientes.setBackgroundResource(R.drawable.tab_activo);  b.btnTabPendientes.setTextColor(blanco) }
+            Tab.HISTORIAL   -> { b.btnTabHistorial.setBackgroundResource(R.drawable.tab_activo);   b.btnTabHistorial.setTextColor(blanco) }
+        }
         cargarDatos()
     }
 
