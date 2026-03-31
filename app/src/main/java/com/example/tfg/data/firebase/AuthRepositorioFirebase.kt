@@ -133,12 +133,13 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 docRef.set(dataDefault).await()
             }
             val reloaded = docRef.get().await()
-            val nombre = reloaded.getString("nombre") ?: (firebaseUser.displayName ?: "")
-            val edad = reloaded.getLong("edad")?.toInt()
-            val ciudad = reloaded.getString("ciudad")
-            val puntos = reloaded.getLong("puntos")?.toInt() ?: 0
-            val puntosRecompensa = reloaded.getLong("puntosRecompensa")?.toInt() ?: 0
-            val user = Usuario(id = firebaseUser.uid, nombre = nombre, edad = edad, ciudad = ciudad, email = firebaseUser.email ?: "", puntos = puntos, puntosRecompensa = puntosRecompensa)
+             val nombre = reloaded.getString("nombre") ?: (firebaseUser.displayName ?: "")
+             val edad = reloaded.getLong("edad")?.toInt()
+             val ciudad = reloaded.getString("ciudad")
+             val puntos = reloaded.getLong("puntos")?.toInt() ?: 0
+             val puntosReservados = reloaded.getLong("puntosReservados")?.toInt() ?: 0
+             val puntosRecompensa = reloaded.getLong("puntosRecompensa")?.toInt() ?: 0
+             val user = Usuario(id = firebaseUser.uid, nombre = nombre, edad = edad, ciudad = ciudad, email = firebaseUser.email ?: "", puntos = puntos, puntosReservados = puntosReservados, puntosRecompensa = puntosRecompensa)
             _usuarioCache = user
             Result.success(user)
         } catch (e: Exception) {

@@ -97,56 +97,53 @@ class RepositorioTareas(private val firestore: FirebaseFirestore = FirebaseFires
     }
 
     suspend fun confirmarTarea(tareaId: String, confirmadoPorUid: String): Result<Unit> {
-        return try {
-            val tareaRef = firestore.collection(coleccionTareas).document(tareaId)
-            val snap = tareaRef.get().await()
-            if (!snap.exists()) return Result.failure(Exception("Tarea no encontrada"))
-            val tarea = snap.toObject(Tarea::class.java) ?: return Result.failure(Exception("Tarea inválida"))
-            if (tarea.estado != "pendiente_confirmacion" && tarea.estado != "completada") return Result.failure(Exception("La tarea no está en estado pendiente de confirmación"))
+         return try {
+             val tareaRef = firestore.collection(coleccionTareas).document(tareaId)
 
-            // confirmar y transferir en transacción (leer todo antes de escribir)
-            firestore.runTransaction { t ->
-                val snapTx = t.get(tareaRef)
-                val tareaTx = snapTx.toObject(Tarea::class.java) ?: throw Exception("Tarea inválida")
-                if (tareaTx.estado != "pendiente_confirmacion" && tareaTx.estado != "completada") throw Exception("La tarea no está en estado correcto para confirmar")
+             // Confirmar y transferir puntos en transacción (leer TODO dentro de la transacción para evitar race conditions)
+             firestore.runTransaction { t ->
+                 val snapTx = t.get(tareaRef)
+                 if (!snapTx.exists()) throw Exception("Tarea no encontrada")
+                 val tareaTx = snapTx.toObject(Tarea::class.java) ?: throw Exception("Tarea inválida")
+                 if (tareaTx.estado != "pendiente_confirmacion" && tareaTx.estado != "completada") throw Exception("La tarea no está en estado correcto para confirmar")
 
-                val ejecUid = tareaTx.asignadoA ?: throw Exception("Tarea sin asignado")
-                val ejecRef = firestore.collection(coleccionUsuarios).document(ejecUid)
-                val creadorUid = tareaTx.creadoPor
-                val creadorRef = if (!creadorUid.isNullOrBlank()) firestore.collection(coleccionUsuarios).document(creadorUid) else null
+                 val ejecUid = tareaTx.asignadoA ?: throw Exception("Tarea sin asignado")
+                 val ejecRef = firestore.collection(coleccionUsuarios).document(ejecUid)
+                 val creadorUid = tareaTx.creadoPor
+                 val creadorRef = if (!creadorUid.isNullOrBlank()) firestore.collection(coleccionUsuarios).document(creadorUid) else null
 
-                // leer usuarios antes de escribir
-                val ejecSnap = t.get(ejecRef)
-                val creadorSnap = creadorRef?.let { t.get(it) }
+                 // Leer usuarios dentro de la transacción
+                 val ejecSnap = t.get(ejecRef)
+                 val creadorSnap = creadorRef?.let { t.get(it) }
 
-                // aplicar escrituras
-                t.update(tareaRef, "estado", "confirmada")
+                 // Aplicar escrituras
+                 t.update(tareaRef, "estado", "confirmada")
 
-                if (!ejecSnap.exists()) {
-                    val datos = mapOf("puntos" to (tareaTx.puntos))
-                    t.set(ejecRef, datos)
-                } else {
-                    val actuales = (ejecSnap.getLong("puntos") ?: 0L).toInt()
-                    t.update(ejecRef, "puntos", actuales + tareaTx.puntos)
-                }
+                 if (!ejecSnap.exists()) {
+                     val datos = mapOf("puntos" to (tareaTx.puntos))
+                     t.set(ejecRef, datos)
+                 } else {
+                     val actuales = (ejecSnap.getLong("puntos") ?: 0L).toInt()
+                     t.update(ejecRef, "puntos", actuales + tareaTx.puntos)
+                 }
 
-                if (creadorRef != null) {
-                    if (!creadorSnap!!.exists()) {
-                        val datosCreador = mapOf("puntosReservados" to 0)
-                        t.set(creadorRef, datosCreador)
-                    } else {
-                        val reservados = (creadorSnap.getLong("puntosReservados") ?: 0L).toInt()
-                        val nuevoReservados = (reservados - tareaTx.puntos).coerceAtLeast(0)
-                        t.update(creadorRef, "puntosReservados", nuevoReservados)
-                    }
-                }
+                 if (creadorRef != null && creadorSnap != null) {
+                     if (!creadorSnap.exists()) {
+                         val datosCreador = mapOf("puntosReservados" to 0)
+                         t.set(creadorRef, datosCreador)
+                     } else {
+                         val reservados = (creadorSnap.getLong("puntosReservados") ?: 0L).toInt()
+                         val nuevoReservados = (reservados - tareaTx.puntos).coerceAtLeast(0)
+                         t.update(creadorRef, "puntosReservados", nuevoReservados)
+                     }
+                 }
 
-                null
-            }.await()
+                 null
+             }.await()
 
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+             Result.success(Unit)
+         } catch (e: Exception) {
+             Result.failure(e)
+         }
+     }
 }

@@ -20,14 +20,31 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
     constructor(application: Application) : this(application, RepositorioPareja())
 
     private val _grupo = MutableStateFlow<Grupo?>(null)
-    val grupo: StateFlow<Grupo?> = _grupo
-    private val TAG = "ParejaViewModel"
+     val grupo: StateFlow<Grupo?> = _grupo
+     
+     // Estados para operaciones asincrónicas (reemplazan callbacks)
+     private val _crearGrupoState = MutableStateFlow<Result<String>?>(null)
+     val crearGrupoState: StateFlow<Result<String>?> = _crearGrupoState
+     
+     private val _salirGrupoState = MutableStateFlow<Result<Unit>?>(null)
+     val salirGrupoState: StateFlow<Result<Unit>?> = _salirGrupoState
+     
+     private val _crearInvitacionState = MutableStateFlow<Result<String>?>(null)
+     val crearInvitacionState: StateFlow<Result<String>?> = _crearInvitacionState
+     
+     private val _aceptarInvitacionState = MutableStateFlow<Result<String>?>(null)
+     val aceptarInvitacionState: StateFlow<Result<String>?> = _aceptarInvitacionState
+     
+     private val _buscarInvitacionesState = MutableStateFlow<Result<List<com.example.tfg.modelo.Invitacion>>?>(null)
+     val buscarInvitacionesState: StateFlow<Result<List<com.example.tfg.modelo.Invitacion>>?> = _buscarInvitacionesState
+     
+     private val TAG = "ParejaViewModel"
 
-    private val prefsName = "tfg_prefs"
-    private val keyGrupoId = "grupoId"
+     private val prefsName = "tfg_prefs"
+     private val keyGrupoId = "grupoId"
 
-    // Job para la observación remota del grupo actual
-    private var grupoObserverJob: Job? = null
+     // Job para la observación remota del grupo actual
+     private var grupoObserverJob: Job? = null
 
     init {
         // Cargar grupoId persistido y obtener grupo desde repo para mostrar inmediatamente
@@ -90,83 +107,103 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
     }
 
     // permitir al usuario salir del grupo
-    fun salirGrupo(usuarioUid: String, onResult: (Result<Unit>) -> Unit) {
-        viewModelScope.launch {
-            val gid = _grupo.value?.id
-            if (gid.isNullOrBlank()) {
-                onResult(Result.failure(Exception("No hay grupo activo")))
-                return@launch
-            }
-            try {
-                val res = repo.quitarMiembroGrupo(gid, usuarioUid)
-                if (res.isSuccess) {
-                    // limpiar estado local y preferencias
-                    _grupo.value = null
-                    try {
-                        val prefs = getApplication<Application>().getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-                        prefs.edit().remove(keyGrupoId).apply()
-                    } catch (_: Exception) {}
-                    // cancelar observador
-                    grupoObserverJob?.cancel()
-                    grupoObserverJob = null
-                }
-                onResult(res)
-            } catch (e: Exception) {
-                Log.e(TAG, "salirGrupo(Exception)", e)
-                onResult(Result.failure(Exception(e.message ?: "Error saliendo del grupo")))
-            }
-        }
-    }
+     fun salirGrupo(usuarioUid: String) {
+         viewModelScope.launch {
+             val gid = _grupo.value?.id
+             if (gid.isNullOrBlank()) {
+                 _salirGrupoState.value = Result.failure(Exception("No hay grupo activo"))
+                 return@launch
+             }
+             try {
+                 val res = repo.quitarMiembroGrupo(gid, usuarioUid)
+                 if (res.isSuccess) {
+                     // limpiar estado local y preferencias
+                     _grupo.value = null
+                     try {
+                         val prefs = getApplication<Application>().getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+                         prefs.edit().remove(keyGrupoId).apply()
+                     } catch (_: Exception) {}
+                     // cancelar observador
+                     grupoObserverJob?.cancel()
+                     grupoObserverJob = null
+                 }
+                 _salirGrupoState.value = res
+             } catch (e: Exception) {
+                 Log.e(TAG, "salirGrupo(Exception)", e)
+                 _salirGrupoState.value = Result.failure(Exception(e.message ?: "Error saliendo del grupo"))
+             }
+         }
+     }
+     
+     // Versión con callback para compatibilidad hacia atrás (DEPRECATED)
+     fun salirGrupo(usuarioUid: String, onResult: (Result<Unit>) -> Unit) {
+         viewModelScope.launch {
+             salirGrupo(usuarioUid)
+             // Observar el estado una sola vez
+             salirGrupoState.collect { res ->
+                 if (res != null) {
+                     onResult(res)
+                 }
+             }
+         }
+     }
 
-    // función original: crear grupo sin callback (mantener compatibilidad)
-    fun crearGrupo(nombre: String, creadorUid: String) {
-        viewModelScope.launch {
-            try {
-                val res = repo.crearGrupo(nombre, creadorUid)
-                if (res.isSuccess) {
-                    val gId = res.getOrNull()
-                    if (!gId.isNullOrBlank()) {
-                        val gObj = repo.obtenerGrupoPorId(gId).getOrNull()
-                        if (gObj != null) setGrupoLocal(gObj)
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "crearGrupo(Exception)", e)
-            }
-        }
-    }
+    // función original: crear grupo sin callback (usa StateFlow internamente)
+     fun crearGrupo(nombre: String, creadorUid: String) {
+         viewModelScope.launch {
+             try {
+                 val res = repo.crearGrupo(nombre, creadorUid)
+                 if (res.isSuccess) {
+                     val gId = res.getOrNull()
+                     if (!gId.isNullOrBlank()) {
+                         val gObj = repo.obtenerGrupoPorId(gId).getOrNull()
+                         if (gObj != null) setGrupoLocal(gObj)
+                     }
+                 }
+                 _crearGrupoState.value = res
+             } catch (e: Exception) {
+                 Log.e(TAG, "crearGrupo(Exception)", e)
+                 _crearGrupoState.value = Result.failure(Exception(e.message ?: "Error creando grupo"))
+             }
+         }
+     }
 
-    // nueva función: crear grupo y devolver resultado (id) mediante callback
-    fun crearGrupo(nombre: String, creadorUid: String, onResult: (Result<String>) -> Unit) {
-        viewModelScope.launch {
-            try {
-                val res = repo.crearGrupo(nombre, creadorUid)
-                if (res.isSuccess) {
-                    val gId = res.getOrNull()
-                    if (!gId.isNullOrBlank()) {
-                        val gObj = repo.obtenerGrupoPorId(gId).getOrNull()
-                        if (gObj != null) setGrupoLocal(gObj)
-                    }
-                }
-                onResult(res)
-            } catch (e: Exception) {
-                Log.e(TAG, "crearGrupo(Exception)", e)
-                onResult(Result.failure(Exception(e.message ?: "Error creando grupo")))
-            }
-        }
-    }
+     // nueva función: crear grupo y devolver resultado mediante StateFlow
+     fun crearGrupo(nombre: String, creadorUid: String, onResult: (Result<String>) -> Unit) {
+         viewModelScope.launch {
+             crearGrupo(nombre, creadorUid)
+             // Observar el estado una sola vez
+             crearGrupoState.collect { res ->
+                 if (res != null) {
+                     onResult(res)
+                 }
+             }
+         }
+     }
 
-    fun crearInvitacion(grupoId: String, creadoPor: String, correoDestino: String? = null, horasExpiracion: Int? = 72, onResult: (Result<String>) -> Unit) {
-        viewModelScope.launch {
-            try {
-                val res = repo.crearInvitacion(grupoId, creadoPor, correoDestino, horasExpiracion)
-                onResult(res)
-            } catch (e: Exception) {
-                Log.e(TAG, "crearInvitacion(Exception)", e)
-                onResult(Result.failure(Exception(e.message ?: "Error creando invitación")))
-            }
-        }
-    }
+    fun crearInvitacion(grupoId: String, creadoPor: String, correoDestino: String? = null, horasExpiracion: Int? = 72) {
+         viewModelScope.launch {
+             try {
+                 val res = repo.crearInvitacion(grupoId, creadoPor, correoDestino, horasExpiracion)
+                 _crearInvitacionState.value = res
+             } catch (e: Exception) {
+                 Log.e(TAG, "crearInvitacion(Exception)", e)
+                 _crearInvitacionState.value = Result.failure(Exception(e.message ?: "Error creando invitación"))
+             }
+         }
+     }
+     
+     // Versión con callback para compatibilidad hacia atrás (DEPRECATED)
+     fun crearInvitacion(grupoId: String, creadoPor: String, correoDestino: String? = null, horasExpiracion: Int? = 72, onResult: (Result<String>) -> Unit) {
+         viewModelScope.launch {
+             crearInvitacion(grupoId, creadoPor, correoDestino, horasExpiracion)
+             crearInvitacionState.collect { res ->
+                 if (res != null) {
+                     onResult(res)
+                 }
+             }
+         }
+     }
 
     fun aceptarInvitacion(codigo: String, usuarioUid: String, onResult: (Result<String>) -> Unit) {
         viewModelScope.launch {
@@ -284,16 +321,24 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
         }
     }
 
-    // Limpieza de grupoId para un usuario (útil para pruebas y correcciones en desarrollo)
-    fun limpiarGrupoIdUsuario(usuarioUid: String, onResult: (Result<Unit>) -> Unit) {
-        viewModelScope.launch {
-            try {
-                val res = repo.limpiarGrupoIdUsuario(usuarioUid)
-                onResult(res)
-            } catch (e: Exception) {
-                Log.e(TAG, "limpiarGrupoIdUsuario(Exception)", e)
-                onResult(Result.failure(Exception(e.message ?: "Error limpiando grupoId")))
-            }
-        }
-    }
-}
+     // Limpieza de grupoId para un usuario (útil para pruebas y correcciones en desarrollo)
+     fun limpiarGrupoIdUsuario(usuarioUid: String, onResult: (Result<Unit>) -> Unit) {
+         viewModelScope.launch {
+             try {
+                 val res = repo.limpiarGrupoIdUsuario(usuarioUid)
+                 onResult(res)
+             } catch (e: Exception) {
+                 Log.e(TAG, "limpiarGrupoIdUsuario(Exception)", e)
+                 onResult(Result.failure(Exception(e.message ?: "Error limpiando grupoId")))
+             }
+         }
+     }
+
+     // Limpiar recursos cuando el ViewModel se destruye
+     override fun onCleared() {
+         super.onCleared()
+         grupoObserverJob?.cancel()
+         grupoObserverJob = null
+         Log.d(TAG, "ParejaViewModel limpiado")
+     }
+ }
