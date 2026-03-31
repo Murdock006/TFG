@@ -8,7 +8,9 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tfg.R
@@ -65,14 +67,16 @@ class FragmentRecompensas : Fragment() {
         cargarDatos()
 
         // Observar cambios de puntos en tiempo real
-        lifecycleScope.launch {
-            LocalizadorServicios.repositorioAuth.observarUsuarios().collect { usuarios ->
-                val uid = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
-                val usuario = usuarios.find { it.id == uid }
-                puntosActuales   = usuario?.puntos ?: puntosActuales
-                puntosRecompensa = usuario?.puntosRecompensa ?: puntosRecompensa
-                actualizarCabecera()
-                if (tabActual == Tab.DISPONIBLES) cargarDisponibles()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                LocalizadorServicios.repositorioAuth.observarUsuarios().collect { usuarios ->
+                    val uid = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
+                    val usuario = usuarios.find { it.id == uid }
+                    puntosActuales   = usuario?.puntos ?: puntosActuales
+                    puntosRecompensa = usuario?.puntosRecompensa ?: puntosRecompensa
+                    actualizarCabecera()
+                    if (tabActual == Tab.DISPONIBLES) cargarDisponibles()
+                }
             }
         }
     }

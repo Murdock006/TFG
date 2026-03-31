@@ -136,7 +136,7 @@ class FragmentPareja : Fragment() {
 
         // Observar usuarios y grupo para mapear uid -> nombre y actualizar puntos
         viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     LocalizadorServicios.repositorioAuth.observarUsuarios().collect { lista ->
                         android.util.Log.d("FragmentPareja", "observarUsuarios: recibidos ${lista.size} usuarios")

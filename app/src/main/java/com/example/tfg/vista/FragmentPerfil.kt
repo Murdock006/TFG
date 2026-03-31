@@ -7,7 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.tfg.service.LocalizadorServicios
 import com.example.tfg.viewmodel.ParejaViewModel
 import kotlinx.coroutines.flow.first
@@ -40,17 +42,20 @@ class FragmentPerfil : Fragment() {
 
         // Observar cambios en usuarios para refrescar datos del usuario actual (actualiza solo la parte de usuario)
         viewLifecycleOwner.lifecycleScope.launch {
-            LocalizadorServicios.repositorioAuth.observarUsuarios().collect { lista ->
-                val id = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: return@collect
-                val baseUsuario = construirInfoUsuario(id, lista)
-                // Si ya hay grupo mostrado, mantendremos su info (se actualiza en el siguiente bloque)
-                tvInfo.text = baseUsuario
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                LocalizadorServicios.repositorioAuth.observarUsuarios().collect { lista ->
+                    val id = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: return@collect
+                    val baseUsuario = construirInfoUsuario(id, lista)
+                    // Si ya hay grupo mostrado, mantendremos su info (se actualiza en el siguiente bloque)
+                    tvInfo.text = baseUsuario
+                }
             }
         }
 
         // Observar grupo activo y mostrar información del grupo en el perfil
         viewLifecycleOwner.lifecycleScope.launch {
-            parejaVM.grupo.collect { g ->
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                parejaVM.grupo.collect { g ->
                 // obtener snapshot de usuarios una vez
                 val listaUsuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
                 val usuarioId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
@@ -66,6 +71,7 @@ class FragmentPerfil : Fragment() {
                 } else {
                     // solo usuario
                     tvInfo.text = baseUsuario
+                }
                 }
             }
         }

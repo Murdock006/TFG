@@ -10,7 +10,9 @@ import android.widget.*
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tfg.R
@@ -70,28 +72,32 @@ class FragmentCalendario : Fragment() {
 
         // Observar grupo y suscribir tareas
         viewLifecycleOwner.lifecycleScope.launch {
-            parejaVM.grupo.collectLatest { grupo ->
-                val nuevoId = grupo?.id
-                if (nuevoId != grupoIdActual) {
-                    grupoIdActual = nuevoId
-                    tareasJob?.cancel()
-                    tareasJob = null
-                    todasLasTareas = emptyList()
-                    adapter.setItems(emptyList())
-                    actualizarResumen(b, emptyList())
-                }
-                if (grupo != null && (tareasJob == null || tareasJob?.isActive == false)) {
-                    tareasJob = viewLifecycleOwner.lifecycleScope.launch {
-                        LocalizadorServicios.repositorioTarea.observarTareas().collect { lista ->
-                            todasLasTareas = lista.filter { it.grupoId == grupoIdActual }
-                            filtrarYMostrar(adapter, b)
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                parejaVM.grupo.collectLatest { grupo ->
+                    val nuevoId = grupo?.id
+                    if (nuevoId != grupoIdActual) {
+                        grupoIdActual = nuevoId
+                        tareasJob?.cancel()
+                        tareasJob = null
+                        todasLasTareas = emptyList()
+                        adapter.setItems(emptyList())
+                        actualizarResumen(b, emptyList())
+                    }
+                    if (grupo != null && (tareasJob == null || tareasJob?.isActive == false)) {
+                        tareasJob = viewLifecycleOwner.lifecycleScope.launch {
+                            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                                LocalizadorServicios.repositorioTarea.observarTareas().collect { lista ->
+                                    todasLasTareas = lista.filter { it.grupoId == grupoIdActual }
+                                    filtrarYMostrar(adapter, b)
+                                }
+                            }
                         }
                     }
-                }
-                if (grupo == null) {
-                    b.tvFechaSeleccionada.text = "Sin grupo activo"
-                    b.tvResumenDia.text = ""
-                    adapter.setItems(emptyList())
+                    if (grupo == null) {
+                        b.tvFechaSeleccionada.text = "Sin grupo activo"
+                        b.tvResumenDia.text = ""
+                        adapter.setItems(emptyList())
+                    }
                 }
             }
         }

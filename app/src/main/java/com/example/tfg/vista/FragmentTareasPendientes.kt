@@ -6,7 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.tfg.databinding.FragmentTareasPendientesBinding
 import com.example.tfg.modelo.Tarea
@@ -51,16 +53,19 @@ class FragmentTareasPendientes : Fragment() {
 
         // observar usuarios para mostrar nombres correctamente
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                LocalizadorServicios.repositorioAuth.observarUsuarios().collect { lista ->
-                    adapter.updateUsuarios(lista)
-                }
-            } catch (_: Exception) { }
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                try {
+                    LocalizadorServicios.repositorioAuth.observarUsuarios().collect { lista ->
+                        adapter.updateUsuarios(lista)
+                    }
+                } catch (_: Exception) { }
+            }
         }
 
         // observar el grupo: mostrar/ocultar UI y recargar tareas cuando cambie
         viewLifecycleOwner.lifecycleScope.launch {
-            parejaVM.grupo.collectLatest { grupo ->
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                parejaVM.grupo.collectLatest { grupo ->
                 val nuevoGrupoId = grupo?.id
                 if (nuevoGrupoId != grupoActualId) {
                     grupoActualId = nuevoGrupoId
@@ -80,10 +85,11 @@ class FragmentTareasPendientes : Fragment() {
                     binding.rvTareasPendientes.visibility = View.VISIBLE
                     binding.layoutSinGrupo.visibility = View.GONE
 
-                    // suscribir tareas del grupo si no hay suscripción activa
+                    //                     suscribir tareas del grupo si no hay suscripción activa
                     if (tareasJob == null || tareasJob?.isActive == false) {
                         suscribirTareas()
                     }
+                }
                 }
             }
         }
@@ -91,8 +97,10 @@ class FragmentTareasPendientes : Fragment() {
 
     private fun suscribirTareas() {
         tareasJob = viewLifecycleOwner.lifecycleScope.launch {
-            LocalizadorServicios.repositorioTarea.observarTareas().collect { list ->
-                actualizarListado(list)
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                LocalizadorServicios.repositorioTarea.observarTareas().collect { list ->
+                    actualizarListado(list)
+                }
             }
         }
     }
