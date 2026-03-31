@@ -314,12 +314,15 @@ class FragmentTareas : Fragment() {
 
                         // configurar botones coherentes (sin mostrar a quién se asignó aquí)
                         btnMas.setOnClickListener {
-                            // Mostrar opciones secundarias según estado
-                            val opciones = when (tarea.estado) {
-                                "pendiente" -> arrayOf("Editar","Eliminar")
-                                "completada" -> arrayOf("Confirmar","Reclamar")
-                                else -> arrayOf("Editar")
+                            val uid2 = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
+                            val esPersonalizada = tarea.categoria.equals("personalizado", true) || tarea.categoria.equals("personalizada", true)
+                            val opciones = when {
+                                tarea.estado == "completada" && uid2 == tarea.creadoPor -> arrayOf("Confirmar", "Reclamar")
+                                tarea.estado == "pendiente" && esPersonalizada && uid2 == tarea.creadoPor -> arrayOf("Editar", "Eliminar")
+                                tarea.estado == "pendiente" && uid2 == tarea.creadoPor -> arrayOf("Eliminar")
+                                else -> emptyArray()
                             }
+                            if (opciones.isEmpty()) return@setOnClickListener
                             androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Opciones")
                                 .setItems(opciones) { _, idx ->
                                     // acciones simples para ejemplo
@@ -430,7 +433,7 @@ class FragmentTareas : Fragment() {
             }
 
             holder.btnAccion.setOnClickListener(null)
-            holder.root.setOnLongClickListener { mostrarDialogoEditar(tarea); true }
+            // Solo tareas personalizadas permiten edición (long press eliminado para predefinidas)
             // Simplificar lista: solo permitir "Completar" si soy el asignado y la tarea está pendiente
             if (!usuarioId.isBlank() && usuarioId == tarea.asignadoA && tarea.estado == "pendiente") {
                 holder.btnAccion.visibility = View.VISIBLE

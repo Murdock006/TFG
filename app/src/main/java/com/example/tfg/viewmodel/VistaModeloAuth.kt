@@ -33,17 +33,16 @@ class VistaModeloAuth(
                 if (res.isSuccess) {
                     _usuario.value = res.getOrNull()
                     _error.value = null
-                    // warm-up: forzar carga de lista de usuarios para que UI resuelva nombres rápidamente
                     try {
                         val lista = LocalizadorServicios.repositorioAuth.observarUsuarios().first()
                         Log.d(TAG, "warmup usuarios tras registrar: ${lista.size}")
                     } catch (e: Exception) { Log.w(TAG, "warmup usuarios falló: ${e.message}") }
                 } else {
                     val ex = res.exceptionOrNull()
-                    _error.value = "Registro fallido: ${ex?.javaClass?.simpleName}: ${ex?.message}"
+                    _error.value = ex?.message ?: "Error al registrarse"
                 }
             } catch (e: Exception) {
-                _error.value = "Registro fallido: ${e.javaClass.simpleName}: ${e.message}"
+                _error.value = e.message ?: "Error al registrarse"
             }
         }
     }
@@ -64,10 +63,10 @@ class VistaModeloAuth(
                     } catch (e: Exception) { Log.w(TAG, "warmup usuarios falló: ${e.message}") }
                 } else {
                     val ex = res.exceptionOrNull()
-                    _error.value = "Login fallido: ${ex?.javaClass?.simpleName}: ${ex?.message}"
+                    _error.value = ex?.message ?: "Error al iniciar sesión"
                 }
             } catch (e: Exception) {
-                _error.value = "Login fallido: ${e.javaClass.simpleName}: ${e.message}"
+                _error.value = e.message ?: "Error al iniciar sesión"
             }
         }
     }

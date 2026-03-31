@@ -180,6 +180,21 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
         }
     }
 
+    override fun observarTareasPorGrupo(grupoId: String): Flow<List<Tarea>> = callbackFlow {
+        val combinado = mutableMapOf<String, Tarea>()
+        val sub = firestore.collection(coleccion)
+            .whereEqualTo("grupoId", grupoId)
+            .addSnapshotListener { snap, error ->
+                if (error != null) { close(error); return@addSnapshotListener }
+                snap?.documents?.mapNotNull { docToTarea(it) }?.forEach { combinado[it.id] = it }
+                // Eliminar los que ya no están en el snapshot
+                val idsActuales = snap?.documents?.map { it.id }?.toSet() ?: emptySet()
+                combinado.keys.removeAll { it !in idsActuales }
+                trySend(combinado.values.toList())
+            }
+        awaitClose { sub.remove() }
+    }
+
     override suspend fun actualizarTarea(tarea: Tarea): Result<Tarea> {
         return try {
             val docRef = firestore.collection(coleccion).document(tarea.id)

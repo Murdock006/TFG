@@ -153,47 +153,41 @@ class FragmentPgPrincipal : Fragment() {
 
         // Añadir soporte para tareas recientes: usar lista vertical (una tarea por línea)
         binding.rvTareasHome.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
-        // al estar dentro de un ScrollView, desactivar nested scrolling para que RecyclerView mida correctamente
         binding.rvTareasHome.isNestedScrollingEnabled = false
-        // indicar que tiene tamaño fijo para optimizar las medidas (mejora rendimiento si el tamaño del RecyclerView no cambia)
-        binding.rvTareasHome.setHasFixedSize(true)
-        // desactivar animador por defecto para evitar trabajo extra en frames complejos
-        binding.rvTareasHome.itemAnimator = null
 
         val tareaAdapter = TareasHomeAdapter(this, parejaVM, viewLifecycleOwner.lifecycleScope)
         binding.rvTareasHome.adapter = tareaAdapter
 
-        // observar el grupo y gestionar tareas recientes con la misma lógica que FragmentTareasPendientes
+        // observar el grupo y gestionar tareas recientes — re-suscribir siempre que cambie el grupo
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 parejaVM.grupo.collectLatest { grupo ->
                     val nuevoGrupoId = grupo?.id
-                    if (nuevoGrupoId != grupoIdActual) {
-                        grupoIdActual = nuevoGrupoId
-                        tareasHomeJob?.cancel()
-                        tareasHomeJob = null
-                        tareaAdapter.updateItems(emptyList())
-                    }
+
+                    // Siempre cancelar la suscripción anterior al cambiar de grupo
+                    tareasHomeJob?.cancel()
+                    tareasHomeJob = null
+                    tareaAdapter.updateItems(emptyList())
+                    grupoIdActual = nuevoGrupoId
 
                     if (grupo == null) {
-                        // Sin grupo: ocultar lista y mostrar mensaje
                         binding.rvTareasHome.visibility = View.GONE
                         binding.tvSinTareasRecientes.visibility = View.VISIBLE
                         binding.tvSinTareasRecientes.text = "Únete a un grupo para ver tareas recientes"
                     } else {
-                        // Con grupo: suscribir tareas si no hay suscripción activa
                         binding.tvSinTareasRecientes.visibility = View.GONE
                         binding.rvTareasHome.visibility = View.VISIBLE
-                        if (tareasHomeJob == null || tareasHomeJob?.isActive == false) {
-                            tareasHomeJob = viewLifecycleOwner.lifecycleScope.launch {
-                                LocalizadorServicios.repositorioTarea.observarTareas().collect { list ->
-                                    // Filtrar solo tareas del grupo actual y mostrar las 5 más recientes
-                                    val tareasDelGrupo = list
-                                        .filter { it.grupoId == grupoIdActual }
+                        // Nueva suscripción con el grupoId ya conocido — evita que el repositorio
+                        // tenga que ir a Firestore a buscarlo y no lo encuentre a tiempo
+                        tareasHomeJob = viewLifecycleOwner.lifecycleScope.launch {
+                            LocalizadorServicios.repositorioTarea
+                                .observarTareasPorGrupo(nuevoGrupoId!!)
+                                .collect { list ->
+                                    val recientes = list
                                         .sortedByDescending { it.fechaCreada?.seconds ?: 0L }
                                         .take(5)
-                                    tareaAdapter.updateItems(tareasDelGrupo)
-                                    if (tareasDelGrupo.isEmpty()) {
+                                    tareaAdapter.updateItems(recientes)
+                                    if (recientes.isEmpty()) {
                                         binding.rvTareasHome.visibility = View.GONE
                                         binding.tvSinTareasRecientes.visibility = View.VISIBLE
                                         binding.tvSinTareasRecientes.text = "No hay tareas recientes en este grupo"
@@ -202,7 +196,6 @@ class FragmentPgPrincipal : Fragment() {
                                         binding.tvSinTareasRecientes.visibility = View.GONE
                                     }
                                 }
-                            }
                         }
                     }
                 }

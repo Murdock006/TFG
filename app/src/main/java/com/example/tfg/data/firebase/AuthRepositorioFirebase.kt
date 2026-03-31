@@ -92,10 +92,16 @@ class AuthRepositorioFirebase : AuthRepositorio {
             Result.success(user)
         } catch (e: Exception) {
             Log.e(TAG, "Error login", e)
-            val msg = when (e) {
-                is com.google.firebase.auth.FirebaseAuthInvalidUserException -> "Usuario no encontrado"
-                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> "Credenciales inválidas"
-                is com.google.firebase.FirebaseNetworkException -> "Fallo de red: comprueba tu conexión"
+            val msg = when {
+                e is com.google.firebase.auth.FirebaseAuthInvalidUserException -> "Usuario no encontrado"
+                e is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> "Email o contraseña incorrectos"
+                e is com.google.firebase.FirebaseNetworkException -> "Fallo de red: comprueba tu conexión"
+                e is com.google.firebase.auth.FirebaseAuthException && e.errorCode == "INVALID_API_KEY" ->
+                    "API key inválida. Descarga el google-services.json actualizado de Firebase Console"
+                e is com.google.firebase.auth.FirebaseAuthException && e.errorCode == "API_KEY_SERVICE_BLOCKED" ->
+                    "La API key tiene restricciones. Habilita 'Identity Toolkit API' en Google Cloud Console"
+                e is com.google.firebase.auth.FirebaseAuthException ->
+                    "Error auth [${e.errorCode}]: ${e.message}"
                 else -> e.message ?: "Error desconocido"
             }
             Result.failure(Exception(msg))

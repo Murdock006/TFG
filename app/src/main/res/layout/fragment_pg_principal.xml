@@ -196,7 +196,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="12dp"
+                    android:padding="10dp"
                     android:gravity="center_vertical">
 
                     <Button
@@ -235,7 +235,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="12dp"
+                    android:padding="10dp"
                     android:gravity="center_vertical">
 
                     <Button
@@ -274,7 +274,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="12dp"
+                    android:padding="10dp"
                     android:gravity="center_vertical">
 
                     <Button
@@ -313,7 +313,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="12dp"
+                    android:padding="10dp"
                     android:gravity="center_vertical">
 
                     <Button
@@ -352,7 +352,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="12dp"
+                    android:padding="10dp"
                     android:gravity="center_vertical">
 
                     <Button
@@ -390,7 +390,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="12dp"
+                    android:padding="10dp"
                     android:gravity="center_vertical">
 
                     <Button
@@ -440,11 +440,9 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvTareasHome"
             android:layout_width="match_parent"
-            android:layout_height="240dp"
-            android:clipToPadding="false"
-            android:paddingBottom="12dp"
+            android:layout_height="wrap_content"
             android:nestedScrollingEnabled="false"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+            android:overScrollMode="never" />
 
     </LinearLayout>
 

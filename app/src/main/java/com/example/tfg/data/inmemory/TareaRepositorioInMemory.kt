@@ -5,6 +5,7 @@ import com.example.tfg.repositorio.TareaRepositorio
 import com.example.tfg.service.LocalizadorServicios
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import java.util.UUID
@@ -36,6 +37,9 @@ class TareaRepositorioInMemory : TareaRepositorio {
     }
 
     override fun observarTareas(): Flow<List<Tarea>> = tareasFlow
+
+    override fun observarTareasPorGrupo(grupoId: String): Flow<List<Tarea>> =
+        tareasFlow.map { lista -> lista.filter { it.grupoId == grupoId } }
 
     override suspend fun actualizarTarea(tarea: Tarea): Result<Tarea> = withContext(Dispatchers.Default) {
         val idx = tareas.indexOfFirst { it.id == tarea.id }

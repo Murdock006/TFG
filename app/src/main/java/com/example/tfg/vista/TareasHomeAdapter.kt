@@ -37,7 +37,7 @@ class TareasHomeAdapter(
     private val TAG = "TareasHomeAdapter"
     private var usuarios: List<Usuario> = emptyList()
 
-    fun updateItems(list: List<Tarea>) { submitList(list) }
+    fun updateItems(list: List<Tarea>) { submitList(null); submitList(list) }
     fun updateUsuarios(list: List<Usuario>) { usuarios = list; notifyDataSetChanged() }
 
     class TareaDiffCallback : DiffUtil.ItemCallback<Tarea>() {
@@ -47,6 +47,7 @@ class TareasHomeAdapter(
 
     inner class VH(val root: View) : RecyclerView.ViewHolder(root) {
         val tvTitulo: TextView = root.findViewById(R.id.tvTituloTarea)
+        val tvDificultad: TextView? = root.findViewById(R.id.tvDificultad)
         val tvMeta: TextView = root.findViewById(R.id.tvMetaTarea)
         val tvAsignado: TextView = root.findViewById(R.id.tvAsignado)
         val btnAccion: Button = root.findViewById(R.id.btnAccionTarea)
@@ -88,7 +89,8 @@ class TareasHomeAdapter(
 
         val difTxt = when (t.dificultad) { 1 -> "Fácil"; 2 -> "Media"; else -> "Difícil" }
         holder.tvTitulo.text = t.titulo
-        holder.tvMeta.text = "${t.puntos} pts · $difTxt · ${estadoLegible.replaceFirstChar { it.uppercase() }}"
+        holder.tvDificultad?.text = difTxt
+        holder.tvMeta.text = "${t.puntos} pts · ${estadoLegible.replaceFirstChar { it.uppercase() }}"
 
         when (t.dificultad) {
             1 -> holder.vIndicator?.setBackgroundColor(Color.parseColor("#A5D6A7"))
@@ -100,18 +102,30 @@ class TareasHomeAdapter(
 
         if (!t.asignadoA.isNullOrBlank()) {
             holder.tvAsignado.visibility = View.VISIBLE
-            holder.tvAsignado.text = "Cargando..."
-            scope.launch {
-                // "Te la asignó" → nombre del CREADOR (quien asignó)
-                // "Asignado a"   → nombre del ASIGNADO (quien la recibe)
-                if (usuarioId == t.asignadoA) {
-                    // Soy el receptor: mostrar quién me la asignó (creadoPor)
-                    val nombreCreador = obtenerNombreUsuario(t.creadoPor)
-                    holder.tvAsignado.text = "Te la asignó: $nombreCreador"
-                } else {
-                    // Soy el creador o un observador: mostrar a quién está asignada
-                    val nombreAsignado = obtenerNombreUsuario(t.asignadoA)
-                    holder.tvAsignado.text = "Asignado a: $nombreAsignado"
+            // Intentar resolver el nombre de forma síncrona desde la caché primero
+            val cacheCreador = if (usuarioId == t.asignadoA) usuarios.find { it.id == t.creadoPor } else null
+            val cacheAsignado = if (usuarioId != t.asignadoA) usuarios.find { it.id == t.asignadoA } else null
+
+            fun nombreDesdeCache(u: com.example.tfg.modelo.Usuario?): String? =
+                u?.let { if (it.nombre.isNotBlank()) it.nombre else if (it.email.isNotBlank()) it.email else null }
+
+            if (usuarioId == t.asignadoA && cacheCreador != null) {
+                holder.tvAsignado.text = "Te la asignó: ${nombreDesdeCache(cacheCreador) ?: cacheCreador.id}"
+            } else if (usuarioId != t.asignadoA && cacheAsignado != null) {
+                holder.tvAsignado.text = "Asignado a: ${nombreDesdeCache(cacheAsignado) ?: cacheAsignado.id}"
+            } else {
+                // Solo ir a Firestore si no está en caché — guardar posición para evitar race condition
+                holder.tvAsignado.text = "Cargando..."
+                val posicionActual = holder.bindingAdapterPosition
+                scope.launch {
+                    val nombre = if (usuarioId == t.asignadoA) {
+                        "Te la asignó: ${obtenerNombreUsuario(t.creadoPor)}"
+                    } else {
+                        "Asignado a: ${obtenerNombreUsuario(t.asignadoA)}"
+                    }
+                    if (holder.bindingAdapterPosition == posicionActual) {
+                        holder.tvAsignado.text = nombre
+                    }
                 }
             }
         }
