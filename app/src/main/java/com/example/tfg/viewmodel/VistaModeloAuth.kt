@@ -33,10 +33,13 @@ class VistaModeloAuth(
                 if (res.isSuccess) {
                     _usuario.value = res.getOrNull()
                     _error.value = null
-                    try {
-                        val lista = LocalizadorServicios.repositorioAuth.observarUsuarios().first()
-                        Log.d(TAG, "warmup usuarios tras registrar: ${lista.size}")
-                    } catch (e: Exception) { Log.w(TAG, "warmup usuarios falló: ${e.message}") }
+                    // warm-up: forzar carga de lista de usuarios para que UI resuelva nombres rápidamente (no-bloqueante)
+                    launch {
+                        try {
+                            val lista = LocalizadorServicios.repositorioAuth.observarUsuarios().first()
+                            Log.d(TAG, "warmup usuarios tras registrar: ${lista.size}")
+                        } catch (e: Exception) { Log.w(TAG, "warmup usuarios falló: ${e.message}") }
+                    }
                 } else {
                     val ex = res.exceptionOrNull()
                     _error.value = ex?.message ?: "Error al registrarse"
@@ -56,11 +59,13 @@ class VistaModeloAuth(
                 if (res.isSuccess) {
                     _usuario.value = res.getOrNull()
                     _error.value = null
-                    // warm-up: forzar carga de lista de usuarios para que UI resuelva nombres rápidamente
-                    try {
-                        val lista = LocalizadorServicios.repositorioAuth.observarUsuarios().first()
-                        Log.d(TAG, "warmup usuarios tras login: ${lista.size}")
-                    } catch (e: Exception) { Log.w(TAG, "warmup usuarios falló: ${e.message}") }
+                    // warm-up: forzar carga de lista de usuarios para que UI resuelva nombres rápidamente (no-bloqueante)
+                    launch {
+                        try {
+                            val lista = LocalizadorServicios.repositorioAuth.observarUsuarios().first()
+                            Log.d(TAG, "warmup usuarios tras login: ${lista.size}")
+                        } catch (e: Exception) { Log.w(TAG, "warmup usuarios falló: ${e.message}") }
+                    }
                 } else {
                     val ex = res.exceptionOrNull()
                     _error.value = ex?.message ?: "Error al iniciar sesión"
@@ -83,6 +88,13 @@ class VistaModeloAuth(
                 if (res.isSuccess) {
                     _usuario.value = res.getOrNull()
                     _error.value = null
+                    // warm-up: forzar carga de lista de usuarios para que UI resuelva nombres rápidamente (no-bloqueante)
+                    launch {
+                        try {
+                            val lista = LocalizadorServicios.repositorioAuth.observarUsuarios().first()
+                            Log.d(TAG, "warmup usuarios tras login proveedor: ${lista.size}")
+                        } catch (e: Exception) { Log.w(TAG, "warmup usuarios falló: ${e.message}") }
+                    }
                 } else {
                     val ex = res.exceptionOrNull()
                     _error.value = "Login con proveedor fallido: ${ex?.message}"
