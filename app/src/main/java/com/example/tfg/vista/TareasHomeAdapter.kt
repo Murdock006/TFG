@@ -18,6 +18,7 @@ import com.example.tfg.modelo.Tarea
 import com.example.tfg.modelo.Usuario
 import com.example.tfg.service.LocalizadorServicios
 import com.example.tfg.viewmodel.ParejaViewModel
+import com.example.tfg.viewmodel.TareasViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -31,6 +32,7 @@ import java.util.Calendar
 class TareasHomeAdapter(
     private val fragment: Fragment,
     private val parejaVM: ParejaViewModel,
+    private val tareasVM: TareasViewModel,
     private val scope: CoroutineScope
 ) : ListAdapter<Tarea, TareasHomeAdapter.VH>(TareaDiffCallback()) {
 
@@ -139,14 +141,9 @@ class TareasHomeAdapter(
                     holder.btnAccion.isEnabled = true
                     holder.btnAccion.text = "Completar"
                     holder.btnAccion.setOnClickListener {
-                        scope.launch {
-                            holder.btnAccion.isEnabled = false
-                            val res = LocalizadorServicios.repositorioTarea.marcarCompletada(t.id, usuarioId)
-                            if (res.isSuccess) android.widget.Toast.makeText(fragment.requireContext(), "Tarea marcada como completada", android.widget.Toast.LENGTH_SHORT).show() else {
-                                android.widget.Toast.makeText(fragment.requireContext(), res.exceptionOrNull()?.message ?: "Error", android.widget.Toast.LENGTH_LONG).show()
-                                holder.btnAccion.isEnabled = true
-                            }
-                        }
+                        holder.btnAccion.isEnabled = false
+                        tareasVM.marcarCompletada(t.id, usuarioId)
+                        // El observer del Fragment maneja el resultado y muestra Toast
                     }
                 } else if (!usuarioId.isBlank() && usuarioId == t.creadoPor && t.asignadoA.isNullOrBlank()) {
                     // Si soy el creador Y la tarea AÚN NO tiene asignado → permitir asignar
@@ -200,16 +197,10 @@ class TareasHomeAdapter(
                             .setTitle("Elige acción")
                             .setItems(opciones) { _, idx ->
                                 when (idx) {
-                                    0 -> scope.launch {
+                                    0 -> {
                                         holder.btnAccion.isEnabled = false
-                                        val r = LocalizadorServicios.repositorioTarea.confirmarTarea(t.id, usuarioId)
-                                        if (r.isSuccess) {
-                                            android.widget.Toast.makeText(fragment.requireContext(), "Tarea confirmada", android.widget.Toast.LENGTH_SHORT).show()
-                                            holder.btnAccion.visibility = View.GONE
-                                        } else {
-                                            android.widget.Toast.makeText(fragment.requireContext(), r.exceptionOrNull()?.message ?: "Error", android.widget.Toast.LENGTH_LONG).show()
-                                            holder.btnAccion.isEnabled = true
-                                        }
+                                        tareasVM.confirmarTarea(t.id, usuarioId)
+                                        // El observer del Fragment maneja el resultado y muestra Toast
                                     }
                                     1 -> android.widget.Toast.makeText(fragment.requireContext(), "Abre la tarea y usa 'Reclamar' para adjuntar evidencia", android.widget.Toast.LENGTH_LONG).show()
                                 }

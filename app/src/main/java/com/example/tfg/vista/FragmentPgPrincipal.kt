@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.tfg.databinding.FragmentPgPrincipalBinding
 import com.example.tfg.viewmodel.VistaModeloPrincipal
 import com.example.tfg.viewmodel.ParejaViewModel
+import com.example.tfg.viewmodel.TareasViewModel
 import com.example.tfg.service.LocalizadorServicios
 import com.example.tfg.modelo.Tarea
 import com.example.tfg.modelo.Usuario
@@ -32,6 +33,7 @@ class FragmentPgPrincipal : Fragment() {
     private lateinit var binding: FragmentPgPrincipalBinding
     private val vistaModelo: VistaModeloPrincipal by viewModels()
     private val parejaVM: ParejaViewModel by activityViewModels()
+    private val tareasVM: TareasViewModel by activityViewModels()
     // cache de usuarios para resolver nombres en adapters
     private var usuariosCache: List<Usuario> = emptyList()
     // control de suscripción de tareas recientes por grupo
@@ -155,7 +157,7 @@ class FragmentPgPrincipal : Fragment() {
         binding.rvTareasHome.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         binding.rvTareasHome.isNestedScrollingEnabled = false
 
-        val tareaAdapter = TareasHomeAdapter(this, parejaVM, viewLifecycleOwner.lifecycleScope)
+        val tareaAdapter = TareasHomeAdapter(this, parejaVM, tareasVM, viewLifecycleOwner.lifecycleScope)
         binding.rvTareasHome.adapter = tareaAdapter
 
         // observar el grupo y gestionar tareas recientes — re-suscribir siempre que cambie el grupo

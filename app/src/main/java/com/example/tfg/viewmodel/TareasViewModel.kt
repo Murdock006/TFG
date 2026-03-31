@@ -13,6 +13,12 @@ class TareasViewModel(private val repo: RepositorioTareas = RepositorioTareas())
     private val _tareaCreada = MutableStateFlow<Result<String>?>(null)
     val tareaCreada: StateFlow<Result<String>?> = _tareaCreada
 
+    private val _marcarCompletadaState = MutableStateFlow<Result<Unit>?>(null)
+    val marcarCompletadaState: StateFlow<Result<Unit>?> = _marcarCompletadaState
+
+    private val _confirmarTareaState = MutableStateFlow<Result<Unit>?>(null)
+    val confirmarTareaState: StateFlow<Result<Unit>?> = _confirmarTareaState
+
     fun crearTarea(tarea: Tarea) {
         viewModelScope.launch {
             val res = repo.crearTarea(tarea)
@@ -20,17 +26,30 @@ class TareasViewModel(private val repo: RepositorioTareas = RepositorioTareas())
         }
     }
 
-    fun marcarCompletada(tareaId: String, ejecutorUid: String, onResult: (Result<Unit>) -> Unit) {
+    fun marcarCompletada(tareaId: String, ejecutorUid: String) {
         viewModelScope.launch {
             val res = repo.marcarCompletada(tareaId, ejecutorUid)
-            onResult(res)
+            _marcarCompletadaState.value = res
         }
     }
 
-    fun confirmarTarea(tareaId: String, confirmadoPorUid: String, onResult: (Result<Unit>) -> Unit) {
+    fun confirmarTarea(tareaId: String, confirmadoPorUid: String) {
         viewModelScope.launch {
             val res = repo.confirmarTarea(tareaId, confirmadoPorUid)
-            onResult(res)
+            _confirmarTareaState.value = res
         }
+    }
+
+    // Funciones para resetear estados después de consumirlos
+    fun resetMarcarCompletadaState() {
+        _marcarCompletadaState.value = null
+    }
+
+    fun resetConfirmarTareaState() {
+        _confirmarTareaState.value = null
+    }
+
+    fun resetTareaCreada() {
+        _tareaCreada.value = null
     }
 }

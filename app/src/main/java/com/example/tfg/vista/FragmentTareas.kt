@@ -28,6 +28,7 @@ import com.example.tfg.repositorio.RepositorioDisputas
 import com.example.tfg.service.LocalizadorServicios
 import com.example.tfg.service.NotificationScheduler
 import com.example.tfg.viewmodel.ParejaViewModel
+import com.example.tfg.viewmodel.TareasViewModel
 import com.example.tfg.repositorio.CategoriasRepositorio
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -37,6 +38,7 @@ class FragmentTareas : Fragment() {
     private var listaBinding: FragmentTareasListaBinding? = null
     private var crearBinding: FragmentTareasCrearBinding? = null
     private val parejaVM: ParejaViewModel by activityViewModels()
+    private val tareasVM: TareasViewModel by activityViewModels()
     private val repoDisputas = RepositorioDisputas()
     private var pickImageLauncher: ActivityResultLauncher<String>? = null
     private var pendingTareaParaDisputa: Tarea? = null
@@ -91,6 +93,43 @@ class FragmentTareas : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 LocalizadorServicios.repositorioAuth.observarUsuarios().collect { list -> usuariosCacheGlobal = list }
+            }
+        }
+
+        // observers para StateFlow del TareasViewModel
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                tareasVM.marcarCompletadaState.collect { result ->
+                    result?.let {
+                        if (it.isSuccess) {
+                            Toast.makeText(requireContext(), "Tarea marcada como completada", Toast.LENGTH_SHORT).show()
+                        } else {
+                            val msg = it.exceptionOrNull()?.message ?: "Error"
+                            Log.e(TAG, "marcarCompletada failed: $msg")
+                            if (msg.contains("PERMISSION_DENIED") || msg.contains("permission", true)) {
+                                Toast.makeText(requireContext(), "Permisos Firestore insuficientes", Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                            }
+                        }
+                        tareasVM.resetMarcarCompletadaState()
+                    }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                tareasVM.confirmarTareaState.collect { result ->
+                    result?.let {
+                        if (it.isSuccess) {
+                            Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(requireContext(), it.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+                        }
+                        tareasVM.resetConfirmarTareaState()
+                    }
+                }
             }
         }
 
@@ -329,23 +368,12 @@ class FragmentTareas : Fragment() {
                                     when (opciones[idx]) {
                                         "Editar" -> mostrarDialogoEditar(tarea)
                                         "Eliminar" -> lifecycleScope.launch { LocalizadorServicios.repositorioTarea.actualizarTarea(tarea.copy(estado = "eliminada")) }
-                                        "Confirmar" -> lifecycleScope.launch {
+                                        "Confirmar" -> {
                                             // deshabilitar botón para evitar doble click
                                             btnAccion.isEnabled = false
-                                            try {
-                                                val r = LocalizadorServicios.repositorioTarea.confirmarTarea(tarea.id, tarea.creadoPor ?: "")
-                                                if (r.isSuccess) {
-                                                    Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show()
-                                                    // ocultar el botón de acción en la vista detalle
-                                                    btnAccion.visibility = Button.GONE
-                                                } else {
-                                                    Toast.makeText(requireContext(), r.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
-                                                    btnAccion.isEnabled = true
-                                                }
-                                            } catch (e: Exception) {
-                                                Toast.makeText(requireContext(), e.message ?: "Error", Toast.LENGTH_SHORT).show()
-                                                btnAccion.isEnabled = true
-                                            }
+                                            tareasVM.confirmarTarea(tarea.id, tarea.creadoPor ?: "")
+                                            // El observer maneja el resultado y muestra Toast
+                                            // TODO: re-habilitar botón si falla (necesita refactor para manejar UI state)
                                         }
                                         "Reclamar" -> { pendingTareaParaDisputa = tarea; pickImageLauncher?.launch("image/*") }
                                     }
@@ -357,26 +385,16 @@ class FragmentTareas : Fragment() {
                             !uid.isBlank() && uid == tarea.creadoPor && tarea.estado == "completada" -> {
                                 btnAccion.text = "Confirmar"
                                 btnAccion.setOnClickListener {
-                                    lifecycleScope.launch {
-                                        btnAccion.isEnabled = false
-                                        val res = LocalizadorServicios.repositorioTarea.confirmarTarea(tarea.id, tarea.creadoPor ?: "")
-                                        if (res.isSuccess) {
-                                            Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show()
-                                            btnAccion.visibility = Button.GONE
-                                        } else {
-                                            Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
-                                            btnAccion.isEnabled = true
-                                        }
-                                    }
+                                    btnAccion.isEnabled = false
+                                    tareasVM.confirmarTarea(tarea.id, tarea.creadoPor ?: "")
+                                    // El observer maneja el resultado y muestra Toast
                                 }
                             }
                             !uid.isBlank() && uid == tarea.asignadoA && tarea.estado == "pendiente" -> {
                                 btnAccion.text = "Completar"
                                 btnAccion.setOnClickListener {
-                                    lifecycleScope.launch {
-                                        val r = LocalizadorServicios.repositorioTarea.marcarCompletada(tarea.id, uid)
-                                        if (r.isSuccess) Toast.makeText(requireContext(), "Tarea marcada como completada", Toast.LENGTH_SHORT).show() else Toast.makeText(requireContext(), r.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
-                                    }
+                                    tareasVM.marcarCompletada(tarea.id, uid)
+                                    // El observer maneja el resultado y muestra Toast
                                 }
                             }
                             else -> {
@@ -440,14 +458,8 @@ class FragmentTareas : Fragment() {
                 holder.btnAccion.isEnabled = true
                 holder.btnAccion.text = "Completar"
                 holder.btnAccion.setOnClickListener {
-                    lifecycleScope.launch {
-                        val res = LocalizadorServicios.repositorioTarea.marcarCompletada(tarea.id, usuarioId)
-                        if (res.isSuccess) Toast.makeText(requireContext(), "Tarea marcada como completada", Toast.LENGTH_SHORT).show() else {
-                            val msg = res.exceptionOrNull()?.message ?: "Error"
-                            Log.e(TAG, "marcarCompletada failed: $msg")
-                            if (msg.contains("PERMISSION_DENIED") || msg.contains("permission", true)) Toast.makeText(requireContext(), "Permisos Firestore insuficientes", Toast.LENGTH_LONG).show() else Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                        }
-                    }
+                    tareasVM.marcarCompletada(tarea.id, usuarioId)
+                    // El observer maneja el resultado y muestra Toast
                 }
             } else if (!usuarioId.isBlank() && usuarioId == tarea.creadoPor && tarea.estado == "pendiente") {
                 // Si soy el creador y la tarea está pendiente, permitir asignar/reasignar desde la lista

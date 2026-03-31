@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.tfg.databinding.FragmentTareasPendientesBinding
 import com.example.tfg.modelo.Tarea
+import com.example.tfg.viewmodel.TareasViewModel
 import com.example.tfg.service.LocalizadorServicios
 import com.example.tfg.R
 import kotlinx.coroutines.Job
@@ -21,8 +22,9 @@ class FragmentTareasPendientes : Fragment() {
     private var _binding: FragmentTareasPendientesBinding? = null
     private val binding get() = _binding!!
     private val parejaVM: com.example.tfg.viewmodel.ParejaViewModel by activityViewModels()
+    private val tareasVM: TareasViewModel by activityViewModels()
 
-    private val adapter by lazy { TareasHomeAdapter(this, parejaVM, viewLifecycleOwner.lifecycleScope) }
+    private val adapter by lazy { TareasHomeAdapter(this, parejaVM, tareasVM, viewLifecycleOwner.lifecycleScope) }
 
     // Job para la suscripción a tareas, se cancela y reinicia cuando cambia el grupo
     private var tareasJob: Job? = null
