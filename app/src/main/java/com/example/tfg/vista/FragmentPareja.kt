@@ -396,7 +396,7 @@ class FragmentPareja : Fragment() {
                             this.data = data
                             description.isEnabled = false
                             legend.isEnabled = false
-                            animateY(1000, com.github.mikephil.charting.animation.Easing.EasingOption.EaseInOutQuad)
+                            animateY(1000)
                             invalidate()
                         }
                     } else {
