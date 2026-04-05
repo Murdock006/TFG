@@ -68,8 +68,8 @@ class MainActivity : AppCompatActivity() {
             // Solo manejar navigation bar (barra inferior) dinámicamente
             val navInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
             
-            // Aplicar padding superior FIJO (24dp) y padding inferior dinámico
-            val paddingTopDp = 24 // padding fijo en dp
+            // Aplicar padding superior FIJO (16dp) y padding inferior dinámico
+            val paddingTopDp = 16 // padding fijo en dp
             val paddingTopPx = (paddingTopDp * resources.displayMetrics.density).toInt()
             
             v.updatePadding(
