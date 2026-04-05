@@ -27,6 +27,7 @@
 
     <!-- Semantic colors preserved -->
     <color name="exito">#2E7D32</color>
+    <color name="verde">#2E7D32</color>
     <color name="advertencia">#F9A825</color>
     <color name="error">#C62828</color>
     <!-- Compatibilidad: alias de colores antiguos usados en layouts -->

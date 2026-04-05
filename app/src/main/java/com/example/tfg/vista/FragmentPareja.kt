@@ -30,6 +30,9 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 import android.util.TypedValue
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
 
 class FragmentPareja : Fragment() {
 
@@ -60,6 +63,9 @@ class FragmentPareja : Fragment() {
     private lateinit var tvGroupEmoji: TextView
     private lateinit var btnCopiarCodigo: Button
     private lateinit var btnCompartirCodigo: Button
+    private lateinit var pieChartTareas: com.github.mikephil.charting.charts.PieChart
+    private lateinit var tvTareasCompletadas: TextView
+    private lateinit var tvTareasPendientes: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -90,6 +96,9 @@ class FragmentPareja : Fragment() {
         tvGroupEmoji = rootView.findViewById(com.example.tfg.R.id.tvGroupEmoji)
         btnCopiarCodigo = rootView.findViewById(com.example.tfg.R.id.btnCopiarCodigo)
         btnCompartirCodigo = rootView.findViewById(com.example.tfg.R.id.btnCompartirCodigo)
+        pieChartTareas = rootView.findViewById(com.example.tfg.R.id.pieChartTareas)
+        tvTareasCompletadas = rootView.findViewById(com.example.tfg.R.id.tvTareasCompletadas)
+        tvTareasPendientes = rootView.findViewById(com.example.tfg.R.id.tvTareasPendientes)
 
         return rootView
     }
@@ -343,6 +352,62 @@ class FragmentPareja : Fragment() {
         builder.show()
     }
 
+    private fun cargarYMostrarEstadisticasTareas(grupoId: String) {
+        lifecycleScope.launch {
+            try {
+                val db = Firebase.firestore
+                val tareasSnapshot = db.collection("tareas")
+                    .whereEqualTo("grupoId", grupoId)
+                    .get()
+                    .await()
+
+                val completadas = tareasSnapshot.documents.count { it.getString("estado") == "completada" || it.getString("estado") == "confirmada" }
+                val pendientes = tareasSnapshot.documents.count { it.getString("estado") == "pendiente" }
+                val total = completadas + pendientes
+
+                withContext(Dispatchers.Main) {
+                    tvTareasCompletadas.text = completadas.toString()
+                    tvTareasPendientes.text = pendientes.toString()
+
+                    // Configurar gráfico circular
+                    if (total > 0) {
+                        val entries = mutableListOf<PieEntry>()
+                        if (completadas > 0) entries.add(PieEntry(completadas.toFloat(), "Completadas"))
+                        if (pendientes > 0) entries.add(PieEntry(pendientes.toFloat(), "Pendientes"))
+
+                        val dataSet = PieDataSet(entries, "")
+                        dataSet.colors = listOf(
+                            resources.getColor(com.example.tfg.R.color.exito, requireContext().theme),
+                            resources.getColor(com.example.tfg.R.color.gris_claro, requireContext().theme)
+                        )
+                        dataSet.setSliceSpace(2f)
+                        dataSet.setValueTextSize(12f)
+                        dataSet.setValueTextColor(android.graphics.Color.WHITE)
+
+                        val data = PieData(dataSet)
+                        data.setValueFormatter { value, _, _, _ ->
+                            if (value > 0) value.toInt().toString() else ""
+                        }
+
+                        pieChartTareas.apply {
+                            this.data = data
+                            description.isEnabled = false
+                            legend.isEnabled = false
+                            animateY(1000, com.github.mikephil.charting.animation.Easing.EasingOption.EaseInOutQuad)
+                            invalidate()
+                        }
+                    } else {
+                        // Sin tareas, mostrar un gráfico vacío o un mensaje
+                        pieChartTareas.clear()
+                        pieChartTareas.invalidate()
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("FragmentPareja", "cargarYMostrarEstadisticasTareas error", e)
+            }
+        }
+    }
+
     private fun salirDelGrupo(usuarioId: String, adapter: MiembrosAdapter) {
         AlertDialog.Builder(requireContext())
             .setTitle("Salir del grupo")
@@ -395,6 +460,9 @@ class FragmentPareja : Fragment() {
             tvGroupName.text = g.nombre
             tvGroupMembers.text = getString(com.example.tfg.R.string.miembros_format, g.miembros.size)
             tvGroupEmoji.text = g.emoji
+            
+            // Cargar estadísticas de tareas
+            cargarYMostrarEstadisticasTareas(g.id)
 
             viewLifecycleOwner.lifecycleScope.launch {
                 val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<Usuario>() }
