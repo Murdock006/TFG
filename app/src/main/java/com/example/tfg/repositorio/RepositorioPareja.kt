@@ -32,13 +32,14 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseFires
     }
 
     // Nueva versión: crear grupo y actualizar usuario con grupoId en operación atómica
-    suspend fun crearGrupo(nombre: String, creadorUid: String): Result<String> {
+    suspend fun crearGrupo(nombre: String, creadorUid: String, emoji: String = "❤️"): Result<String> {
         return try {
             val grupoData = mapOf(
                 "nombre" to nombre,
                 "miembros" to mapOf(creadorUid to "creador"),
                 "puntos" to 0,
-                "fechaCreacion" to Timestamp.now()
+                "fechaCreacion" to Timestamp.now(),
+                "emoji" to emoji
             )
             // Usar batch para crear documento y actualizar usuario
             val newDocRef = firestore.collection(coleccionGrupos).document()
@@ -269,6 +270,19 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseFires
         } catch (e: Exception) {
             Log.e(TAG, "actualizarNombreGrupo error", e)
             Result.failure(Exception(e.message ?: "Error actualizando nombre de grupo"))
+        }
+    }
+
+    // Actualiza el emoji de un grupo (campo 'emoji')
+    suspend fun actualizarEmojiGrupo(grupoId: String, nuevoEmoji: String): Result<Unit> {
+        return try {
+            val docRef = firestore.collection(coleccionGrupos).document(grupoId)
+            docRef.update("emoji", nuevoEmoji).await()
+            Log.d(TAG, "actualizarEmojiGrupo OK grupo=$grupoId emoji=$nuevoEmoji")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "actualizarEmojiGrupo error", e)
+            Result.failure(Exception(e.message ?: "Error actualizando emoji de grupo"))
         }
     }
 

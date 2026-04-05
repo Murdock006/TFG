@@ -57,6 +57,9 @@ class FragmentPareja : Fragment() {
     private lateinit var tvGroupMembers: TextView
     private lateinit var tvMiembrosTitulo: TextView
     private lateinit var cardInfoGrupo: MaterialCardView
+    private lateinit var tvGroupEmoji: TextView
+    private lateinit var btnCopiarCodigo: Button
+    private lateinit var btnCompartirCodigo: Button
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -84,6 +87,9 @@ class FragmentPareja : Fragment() {
         tvGroupMembers = rootView.findViewById(com.example.tfg.R.id.tvGroupMembers)
         tvMiembrosTitulo = rootView.findViewById(com.example.tfg.R.id.tvMiembrosTitulo)
         cardInfoGrupo = rootView.findViewById(com.example.tfg.R.id.cardInfoGrupo)
+        tvGroupEmoji = rootView.findViewById(com.example.tfg.R.id.tvGroupEmoji)
+        btnCopiarCodigo = rootView.findViewById(com.example.tfg.R.id.btnCopiarCodigo)
+        btnCompartirCodigo = rootView.findViewById(com.example.tfg.R.id.btnCompartirCodigo)
 
         return rootView
     }
@@ -278,6 +284,63 @@ class FragmentPareja : Fragment() {
         }
         btnEditarNombre.setOnClickListener(guardarHandler)
 
+        // Selector de emoji
+        tvGroupEmoji.setOnClickListener {
+            val g = parejaVM.grupo.value ?: run { Toast.makeText(requireContext(), getString(com.example.tfg.R.string.no_hay_grupo_activo), Toast.LENGTH_SHORT).show(); return@setOnClickListener }
+            mostrarSelectorEmoji { nuevoEmoji ->
+                parejaVM.actualizarEmojiGrupo(g.id, nuevoEmoji) { res ->
+                    if (res.isSuccess) {
+                        tvGroupEmoji.text = nuevoEmoji
+                        Toast.makeText(requireContext(), "Emoji actualizado", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error actualizando emoji", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+
+        // Copiar código
+        btnCopiarCodigo.setOnClickListener {
+            val codigoTexto = tvCodigo.text.toString()
+            if (codigoTexto.isBlank() || codigoTexto == "Código: -") {
+                Toast.makeText(requireContext(), "Genera una invitación primero", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val codigo = codigoTexto.removePrefix("Código: ").trim()
+            val clipboard = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            val clip = android.content.ClipData.newPlainText("Código de invitación", codigo)
+            clipboard.setPrimaryClip(clip)
+            Toast.makeText(requireContext(), "Código copiado al portapapeles", Toast.LENGTH_SHORT).show()
+        }
+
+        // Compartir código
+        btnCompartirCodigo.setOnClickListener {
+            val codigoTexto = tvCodigo.text.toString()
+            if (codigoTexto.isBlank() || codigoTexto == "Código: -") {
+                Toast.makeText(requireContext(), "Genera una invitación primero", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val codigo = codigoTexto.removePrefix("Código: ").trim()
+            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_TEXT, "¡Únete a mi grupo! Código de invitación: $codigo")
+                putExtra(android.content.Intent.EXTRA_SUBJECT, "Invitación de grupo")
+            }
+            startActivity(android.content.Intent.createChooser(intent, "Compartir código"))
+        }
+
+    }
+
+    private fun mostrarSelectorEmoji(onEmojiSelected: (String) -> Unit) {
+        val emojis = arrayOf("❤️", "🔥", "👫", "💑", "🏠", "🌟", "💕", "💖", "🎉", "🎊", "🌈", "✨")
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Selecciona un emoji")
+        builder.setItems(emojis) { dialog, which ->
+            onEmojiSelected(emojis[which])
+            dialog.dismiss()
+        }
+        builder.setNegativeButton(getString(com.example.tfg.R.string.cancelar), null)
+        builder.show()
     }
 
     private fun salirDelGrupo(usuarioId: String, adapter: MiembrosAdapter) {
@@ -331,6 +394,7 @@ class FragmentPareja : Fragment() {
             mostrarUIGrupo(true)
             tvGroupName.text = g.nombre
             tvGroupMembers.text = getString(com.example.tfg.R.string.miembros_format, g.miembros.size)
+            tvGroupEmoji.text = g.emoji
 
             viewLifecycleOwner.lifecycleScope.launch {
                 val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<Usuario>() }
@@ -350,6 +414,7 @@ class FragmentPareja : Fragment() {
             mostrarUIGrupo(false)
             tvGroupName.text = getString(com.example.tfg.R.string.guion)
             tvGroupMembers.text = getString(com.example.tfg.R.string.miembros_format, 0)
+            tvGroupEmoji.text = "❤️"
             adapter.setItems(emptyList())
         }
     }

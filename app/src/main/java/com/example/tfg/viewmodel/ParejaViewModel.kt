@@ -149,10 +149,10 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
      }
 
     // función original: crear grupo sin callback (usa StateFlow internamente)
-     fun crearGrupo(nombre: String, creadorUid: String) {
+     fun crearGrupo(nombre: String, creadorUid: String, emoji: String = "❤️") {
          viewModelScope.launch {
              try {
-                 val res = repo.crearGrupo(nombre, creadorUid)
+                 val res = repo.crearGrupo(nombre, creadorUid, emoji)
                  if (res.isSuccess) {
                      val gId = res.getOrNull()
                      if (!gId.isNullOrBlank()) {
@@ -180,6 +180,18 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
              }
          }
      }
+
+    fun actualizarEmojiGrupo(grupoId: String, nuevoEmoji: String, onResult: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val res = repo.actualizarEmojiGrupo(grupoId, nuevoEmoji)
+                onResult(res)
+            } catch (e: Exception) {
+                Log.e(TAG, "actualizarEmojiGrupo error", e)
+                onResult(Result.failure(Exception(e.message ?: "Error actualizando emoji")))
+            }
+        }
+    }
 
     fun crearInvitacion(grupoId: String, creadoPor: String, correoDestino: String? = null, horasExpiracion: Int? = 72) {
          viewModelScope.launch {

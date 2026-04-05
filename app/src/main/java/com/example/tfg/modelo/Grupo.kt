@@ -7,5 +7,6 @@ data class Grupo(
     val nombre: String = "",
     val miembros: Map<String, String> = emptyMap(), // uid -> rol
     val puntos: Int = 0,
-    val fechaCreacion: Timestamp? = null
+    val fechaCreacion: Timestamp? = null,
+    val emoji: String = "❤️" // emoji representativo del grupo (por defecto corazón)
 )
