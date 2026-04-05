@@ -63,11 +63,18 @@ class FragmentCalendario : Fragment() {
         }
         b.btnElegirDia.setOnClickListener {
             val hoy = fechaSeleccionada
-            DatePickerDialog(requireContext(), { _, y, m, d ->
-                fechaSeleccionada.set(y, m, d, 12, 0, 0)
-                actualizarCabecera(b)
-                filtrarYMostrar(adapter, b)
-            }, hoy.get(Calendar.YEAR), hoy.get(Calendar.MONTH), hoy.get(Calendar.DAY_OF_MONTH)).show()
+            DatePickerDialog(
+                requireContext(),
+                android.R.style.Theme_Material_Light_Dialog,
+                { _, y, m, d ->
+                    fechaSeleccionada.set(y, m, d, 12, 0, 0)
+                    actualizarCabecera(b)
+                    filtrarYMostrar(adapter, b)
+                },
+                hoy.get(Calendar.YEAR),
+                hoy.get(Calendar.MONTH),
+                hoy.get(Calendar.DAY_OF_MONTH)
+            ).show()
         }
 
         // Observar grupo y suscribir tareas
@@ -253,23 +260,30 @@ class FragmentCalendario : Fragment() {
 
     private fun elegirFechaHoraParaTarea(tarea: Tarea) {
         val hoy = Calendar.getInstance()
-        DatePickerDialog(requireContext(), { _, y, m, d ->
-            TimePickerDialog(requireContext(), { _, h, min ->
-                val cal = Calendar.getInstance().apply { set(y, m, d, h, min, 0) }
-                val nueva = tarea.copy(fechaProgramada = Timestamp(cal.time))
-                actualizarCampo(nueva)
-                // programar recordatorio
-                val trigger = cal.time.time - (tarea.minutosAntes * 60 * 1000L)
-                if (trigger > System.currentTimeMillis()) {
-                    NotificationScheduler.cancelReminder(requireContext(), tarea.id)
-                    NotificationScheduler.scheduleReminder(requireContext(), tarea.id,
-                        "Recordatorio: ${tarea.titulo}",
-                        "Tarea en ${tarea.minutosAntes} min",
-                        trigger)
-                }
-                Toast.makeText(requireContext(), "Reprogramada: ${formatoFechaLargo(cal)} ${"${"%02d".format(h)}:${"%02d".format(min)}"}", Toast.LENGTH_SHORT).show()
-            }, hoy.get(Calendar.HOUR_OF_DAY), hoy.get(Calendar.MINUTE), true).show()
-        }, hoy.get(Calendar.YEAR), hoy.get(Calendar.MONTH), hoy.get(Calendar.DAY_OF_MONTH)).show()
+        DatePickerDialog(
+            requireContext(),
+            android.R.style.Theme_Material_Light_Dialog,
+            { _, y, m, d ->
+                TimePickerDialog(requireContext(), { _, h, min ->
+                    val cal = Calendar.getInstance().apply { set(y, m, d, h, min, 0) }
+                    val nueva = tarea.copy(fechaProgramada = Timestamp(cal.time))
+                    actualizarCampo(nueva)
+                    // programar recordatorio
+                    val trigger = cal.time.time - (tarea.minutosAntes * 60 * 1000L)
+                    if (trigger > System.currentTimeMillis()) {
+                        NotificationScheduler.cancelReminder(requireContext(), tarea.id)
+                        NotificationScheduler.scheduleReminder(requireContext(), tarea.id,
+                            "Recordatorio: ${tarea.titulo}",
+                            "Tarea en ${tarea.minutosAntes} min",
+                            trigger)
+                    }
+                    Toast.makeText(requireContext(), "Reprogramada: ${formatoFechaLargo(cal)} ${"${"%02d".format(h)}:${"%02d".format(min)}"}", Toast.LENGTH_SHORT).show()
+                }, hoy.get(Calendar.HOUR_OF_DAY), hoy.get(Calendar.MINUTE), true).show()
+            },
+            hoy.get(Calendar.YEAR),
+            hoy.get(Calendar.MONTH),
+            hoy.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
     private fun actualizarCampo(tarea: Tarea) {

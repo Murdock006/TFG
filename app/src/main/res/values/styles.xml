@@ -22,8 +22,10 @@
     <!-- BottomNavigationView compacta: sin padding extra del sistema -->
     <style name="Widget.TFG.BottomNav" parent="Widget.MaterialComponents.BottomNavigationView">
         <item name="android:minHeight">0dp</item>
-        <item name="itemPaddingTop">6dp</item>
-        <item name="itemPaddingBottom">6dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="itemPaddingTop">4dp</item>
+        <item name="itemPaddingBottom">4dp</item>
         <item name="itemTextAppearanceActive">@style/TextAppearance.TFG.NavLabel</item>
         <item name="itemTextAppearanceInactive">@style/TextAppearance.TFG.NavLabel</item>
     </style>

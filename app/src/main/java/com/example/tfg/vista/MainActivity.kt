@@ -63,13 +63,24 @@ class MainActivity : AppCompatActivity() {
         // Configurar BottomNavigation
         binding.bottomNavigation.setupWithNavController(navController)
 
-        // Ajustar insets: añadir el bottom inset como padding al contenedor y al navHostFragment
+        // Ajustar insets: añadir padding superior (status bar) e inferior (navigation bar)
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
-            // sólo usar navigationBars para evitar conflictos con IME (el sistema gestionará el resize por windowSoftInputMode)
+            // Manejar status bar (barra superior) y navigation bar (barra inferior)
+            val statusInsets = insets.getInsets(WindowInsetsCompat.Type.statusBars())
             val navInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            v.updatePadding(bottom = navInsets.bottom)
-            binding.navHostFragment?.updatePadding(bottom = navInsets.bottom)
-            // mantener bottomNavigation en su sitio (el nav host ya tiene padding)
+            
+            // Aplicar padding superior para status bar e inferior para navigation bar
+            v.updatePadding(
+                top = statusInsets.top,
+                bottom = navInsets.bottom
+            )
+            
+            // El navHostFragment también necesita conocer estos insets
+            binding.navHostFragment?.updatePadding(
+                top = statusInsets.top,
+                bottom = navInsets.bottom
+            )
+            
             insets
         }
 

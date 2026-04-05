@@ -63,12 +63,23 @@ class RepositorioTareas(private val firestore: FirebaseFirestore = FirebaseFires
                     // Escrituras: actualizar estado y sumar puntos al ejecutor
                     t.update(tareaRef, "estado", "confirmada")
 
+                    // Calcular puntos de recompensa (10% de los puntos generales)
+                    val puntosRecompensa = (tareaTx.puntos * 0.10).toInt()
+
                     if (!userSnap.exists()) {
-                        val datos = mapOf("puntos" to tareaTx.puntos, "puntosReservados" to 0)
+                        val datos = mapOf(
+                            "puntos" to tareaTx.puntos, 
+                            "puntosReservados" to 0,
+                            "puntosRecompensa" to puntosRecompensa
+                        )
                         t.set(userRef, datos)
                     } else {
                         val puntosActuales = (userSnap.getLong("puntos") ?: 0L).toInt()
-                        t.update(userRef, "puntos", puntosActuales + tareaTx.puntos)
+                        val puntosRecompensaActuales = (userSnap.getLong("puntosRecompensa") ?: 0L).toInt()
+                        t.update(userRef, mapOf(
+                            "puntos" to (puntosActuales + tareaTx.puntos),
+                            "puntosRecompensa" to (puntosRecompensaActuales + puntosRecompensa)
+                        ))
                     }
 
                     if (creadorRef != null) {
@@ -119,12 +130,22 @@ class RepositorioTareas(private val firestore: FirebaseFirestore = FirebaseFires
                  // Aplicar escrituras
                  t.update(tareaRef, "estado", "confirmada")
 
+                 // Calcular puntos de recompensa (10% de los puntos generales)
+                 val puntosRecompensa = (tareaTx.puntos * 0.10).toInt()
+
                  if (!ejecSnap.exists()) {
-                     val datos = mapOf("puntos" to (tareaTx.puntos))
+                     val datos = mapOf(
+                         "puntos" to (tareaTx.puntos),
+                         "puntosRecompensa" to puntosRecompensa
+                     )
                      t.set(ejecRef, datos)
                  } else {
                      val actuales = (ejecSnap.getLong("puntos") ?: 0L).toInt()
-                     t.update(ejecRef, "puntos", actuales + tareaTx.puntos)
+                     val puntosRecompensaActuales = (ejecSnap.getLong("puntosRecompensa") ?: 0L).toInt()
+                     t.update(ejecRef, mapOf(
+                         "puntos" to (actuales + tareaTx.puntos),
+                         "puntosRecompensa" to (puntosRecompensaActuales + puntosRecompensa)
+                     ))
                  }
 
                  if (creadorRef != null && creadorSnap != null) {
