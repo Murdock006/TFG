@@ -1,4 +1,4 @@
-# TFG2 - Aplicación de Gestión de Tareas en Grupo 👥📋
+# TFG2 - Aplicación de Gestión de Tareas en Grupo TeamTask 👥📋
 
 Una aplicación Android moderna para **gestionar tareas colaborativas en grupos**, con sistema de puntos, recompensas, calendario y disputas. Construida con **MVVM**, **Kotlin Coroutines**, **StateFlow** y **Firebase Firestore**.
 
