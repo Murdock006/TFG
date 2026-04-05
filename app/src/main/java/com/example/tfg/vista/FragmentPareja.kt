@@ -33,6 +33,7 @@ import android.util.TypedValue
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.formatter.ValueFormatter
 
 class FragmentPareja : Fragment() {
 
@@ -385,15 +386,17 @@ class FragmentPareja : Fragment() {
                         dataSet.setValueTextColor(android.graphics.Color.WHITE)
 
                         val data = PieData(dataSet)
-                        data.setValueFormatter { value, _, _, _ ->
-                            if (value > 0) value.toInt().toString() else ""
-                        }
+                        data.setValueFormatter(object : ValueFormatter() {
+                            override fun getFormattedValue(value: Float): String {
+                                return if (value > 0) value.toInt().toString() else ""
+                            }
+                        })
 
                         pieChartTareas.apply {
                             this.data = data
                             description.isEnabled = false
                             legend.isEnabled = false
-                            animateY(1000, com.github.mikephil.charting.animation.Easing.EasingOption.EaseInOutQuad)
+                            animateY(1000)
                             invalidate()
                         }
                     } else {
