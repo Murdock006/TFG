@@ -21,6 +21,7 @@ class FragmentPresentacion : Fragment() {
     )
     private var mensajeIndex = 0
     private val handler = Handler(Looper.getMainLooper())
+    private var runnable: Runnable? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,16 +37,29 @@ class FragmentPresentacion : Fragment() {
     }
 
     private fun mostrarMensajes() {
-        handler.postDelayed(object : Runnable {
+        runnable = object : Runnable {
             override fun run() {
+                // Verificar que el fragment siga visible y no sea null
+                if (!isAdded || view == null) return
+
                 if (mensajeIndex < mensajes.size) {
                     binding.textoPresentacion.text = mensajes[mensajeIndex]
                     mensajeIndex++
                     handler.postDelayed(this, 2000)
                 } else {
-                    findNavController().navigate(R.id.action_fragment_Presentacion_to_fragment_Login)
+                    // Solo navegar si el fragment sigue agregado al activity
+                    if (isAdded) {
+                        findNavController().navigate(R.id.action_fragment_Presentacion_to_fragment_Login)
+                    }
                 }
             }
-        }, 0)
+        }
+        handler.post(runnable!!)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Cancelar todos los postDelayed pendientes
+        runnable?.let { handler.removeCallbacks(it) }
     }
 }
