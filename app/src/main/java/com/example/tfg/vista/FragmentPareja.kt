@@ -362,23 +362,38 @@ class FragmentPareja : Fragment() {
                     .get()
                     .await()
 
-                val completadas = tareasSnapshot.documents.count { it.getString("estado") == "completada" || it.getString("estado") == "confirmada" }
-                val pendientes = tareasSnapshot.documents.count { it.getString("estado") == "pendiente" }
-                val total = completadas + pendientes
+                val miId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
+
+                val completadas = tareasSnapshot.documents.count { 
+                    it.getString("estado") == "completada" || it.getString("estado") == "confirmada" 
+                }
+                
+                val pendientesMias = tareasSnapshot.documents.count { 
+                    it.getString("estado") == "pendiente" && it.getString("asignadoA") == miId
+                }
+                
+                val pendientesOtros = tareasSnapshot.documents.count { 
+                    it.getString("estado") == "pendiente" && it.getString("asignadoA") != miId
+                }
+
+                val total = completadas + pendientesMias + pendientesOtros
 
                 withContext(Dispatchers.Main) {
                     tvTareasCompletadas.text = completadas.toString()
-                    tvTareasPendientes.text = pendientes.toString()
+                    // Mostrar total de pendientes (mías + otros) en el TextView original
+                    tvTareasPendientes.text = (pendientesMias + pendientesOtros).toString()
 
-                    // Configurar gráfico circular
+                    // Configurar gráfico circular con 3 segmentos
                     if (total > 0) {
                         val entries = mutableListOf<PieEntry>()
                         if (completadas > 0) entries.add(PieEntry(completadas.toFloat(), "Completadas"))
-                        if (pendientes > 0) entries.add(PieEntry(pendientes.toFloat(), "Pendientes"))
+                        if (pendientesMias > 0) entries.add(PieEntry(pendientesMias.toFloat(), "Pendientes mías"))
+                        if (pendientesOtros > 0) entries.add(PieEntry(pendientesOtros.toFloat(), "Pendientes de otros"))
 
                         val dataSet = PieDataSet(entries, "")
                         dataSet.colors = listOf(
                             resources.getColor(com.example.tfg.R.color.exito, requireContext().theme),
+                            resources.getColor(com.example.tfg.R.color.primario, requireContext().theme),
                             resources.getColor(com.example.tfg.R.color.gris_claro, requireContext().theme)
                         )
                         dataSet.setSliceSpace(2f)
