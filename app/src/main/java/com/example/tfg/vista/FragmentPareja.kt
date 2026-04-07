@@ -66,7 +66,8 @@ class FragmentPareja : Fragment() {
     private lateinit var btnCompartirCodigo: Button
     private lateinit var pieChartTareas: com.github.mikephil.charting.charts.PieChart
     private lateinit var tvTareasCompletadas: TextView
-    private lateinit var tvTareasPendientes: TextView
+    private lateinit var tvTareasPendientesMias: TextView
+    private lateinit var tvTareasPendientesOtros: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -99,7 +100,8 @@ class FragmentPareja : Fragment() {
         btnCompartirCodigo = rootView.findViewById(com.example.tfg.R.id.btnCompartirCodigo)
         pieChartTareas = rootView.findViewById(com.example.tfg.R.id.pieChartTareas)
         tvTareasCompletadas = rootView.findViewById(com.example.tfg.R.id.tvTareasCompletadas)
-        tvTareasPendientes = rootView.findViewById(com.example.tfg.R.id.tvTareasPendientes)
+        tvTareasPendientesMias = rootView.findViewById(com.example.tfg.R.id.tvTareasPendientesMias)
+        tvTareasPendientesOtros = rootView.findViewById(com.example.tfg.R.id.tvTareasPendientesOtros)
 
         return rootView
     }
@@ -380,24 +382,25 @@ class FragmentPareja : Fragment() {
 
                 withContext(Dispatchers.Main) {
                     tvTareasCompletadas.text = completadas.toString()
-                    // Mostrar total de pendientes (mías + otros) en el TextView original
-                    tvTareasPendientes.text = (pendientesMias + pendientesOtros).toString()
+                    tvTareasPendientesMias.text = pendientesMias.toString()
+                    tvTareasPendientesOtros.text = pendientesOtros.toString()
 
-                    // Configurar gráfico circular con 3 segmentos
+                    // Configurar gráfico circular con 3 segmentos y colores vivos
                     if (total > 0) {
                         val entries = mutableListOf<PieEntry>()
                         if (completadas > 0) entries.add(PieEntry(completadas.toFloat(), "Completadas"))
-                        if (pendientesMias > 0) entries.add(PieEntry(pendientesMias.toFloat(), "Pendientes mías"))
-                        if (pendientesOtros > 0) entries.add(PieEntry(pendientesOtros.toFloat(), "Pendientes de otros"))
+                        if (pendientesMias > 0) entries.add(PieEntry(pendientesMias.toFloat(), "Mis pendientes"))
+                        if (pendientesOtros > 0) entries.add(PieEntry(pendientesOtros.toFloat(), "De otros"))
 
                         val dataSet = PieDataSet(entries, "")
+                        // Colores vivos: Verde brillante, Azul Material, Naranja
                         dataSet.colors = listOf(
-                            resources.getColor(com.example.tfg.R.color.exito, requireContext().theme),
-                            resources.getColor(com.example.tfg.R.color.primario, requireContext().theme),
-                            resources.getColor(com.example.tfg.R.color.gris_claro, requireContext().theme)
+                            android.graphics.Color.parseColor("#4CAF50"),  // Verde brillante
+                            android.graphics.Color.parseColor("#2196F3"),  // Azul Material
+                            android.graphics.Color.parseColor("#FF9800")   // Naranja
                         )
-                        dataSet.setSliceSpace(2f)
-                        dataSet.setValueTextSize(12f)
+                        dataSet.setSliceSpace(3f)
+                        dataSet.setValueTextSize(14f)
                         dataSet.setValueTextColor(android.graphics.Color.WHITE)
 
                         val data = PieData(dataSet)
@@ -411,6 +414,7 @@ class FragmentPareja : Fragment() {
                             this.data = data
                             description.isEnabled = false
                             legend.isEnabled = false
+                            setDrawEntryLabels(false)
                             animateY(1000)
                             invalidate()
                         }
