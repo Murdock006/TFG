@@ -293,43 +293,42 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
     }
 
     // Nuevo: cargar el grupo asociado a un usuario (útil al iniciar la app)
-    fun cargarGrupoPorUsuario(usuarioUid: String) {
-        viewModelScope.launch {
-            try {
-                // Primero, intentar leer el campo 'grupoId' directamente desde el documento de usuario
-                val gidRes = repo.obtenerGrupoIdDesdeUsuario(usuarioUid)
-                if (gidRes.isSuccess) {
-                    val gid = gidRes.getOrNull()
-                    if (!gid.isNullOrBlank()) {
-                        // cargar el grupo por id
-                        val gRes = repo.obtenerGrupoPorId(gid)
-                        if (gRes.isSuccess) {
-                            val g = gRes.getOrNull()
-                            if (g != null) {
-                                // validar que el usuario está en miembros
-                                if (g.miembros.containsKey(usuarioUid)) {
-                                    setGrupoLocal(g)
-                                    return@launch
-                                } else {
-                                    // inconsistencia: borrar grupoId del usuario en Firestore
-                                    try {
-                                        repo.limpiarGrupoIdUsuario(usuarioUid)
-                                    } catch (_: Exception) {}
-                                    // continuar: no asignar grupo
-                                }
+    // VERSIÓN SUSPENDIDA: devuelve cuando termina de cargar (o falla)
+    suspend fun cargarGrupoPorUsuario(usuarioUid: String) {
+        try {
+            // Primero, intentar leer el campo 'grupoId' directamente desde el documento de usuario
+            val gidRes = repo.obtenerGrupoIdDesdeUsuario(usuarioUid)
+            if (gidRes.isSuccess) {
+                val gid = gidRes.getOrNull()
+                if (!gid.isNullOrBlank()) {
+                    // cargar el grupo por id
+                    val gRes = repo.obtenerGrupoPorId(gid)
+                    if (gRes.isSuccess) {
+                        val g = gRes.getOrNull()
+                        if (g != null) {
+                            // validar que el usuario está en miembros
+                            if (g.miembros.containsKey(usuarioUid)) {
+                                setGrupoLocal(g)
+                                return
+                            } else {
+                                // inconsistencia: borrar grupoId del usuario en Firestore
+                                try {
+                                    repo.limpiarGrupoIdUsuario(usuarioUid)
+                                } catch (_: Exception) {}
+                                // continuar: no asignar grupo
                             }
                         }
                     }
                 }
-                // Si no hay grupoId válido en el documento de usuario, no hacemos fallback: el usuario no pertenece a ningún grupo
-                _grupo.value = null
-                try {
-                    val prefs = getApplication<Application>().getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-                    prefs.edit().remove(keyGrupoId).apply()
-                } catch (_: Exception) {}
-            } catch (e: Exception) {
-                Log.e(TAG, "cargarGrupoPorUsuario(Exception)", e)
             }
+            // Si no hay grupoId válido en el documento de usuario, no hacemos fallback: el usuario no pertenece a ningún grupo
+            _grupo.value = null
+            try {
+                val prefs = getApplication<Application>().getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+                prefs.edit().remove(keyGrupoId).apply()
+            } catch (_: Exception) {}
+        } catch (e: Exception) {
+            Log.e(TAG, "cargarGrupoPorUsuario(Exception)", e)
         }
     }
 

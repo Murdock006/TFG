@@ -197,10 +197,11 @@ class MainActivity : AppCompatActivity() {
                         return@launch
                     }
                     
-                    // Usuario autenticado y verificado: cargar grupo y navegar
+                    // Usuario autenticado y verificado: ESPERAR a que el grupo se cargue completamente
+                    // antes de navegar (evita crash por acceso a grupo null)
                     parejaVM.cargarGrupoPorUsuario(firebaseUser.uid)
                     
-                    // Esperar a que el NavController esté listo y navegar a PgPrincipal
+                    // Ahora que el grupo está cargado, esperar a que el NavController esté listo y navegar a PgPrincipal
                     navController.addOnDestinationChangedListener(object : androidx.navigation.NavController.OnDestinationChangedListener {
                         override fun onDestinationChanged(
                             controller: androidx.navigation.NavController,
