@@ -11,170 +11,197 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingTop="16dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="72dp">
+        android:paddingTop="20dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="80dp">
 
-        <!-- Título -->
+        <!-- Título con más espacio -->
         <ImageView
             android:id="@+id/titulo"
             android:layout_width="wrap_content"
-            android:layout_height="64dp"
+            android:layout_height="70dp"
             android:layout_gravity="center"
             android:contentDescription="@string/app_name"
-            android:src="@drawable/titulo" />
+            android:src="@drawable/titulo"
+            android:layout_marginBottom="8dp" />
 
-        <!-- Tarjetas de puntos -->
+        <!-- Tarjetas de puntos mejoradas -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
             android:gravity="center"
             android:weightSum="2">
 
-            <!-- Tarjeta Usuario -->
+            <!-- Tarjeta Usuario mejorada -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_margin="6dp"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="5dp"
+                android:layout_marginEnd="8dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
                 app:cardBackgroundColor="@color/white"
-                app:strokeColor="@color/negro"
-                app:strokeWidth="1dp">
+                app:strokeColor="@color/divisor"
+                app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="14dp"
-                    android:background="#F8F8F8">
+                    android:padding="18dp"
+                    android:background="@android:color/white">
 
                     <TextView
                         android:text="@string/tus_puntos"
                         android:textStyle="bold"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
-                        android:textColor="@color/texto_principal"
-                        android:textSize="13sp" />
+                        android:textColor="@color/gris"
+                        android:textSize="11sp"
+                        android:letterSpacing="0.05" />
 
                     <TextView
                         android:id="@+id/puntosUsuario"
                         android:text="@string/cargando"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
-                        android:textSize="22sp"
+                        android:textSize="32sp"
                         android:textStyle="bold"
                         android:textColor="@color/negro"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="4dp" />
 
                     <TextView
                         android:id="@+id/puntosReservados"
                         android:text="@string/reservados_format"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textColor="@color/gris"
-                        android:layout_marginTop="2dp" />
+                        android:layout_marginTop="4dp" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/divisor"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="12dp" />
 
                     <TextView
                         android:text="@string/comprar_puntos"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
-                        android:textColor="@color/gris" />
+                        android:textColor="@color/texto_secundario"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.05" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Tarjeta Compañero -->
+            <!-- Tarjeta Compañero mejorada -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_margin="6dp"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="5dp"
+                android:layout_marginStart="8dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
                 app:cardBackgroundColor="@color/white"
-                app:strokeColor="@color/negro"
-                app:strokeWidth="1dp">
+                app:strokeColor="@color/divisor"
+                app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="14dp"
-                    android:background="#F8F8F8">
+                    android:padding="18dp"
+                    android:background="@android:color/white">
 
                     <TextView
                         android:text="@string/tu_companero"
                         android:textStyle="bold"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
-                        android:textColor="@color/texto_principal"
-                        android:textSize="13sp" />
+                        android:textColor="@color/gris"
+                        android:textSize="11sp"
+                        android:letterSpacing="0.05" />
 
                     <TextView
                         android:id="@+id/nombreGrupo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/guion"
-                        android:textColor="@color/texto_principal"
-                        android:textSize="13sp"
-                        android:layout_marginTop="4dp" />
+                        android:textColor="@color/texto_secundario"
+                        android:textSize="12sp"
+                        android:layout_marginTop="6dp"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
 
                     <TextView
                         android:id="@+id/puntosCompanero"
                         android:text="@string/cero"
-                        android:textSize="22sp"
+                        android:textSize="32sp"
                         android:textStyle="bold"
                         android:textColor="@color/negro"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="4dp" />
 
                     <TextView
                         android:id="@+id/miembrosCount"
                         android:text="@string/miembros_format"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textColor="@color/gris"
-                        android:layout_marginTop="2dp" />
+                        android:layout_marginTop="4dp" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/divisor"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="12dp" />
 
                     <TextView
                         android:text="@string/vincula_pareja"
-                        android:textSize="11sp"
-                        android:textColor="@color/gris"
+                        android:textSize="10sp"
+                        android:textColor="@color/texto_secundario"
                         android:layout_height="wrap_content"
-                        android:layout_width="wrap_content"/>
+                        android:layout_width="wrap_content"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.05" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
-        <!-- Título Asignar Tareas -->
+        <!-- Título Asignar Tareas con más espacio -->
         <TextView
             android:id="@+id/tituloAsignar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/asignar_tareas"
             android:textStyle="bold"
-            android:textSize="17sp"
+            android:textSize="20sp"
             android:textColor="@color/texto_principal"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="4dp" />
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="4dp"
+            android:letterSpacing="0.02" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=""
             android:id="@+id/textViewResultados"
-            android:textColor="@color/texto_principal" />
+            android:textColor="@color/texto_principal"
+            android:layout_marginBottom="12dp" />
 
-        <!-- Categorías -->
+        <!-- Categorías con diseño moderno -->
         <LinearLayout
             android:id="@+id/bloqueCategorias"
             android:layout_width="match_parent"
@@ -185,37 +212,40 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="3dp"
+                android:layout_marginBottom="10dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="1dp"
                 app:cardBackgroundColor="@color/white"
                 app:strokeColor="@color/divisor"
-                app:strokeWidth="1dp">
+                app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="10dp"
+                    android:padding="14dp"
                     android:gravity="center_vertical">
 
                     <Button
                         android:id="@+id/categoriaCocina"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
+                        android:layout_height="52dp"
                         style="@style/Widget.TFG.Boton.Relleno"
                         android:text="@string/categoria_cocina"
-                        android:textColor="@color/on_acento" />
+                        android:textColor="@color/on_acento"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <Button
                         android:id="@+id/btnAsignarCocina"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="52dp"
                         style="@style/Widget.TFG.Boton.Contorno"
                         android:text="@string/asignar"
-                        android:textSize="12sp"
-                        android:layout_marginStart="8dp" />
+                        android:textSize="13sp"
+                        android:layout_marginStart="10dp"
+                        android:minWidth="90dp" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -224,37 +254,40 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="3dp"
+                android:layout_marginBottom="10dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="1dp"
                 app:cardBackgroundColor="@color/white"
                 app:strokeColor="@color/divisor"
-                app:strokeWidth="1dp">
+                app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="10dp"
+                    android:padding="14dp"
                     android:gravity="center_vertical">
 
                     <Button
                         android:id="@+id/categoriaRopa"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
+                        android:layout_height="52dp"
                         style="@style/Widget.TFG.Boton.Relleno"
                         android:text="@string/categoria_ropa"
-                        android:textColor="@color/on_acento" />
+                        android:textColor="@color/on_acento"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <Button
                         android:id="@+id/btnAsignarRopa"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="52dp"
                         style="@style/Widget.TFG.Boton.Contorno"
                         android:text="@string/asignar"
-                        android:textSize="12sp"
-                        android:layout_marginStart="8dp" />
+                        android:textSize="13sp"
+                        android:layout_marginStart="10dp"
+                        android:minWidth="90dp" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -263,37 +296,40 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="3dp"
+                android:layout_marginBottom="10dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="1dp"
                 app:cardBackgroundColor="@color/white"
                 app:strokeColor="@color/divisor"
-                app:strokeWidth="1dp">
+                app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="10dp"
+                    android:padding="14dp"
                     android:gravity="center_vertical">
 
                     <Button
                         android:id="@+id/categoriaLimpieza"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
+                        android:layout_height="52dp"
                         style="@style/Widget.TFG.Boton.Relleno"
                         android:text="@string/categoria_limpieza"
-                        android:textColor="@color/on_acento" />
+                        android:textColor="@color/on_acento"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <Button
                         android:id="@+id/btnAsignarLimpieza"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="52dp"
                         style="@style/Widget.TFG.Boton.Contorno"
                         android:text="@string/asignar"
-                        android:textSize="12sp"
-                        android:layout_marginStart="8dp" />
+                        android:textSize="13sp"
+                        android:layout_marginStart="10dp"
+                        android:minWidth="90dp" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -302,37 +338,40 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="3dp"
+                android:layout_marginBottom="10dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="1dp"
                 app:cardBackgroundColor="@color/white"
                 app:strokeColor="@color/divisor"
-                app:strokeWidth="1dp">
+                app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="10dp"
+                    android:padding="14dp"
                     android:gravity="center_vertical">
 
                     <Button
                         android:id="@+id/categoriaMascotas"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
+                        android:layout_height="52dp"
                         style="@style/Widget.TFG.Boton.Relleno"
                         android:text="@string/categoria_mascotas"
-                        android:textColor="@color/on_acento" />
+                        android:textColor="@color/on_acento"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <Button
                         android:id="@+id/btnAsignarMascotas"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="52dp"
                         style="@style/Widget.TFG.Boton.Contorno"
                         android:text="@string/asignar"
-                        android:textSize="12sp"
-                        android:layout_marginStart="8dp" />
+                        android:textSize="13sp"
+                        android:layout_marginStart="10dp"
+                        android:minWidth="90dp" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -341,37 +380,40 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="3dp"
+                android:layout_marginBottom="10dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="1dp"
                 app:cardBackgroundColor="@color/white"
                 app:strokeColor="@color/divisor"
-                app:strokeWidth="1dp">
+                app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="10dp"
+                    android:padding="14dp"
                     android:gravity="center_vertical">
 
                     <Button
                         android:id="@+id/categoriaRecados"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
+                        android:layout_height="52dp"
                         style="@style/Widget.TFG.Boton.Relleno"
                         android:text="@string/categoria_recados"
-                        android:textColor="@color/on_acento" />
+                        android:textColor="@color/on_acento"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <Button
                         android:id="@+id/btnAsignarRecados"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="52dp"
                         style="@style/Widget.TFG.Boton.Contorno"
                         android:text="@string/asignar"
-                        android:textSize="12sp"
-                        android:layout_marginStart="8dp" />
+                        android:textSize="13sp"
+                        android:layout_marginStart="10dp"
+                        android:minWidth="90dp" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -380,52 +422,56 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="3dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="1dp"
                 app:cardBackgroundColor="@color/white"
                 app:strokeColor="@color/divisor"
-                app:strokeWidth="1dp">
+                app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="10dp"
+                    android:padding="14dp"
                     android:gravity="center_vertical">
 
                     <Button
                         android:id="@+id/categoriaPersonalizado"
-                        android:textSize="11sp"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
+                        android:layout_height="52dp"
                         style="@style/Widget.TFG.Boton.Relleno"
                         android:text="@string/categoria_personalizado"
-                        android:textColor="@color/on_acento" />
+                        android:textColor="@color/on_acento"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <Button
                         android:id="@+id/btnAsignarPersonalizado"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="52dp"
                         style="@style/Widget.TFG.Boton.Contorno"
                         android:text="@string/asignar"
-                        android:textSize="12sp"
-                        android:layout_marginStart="8dp" />
+                        android:textSize="13sp"
+                        android:layout_marginStart="10dp"
+                        android:minWidth="90dp" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
-        <!-- Vista rápida de tareas recientes -->
+        <!-- Vista rápida de tareas recientes con mejor espaciado -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/tareas_recientes"
             android:textStyle="bold"
-            android:layout_marginTop="24dp"
-            android:textSize="17sp"
-            android:textColor="@color/texto_principal" />
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="12dp"
+            android:textSize="20sp"
+            android:textColor="@color/texto_principal"
+            android:letterSpacing="0.02" />
 
         <TextView
             android:id="@+id/tvSinTareasRecientes"
