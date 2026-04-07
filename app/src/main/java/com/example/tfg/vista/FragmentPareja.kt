@@ -141,9 +141,11 @@ class FragmentPareja : Fragment() {
 
         // Forzar carga del grupo asociado al usuario si estamos logueados (asegura que parejaVM emitirá estado)
         LocalizadorServicios.repositorioAuth.usuarioActual()?.id?.let { uid ->
-            parejaVM.cargarGrupoPorUsuario(uid)
-            // actualizar vista inmediatamente con estado actual (por si ya está cargado en vm)
-            actualizarVistaGrupo(parejaVM.grupo.value)
+            viewLifecycleOwner.lifecycleScope.launch {
+                parejaVM.cargarGrupoPorUsuario(uid)
+                // actualizar vista inmediatamente con estado actual (por si ya está cargado en vm)
+                actualizarVistaGrupo(parejaVM.grupo.value)
+            }
         }
 
         // Valores por defecto visibles para evitar pantallas vacías
@@ -446,7 +448,10 @@ class FragmentPareja : Fragment() {
                         Toast.makeText(requireContext(), "Has salido del grupo", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error saliendo del grupo", Toast.LENGTH_LONG).show()
-                        parejaVM.cargarGrupoPorUsuario(usuarioId)
+                        // Recargar grupo en coroutine si falla
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            parejaVM.cargarGrupoPorUsuario(usuarioId)
+                        }
                     }
                 }
             }

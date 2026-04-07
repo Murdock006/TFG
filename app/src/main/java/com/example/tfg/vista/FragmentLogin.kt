@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.tfg.databinding.FragmentLoginBinding
 import com.example.tfg.viewmodel.VistaModeloAuth
@@ -19,6 +20,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import kotlinx.coroutines.launch
 
 class FragmentLogin : Fragment() {
 
@@ -92,9 +94,11 @@ class FragmentLogin : Fragment() {
         vistaModeloAuth.usuario.observe(viewLifecycleOwner) { usuario ->
             if (usuario != null) {
                 // Cargar grupo asociado al usuario para asegurar persistencia
-                parejaVM.cargarGrupoPorUsuario(usuario.id)
-                // Navegar al principal
-                findNavController().navigate(com.example.tfg.R.id.action_fragment_Login_to_fragment_PgPrincipal)
+                viewLifecycleOwner.lifecycleScope.launch {
+                    parejaVM.cargarGrupoPorUsuario(usuario.id)
+                    // Navegar al principal después de que el grupo esté cargado
+                    findNavController().navigate(com.example.tfg.R.id.action_fragment_Login_to_fragment_PgPrincipal)
+                }
             }
         }
 
