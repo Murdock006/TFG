@@ -3,7 +3,9 @@ package com.example.tfg.service
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.*
@@ -34,6 +36,12 @@ object NotificationScheduler {
 
     // Mostrar notificación inmediata local
     fun showImmediateNotification(context: Context, notifId: Int, title: String, message: String) {
+        // Verificar permiso antes de mostrar
+        if (!hasNotificationPermission(context)) {
+            android.util.Log.w("NotificationScheduler", "No hay permiso de notificaciones. No se puede mostrar notificación.")
+            return
+        }
+        
         createChannelIfNeeded(context)
         val builder = NotificationCompat.Builder(context, NotificationWorker.CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -49,6 +57,12 @@ object NotificationScheduler {
 
     // Mostrar notificación inmediata local (opcionalmente abre una tarea al pulsarla)
     fun showImmediateNotification(context: Context, notifId: Int, title: String, message: String, openTaskId: String? = null) {
+        // Verificar permiso antes de mostrar
+        if (!hasNotificationPermission(context)) {
+            android.util.Log.w("NotificationScheduler", "No hay permiso de notificaciones. No se puede mostrar notificación.")
+            return
+        }
+        
         createChannelIfNeeded(context)
         val builder = NotificationCompat.Builder(context, NotificationWorker.CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -80,6 +94,19 @@ object NotificationScheduler {
             channel.description = descriptionText
             val manager = context.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
+        }
+    }
+    
+    // Verificar si tenemos permiso de notificaciones
+    fun hasNotificationPermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            // En versiones anteriores a Android 13, no se requiere permiso explícito
+            true
         }
     }
 }

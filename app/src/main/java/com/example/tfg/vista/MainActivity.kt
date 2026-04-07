@@ -1,11 +1,16 @@
 package com.example.tfg.vista
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.updatePadding
@@ -30,6 +35,17 @@ class MainActivity : AppCompatActivity() {
 
     // control doble retroceso
     private var ultimoRetrocesoMs: Long = 0L
+    
+    // Launcher para pedir permiso de notificaciones
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Toast.makeText(this, "Notificaciones activadas ✓", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "No recibirás notificaciones de tareas. Puedes activarlas desde ajustes.", Toast.LENGTH_LONG).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +68,9 @@ class MainActivity : AppCompatActivity() {
 
         // AUTO-LOGIN: verificar si hay sesión activa de Firebase
         verificarSesionActiva()
+        
+        // Pedir permiso de notificaciones (Android 13+)
+        solicitarPermisoNotificaciones()
 
         // Configurar BottomNavigation
         binding.bottomNavigation.setupWithNavController(navController)
@@ -206,6 +225,33 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 android.util.Log.e("MainActivity", "Error verificando sesión activa", e)
+            }
+        }
+    }
+    
+    private fun solicitarPermisoNotificaciones() {
+        // Solo necesario en Android 13+ (API 33+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    // Ya tenemos permiso
+                    android.util.Log.d("MainActivity", "Permiso de notificaciones ya concedido")
+                }
+                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
+                    // El usuario rechazó antes, mostrar explicación
+                    Toast.makeText(
+                        this,
+                        "Las notificaciones te ayudan a recordar tus tareas. Actívalas desde ajustes si quieres recibirlas.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                else -> {
+                    // Pedir permiso
+                    requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
             }
         }
     }

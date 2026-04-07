@@ -3,7 +3,9 @@ package com.example.tfg.service
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.CoroutineWorker
@@ -21,6 +23,12 @@ class NotificationWorker(appContext: Context, params: WorkerParameters) : Corout
     }
 
     override suspend fun doWork(): Result {
+        // Verificar permiso antes de mostrar notificación
+        if (!hasNotificationPermission(applicationContext)) {
+            android.util.Log.w("NotificationWorker", "No hay permiso de notificaciones. No se puede mostrar notificación.")
+            return Result.success()
+        }
+        
         val data: Data = inputData
         val title = data.getString(KEY_TITLE) ?: "Recordatorio"
         val message = data.getString(KEY_MESSAGE) ?: "Tienes una tarea pendiente"
@@ -51,6 +59,17 @@ class NotificationWorker(appContext: Context, params: WorkerParameters) : Corout
             channel.description = descriptionText
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(channel)
+        }
+    }
+    
+    private fun hasNotificationPermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
         }
     }
 }
