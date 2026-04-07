@@ -101,26 +101,35 @@ class MainActivity : AppCompatActivity() {
         // Observar notificaciones para el usuario actual y mostrar locales
         CoroutineScope(Dispatchers.Main).launch {
             try {
+                android.util.Log.d("MainActivity", "Iniciando observación de notificaciones...")
                 val uid = com.example.tfg.service.LocalizadorServicios.repositorioAuth.usuarioActual()?.id
+                android.util.Log.d("MainActivity", "UID actual: $uid")
                 if (!uid.isNullOrBlank()) {
                     val repoNot = com.example.tfg.repositorio.RepositorioNotificaciones()
                     // usar flow observer
                     repoNot.observarNotificaciones(uid).collect { lista ->
+                        android.util.Log.d("MainActivity", "Recibidas ${lista.size} notificaciones")
                         lista.filter { !it.visto }.forEach { not ->
-                            // mostrar notificación local
-                            val title = when (not.tipo) { "asignacion" -> "Tarea asignada"; else -> "Notificación" }
-                            val message = (not.contenido["titulo"] as? String) ?: (not.contenido["texto"] as? String) ?: "Tienes una notificación"
-                            val tareaId = (not.contenido["tareaId"] as? String)
-                            NotificationScheduler.showImmediateNotification(this@MainActivity, (not.id.hashCode()), title, message, tareaId)
-                            // marcar como vista
-                            CoroutineScope(Dispatchers.IO).launch {
-                                repoNot.marcarNotificacionVista(not.id)
+                            try {
+                                // mostrar notificación local
+                                val title = when (not.tipo) { "asignacion" -> "Tarea asignada"; else -> "Notificación" }
+                                val message = (not.contenido["titulo"] as? String) ?: (not.contenido["texto"] as? String) ?: "Tienes una notificación"
+                                val tareaId = (not.contenido["tareaId"] as? String)
+                                NotificationScheduler.showImmediateNotification(this@MainActivity, (not.id.hashCode()), title, message, tareaId)
+                                // marcar como vista
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    repoNot.marcarNotificacionVista(not.id)
+                                }
+                            } catch (e: Exception) {
+                                android.util.Log.e("MainActivity", "Error procesando notificación ${not.id}", e)
                             }
                         }
                     }
+                } else {
+                    android.util.Log.d("MainActivity", "No hay usuario actual, saltando observación de notificaciones")
                 }
             } catch (e: Exception) {
-                // ignore
+                android.util.Log.e("MainActivity", "Error en observarNotificaciones", e)
             }
         }
 
@@ -185,13 +194,16 @@ class MainActivity : AppCompatActivity() {
     private fun verificarSesionActiva() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
+                android.util.Log.d("MainActivity", "verificarSesionActiva: iniciando...")
                 // Verificar Firebase Auth
                 val firebaseUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                android.util.Log.d("MainActivity", "Firebase user: ${firebaseUser?.uid}")
                 
                 if (firebaseUser != null) {
                     // Verificar que el email esté verificado (obligatorio)
                     if (!firebaseUser.isEmailVerified) {
                         // Si NO está verificado, forzar logout y mostrar mensaje
+                        android.util.Log.d("MainActivity", "Email no verificado, logout forzado")
                         com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
                         Toast.makeText(this@MainActivity, "Debes verificar tu correo electrónico antes de continuar. Revisa tu bandeja de entrada.", Toast.LENGTH_LONG).show()
                         return@launch
@@ -199,7 +211,9 @@ class MainActivity : AppCompatActivity() {
                     
                     // Usuario autenticado y verificado: ESPERAR a que el grupo se cargue completamente
                     // antes de navegar (evita crash por acceso a grupo null)
+                    android.util.Log.d("MainActivity", "Cargando grupo para usuario ${firebaseUser.uid}")
                     parejaVM.cargarGrupoPorUsuario(firebaseUser.uid)
+                    android.util.Log.d("MainActivity", "Grupo cargado, procediendo con navegación")
                     
                     // Ahora que el grupo está cargado, esperar a que el NavController esté listo y navegar a PgPrincipal
                     navController.addOnDestinationChangedListener(object : androidx.navigation.NavController.OnDestinationChangedListener {
@@ -210,10 +224,12 @@ class MainActivity : AppCompatActivity() {
                         ) {
                             // Solo navegar cuando llegamos a Presentacion (inicio)
                             if (destination.id == com.example.tfg.R.id.fragment_Presentacion) {
+                                android.util.Log.d("MainActivity", "En Presentacion, navegando a Login")
                                 controller.navigate(com.example.tfg.R.id.action_fragment_Presentacion_to_fragment_Login)
                                 // Esperar un frame para que Login se monte
                                 binding.root.post {
                                     if (controller.currentDestination?.id == com.example.tfg.R.id.fragment_Login) {
+                                        android.util.Log.d("MainActivity", "En Login, navegando a PgPrincipal")
                                         controller.navigate(com.example.tfg.R.id.action_fragment_Login_to_fragment_PgPrincipal)
                                     }
                                 }
@@ -223,6 +239,7 @@ class MainActivity : AppCompatActivity() {
                     })
                 } else {
                     // No hay sesión: flujo normal de presentación → login
+                    android.util.Log.d("MainActivity", "No hay sesión activa")
                 }
             } catch (e: Exception) {
                 android.util.Log.e("MainActivity", "Error verificando sesión activa", e)
