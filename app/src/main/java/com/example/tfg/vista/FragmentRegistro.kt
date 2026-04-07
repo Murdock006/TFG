@@ -44,8 +44,9 @@ class FragmentRegistro : Fragment() {
 
         vistaModeloAuth.usuario.observe(viewLifecycleOwner) { usuario ->
             if (usuario != null) {
-                Toast.makeText(requireContext(), "Registro correcto", Toast.LENGTH_SHORT).show()
-                findNavController().navigate(com.example.tfg.R.id.fragment_PgPrincipal)
+                Toast.makeText(requireContext(), "✅ Registro exitoso. Hemos enviado un email de verificación a ${usuario.email}. Revisa tu bandeja de entrada y verifica tu cuenta antes de iniciar sesión.", Toast.LENGTH_LONG).show()
+                // Navegar de vuelta a login para que inicie sesión tras verificar
+                findNavController().popBackStack()
             }
         }
 

@@ -29,6 +29,11 @@ class AuthRepositorioFirebase : AuthRepositorio {
             val result = auth.createUserWithEmailAndPassword(usuario.email, password).await()
             val firebaseUser = result.user ?: throw Exception("Registro fallido: no hay usuario")
             Log.d(TAG, "registrar OK uid=${firebaseUser.uid} email=${firebaseUser.email}")
+            
+            // ENVIAR EMAIL DE VERIFICACIÓN
+            firebaseUser.sendEmailVerification().await()
+            Log.d(TAG, "Email de verificación enviado a ${firebaseUser.email}")
+            
             // Guardar datos adicionales en Firestore
             val data = mapOf(
                 "nombre" to usuario.nombre,
@@ -41,6 +46,11 @@ class AuthRepositorioFirebase : AuthRepositorio {
             )
             firestore.collection("usuarios").document(firebaseUser.uid).set(data).await()
             Log.d(TAG, "usuario document creado uid=${firebaseUser.uid}")
+            
+            // Cerrar sesión inmediatamente hasta que verifique el email
+            auth.signOut()
+            Log.d(TAG, "Sesión cerrada. Usuario debe verificar email antes de iniciar sesión.")
+            
             Result.success(Usuario(id = firebaseUser.uid, nombre = usuario.nombre, edad = usuario.edad, ciudad = usuario.ciudad, email = firebaseUser.email ?: usuario.email))
         } catch (e: Exception) {
             Log.e(TAG, "Error registrar", e)
@@ -61,6 +71,13 @@ class AuthRepositorioFirebase : AuthRepositorio {
             val res = auth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = res.user ?: throw Exception("Login fallido: no hay usuario")
             Log.d(TAG, "login OK uid=${firebaseUser.uid} email=${firebaseUser.email}")
+            
+            // VERIFICAR QUE EL EMAIL ESTÉ VERIFICADO
+            if (!firebaseUser.isEmailVerified) {
+                auth.signOut()
+                throw Exception("Debes verificar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.")
+            }
+            
             // Leer datos del usuario en Firestore
             val docRef = firestore.collection("usuarios").document(firebaseUser.uid)
             val doc = docRef.get().await()
@@ -93,6 +110,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
         } catch (e: Exception) {
             Log.e(TAG, "Error login", e)
             val msg = when {
+                e.message?.contains("verificar tu correo") == true -> e.message ?: "Email no verificado"
                 e is com.google.firebase.auth.FirebaseAuthInvalidUserException -> "Usuario no encontrado"
                 e is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> "Email o contraseña incorrectos"
                 e is com.google.firebase.FirebaseNetworkException -> "Fallo de red: comprueba tu conexión"

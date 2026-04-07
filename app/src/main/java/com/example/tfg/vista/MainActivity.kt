@@ -40,16 +40,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Al iniciar la app: si hay usuario autenticado, solicitar carga del grupo asociado
-        try {
-            val uid = com.example.tfg.service.LocalizadorServicios.repositorioAuth.usuarioActual()?.id
-            if (!uid.isNullOrBlank()) {
-                parejaVM.cargarGrupoPorUsuario(uid)
-            }
-        } catch (e: Exception) {
-            // ignore
-        }
-
         val navHostFragment = supportFragmentManager.findFragmentById(com.example.tfg.R.id.nav_host_fragment) as? NavHostFragment
         navController = navHostFragment?.navController ?: run {
             val found = try {
@@ -59,6 +49,9 @@ class MainActivity : AppCompatActivity() {
             }
             found ?: throw IllegalStateException("No se encontró NavHostFragment o NavController con id nav_host_fragment. Revisa activity_main.xml y que el id coincida.")
         }
+
+        // AUTO-LOGIN: verificar si hay sesión activa de Firebase
+        verificarSesionActiva()
 
         // Configurar BottomNavigation
         binding.bottomNavigation.setupWithNavController(navController)
@@ -167,6 +160,53 @@ class MainActivity : AppCompatActivity() {
             navController.navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
         } catch (e: Exception) {
             // ignore navigation errors
+        }
+    }
+
+    private fun verificarSesionActiva() {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                // Verificar Firebase Auth
+                val firebaseUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                
+                if (firebaseUser != null) {
+                    // Verificar que el email esté verificado (obligatorio)
+                    if (!firebaseUser.isEmailVerified) {
+                        // Si NO está verificado, forzar logout y mostrar mensaje
+                        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                        Toast.makeText(this@MainActivity, "Debes verificar tu correo electrónico antes de continuar. Revisa tu bandeja de entrada.", Toast.LENGTH_LONG).show()
+                        return@launch
+                    }
+                    
+                    // Usuario autenticado y verificado: cargar grupo y navegar
+                    parejaVM.cargarGrupoPorUsuario(firebaseUser.uid)
+                    
+                    // Esperar a que el NavController esté listo y navegar a PgPrincipal
+                    navController.addOnDestinationChangedListener(object : androidx.navigation.NavController.OnDestinationChangedListener {
+                        override fun onDestinationChanged(
+                            controller: androidx.navigation.NavController,
+                            destination: androidx.navigation.NavDestination,
+                            arguments: android.os.Bundle?
+                        ) {
+                            // Solo navegar cuando llegamos a Presentacion (inicio)
+                            if (destination.id == com.example.tfg.R.id.fragment_Presentacion) {
+                                controller.navigate(com.example.tfg.R.id.action_fragment_Presentacion_to_fragment_Login)
+                                // Esperar un frame para que Login se monte
+                                binding.root.post {
+                                    if (controller.currentDestination?.id == com.example.tfg.R.id.fragment_Login) {
+                                        controller.navigate(com.example.tfg.R.id.action_fragment_Login_to_fragment_PgPrincipal)
+                                    }
+                                }
+                                controller.removeOnDestinationChangedListener(this)
+                            }
+                        }
+                    })
+                } else {
+                    // No hay sesión: flujo normal de presentación → login
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Error verificando sesión activa", e)
+            }
         }
     }
 }
