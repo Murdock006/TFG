@@ -49,12 +49,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        android.util.Log.d("MainActivity", "onCreate iniciado")
 
         // Dejar que el sistema gestione los insets y el redimensionado por el teclado (adjustResize)
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
+        android.util.Log.d("MainActivity", "Binding inflado")
         setContentView(binding.root)
+        android.util.Log.d("MainActivity", "Content view establecido")
 
         val navHostFragment = supportFragmentManager.findFragmentById(com.example.tfg.R.id.nav_host_fragment) as? NavHostFragment
         navController = navHostFragment?.navController ?: run {
@@ -65,6 +68,7 @@ class MainActivity : AppCompatActivity() {
             }
             found ?: throw IllegalStateException("No se encontró NavHostFragment o NavController con id nav_host_fragment. Revisa activity_main.xml y que el id coincida.")
         }
+        android.util.Log.d("MainActivity", "NavController inicializado")
 
         // AUTO-LOGIN: verificar si hay sesión activa de Firebase
         verificarSesionActiva()
