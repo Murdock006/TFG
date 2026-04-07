@@ -103,6 +103,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Observar notificaciones para el usuario actual y mostrar locales
+        // TEMPORALMENTE DESHABILITADO: Está causando crash silencioso después de 10-15 segundos
+        /*
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 android.util.Log.d("MainActivity", "Iniciando observación de notificaciones...")
@@ -136,6 +138,7 @@ class MainActivity : AppCompatActivity() {
                 android.util.Log.e("MainActivity", "Error en observarNotificaciones", e)
             }
         }
+        */
 
         // manejar si la activity fue lanzada con openTaskId
         intent?.getStringExtra("openTaskId")?.let { tid ->
