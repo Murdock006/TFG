@@ -157,17 +157,27 @@ class TareasHomeAdapter(
                             val usuariosList = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<Usuario>() }
                             val opciones = mutableListOf<Pair<String,String>>()
                             if (grupo != null) {
+                                val uidActual = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                                 grupo.miembros.keys.forEach { uid ->
+                                    if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                                     val u2 = usuariosList.find { it.id == uid }
-                                    val display = if (u2 != null && u2.nombre.isNotBlank()) "${u2.nombre} (${if (u2.email.isNotBlank()) u2.email else u2.id})" else u2?.email ?: uid
+                                    val display = when {
+                                        u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
+                                        u2 != null && u2.email.isNotBlank() -> u2.email
+                                        else -> "Usuario"
+                                    }
                                     opciones.add(Pair(display, uid))
                                 }
                             }
-                            if (opciones.isEmpty()) android.widget.Toast.makeText(fragment.requireContext(), "No hay miembros", android.widget.Toast.LENGTH_SHORT).show() else {
+                            if (opciones.isEmpty()) android.widget.Toast.makeText(fragment.requireContext(), fragment.getString(R.string.no_hay_miembros), android.widget.Toast.LENGTH_SHORT).show() else {
                                 val names = opciones.map { it.first }.toTypedArray()
                                 androidx.appcompat.app.AlertDialog.Builder(fragment.requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
                                     scope.launch {
                                         val elegido = opciones[idx].second
+                                        if (!usuarioId.isBlank() && elegido == usuarioId) {
+                                            android.widget.Toast.makeText(fragment.requireContext(), "No podés autoasignarte tareas", android.widget.Toast.LENGTH_LONG).show()
+                                            return@launch
+                                        }
                                         val nueva = t.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
                                         val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
                                         if (res2.isSuccess) {

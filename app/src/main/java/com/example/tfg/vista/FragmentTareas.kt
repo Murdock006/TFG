@@ -378,7 +378,7 @@ class FragmentTareas : Fragment() {
                                             opciones.add(Pair(display, uid))
                                         }
                                     }
-                                    if (opciones.isEmpty()) Toast.makeText(requireContext(), "No hay miembros", Toast.LENGTH_SHORT).show() else {
+                                    if (opciones.isEmpty()) Toast.makeText(requireContext(), getString(R.string.no_hay_miembros), Toast.LENGTH_SHORT).show() else {
                                         val names = opciones.map { it.first }.toTypedArray()
                                         androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
                                             lifecycleScope.launch {
@@ -536,7 +536,7 @@ class FragmentTareas : Fragment() {
                                 opciones.add(Pair(display, uid))
                             }
                         }
-                        if (opciones.isEmpty()) Toast.makeText(requireContext(), "No hay miembros", Toast.LENGTH_SHORT).show() else {
+                        if (opciones.isEmpty()) Toast.makeText(requireContext(), getString(R.string.no_hay_miembros), Toast.LENGTH_SHORT).show() else {
                             val names = opciones.map { it.first }.toTypedArray()
                             androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
                                 lifecycleScope.launch {
@@ -597,14 +597,12 @@ class FragmentTareas : Fragment() {
             }
 
             holder.btnAccion.setOnClickListener {
-                // abrir selector de miembro para crear una nueva instancia de Tarea (siempre permite crear)
+                // abrir selector de miembro para crear una nueva instancia de tarea
                 lifecycleScope.launch {
                     Log.d(TAG, "Intentando asignar sugerida: ${sug.titulo}")
                     val grupo = parejaVM.grupo.value
                     val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
                     val opciones = mutableListOf<Pair<String,String>>()
-                    // permitir 'Sin asignar' para crear sin responsable
-                    opciones.add(Pair(getString(R.string.asignado_por_defecto), ""))
                     if (grupo != null) {
                         val uidActual = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                         grupo.miembros.keys.forEach { uid ->
@@ -618,7 +616,11 @@ class FragmentTareas : Fragment() {
                             opciones.add(Pair(display, uid))
                         }
                     }
-                    // opciones siempre contiene al menos 'Sin asignar'
+                    if (opciones.isEmpty()) {
+                        Toast.makeText(requireContext(), getString(R.string.no_hay_miembros), Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
                     val nombres = opciones.map { it.first }.toTypedArray()
                     androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle(getString(R.string.selecciona_miembro)).setItems(nombres) { _, idx ->
                         lifecycleScope.launch {
@@ -707,11 +709,10 @@ class FragmentTareas : Fragment() {
         // Añadir botón "Crear otra" para crear una nueva instancia (duplicado) y asignarla
         builder.setNegativeButton("Crear otra") { _, _ ->
             lifecycleScope.launch {
-                // elegir miembro (incluye 'Sin asignar')
+                // elegir miembro del grupo
                 val grupo = parejaVM.grupo.value
                 val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
                 val opciones = mutableListOf<Pair<String,String>>()
-                opciones.add(Pair(getString(R.string.asignado_por_defecto), ""))
                 if (grupo != null) {
                     val uidActual = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                     grupo.miembros.keys.forEach { uid ->
@@ -725,6 +726,12 @@ class FragmentTareas : Fragment() {
                         opciones.add(Pair(display, uid))
                     }
                 }
+
+                if (opciones.isEmpty()) {
+                    Toast.makeText(requireContext(), getString(R.string.no_hay_miembros), Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
                 val nombres = opciones.map { it.first }.toTypedArray()
                 androidx.appcompat.app.AlertDialog.Builder(requireContext())
                     .setTitle(getString(R.string.selecciona_miembro))
@@ -782,7 +789,7 @@ class FragmentTareas : Fragment() {
                             opciones.add(Pair(display, uid))
                         }
                     }
-                    if (opciones.isEmpty()) Toast.makeText(requireContext(), "No hay miembros", Toast.LENGTH_SHORT).show() else {
+                    if (opciones.isEmpty()) Toast.makeText(requireContext(), getString(R.string.no_hay_miembros), Toast.LENGTH_SHORT).show() else {
                         val names = opciones.map { it.first }.toTypedArray()
                         androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
                             lifecycleScope.launch {
