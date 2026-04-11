@@ -15,9 +15,40 @@ class TareaRepositorioInMemory : TareaRepositorio {
 
     private val tareas = mutableListOf<Tarea>()
     private val tareasFlow = MutableStateFlow<List<Tarea>>(emptyList())
+    private val puntosFijosPersonalizada = 200
+
+    private fun esCategoriaPersonalizada(categoria: String?): Boolean {
+        return categoria.equals("personalizada", true) || categoria.equals("personalizado", true)
+    }
+
+    private fun normalizarTareaSegunReglas(tarea: Tarea): Tarea {
+        return if (esCategoriaPersonalizada(tarea.categoria)) {
+            tarea.copy(puntos = puntosFijosPersonalizada)
+        } else {
+            tarea
+        }
+    }
+
+    private fun validarAutoasignacion(tarea: Tarea): Result<Unit> {
+        return if (!tarea.creadoPor.isNullOrBlank() && !tarea.asignadoA.isNullOrBlank() && tarea.creadoPor == tarea.asignadoA) {
+            Result.failure(Exception("No se permite autoasignarse tareas"))
+        } else {
+            Result.success(Unit)
+        }
+    }
+
+    private fun esAutoasignada(tarea: Tarea): Boolean {
+        return !tarea.creadoPor.isNullOrBlank() && !tarea.asignadoA.isNullOrBlank() && tarea.creadoPor == tarea.asignadoA
+    }
 
     override suspend fun crearTarea(tarea: Tarea): Result<Tarea> = withContext(Dispatchers.Default) {
-        val t = tarea.copy(id = UUID.randomUUID().toString())
+        val tareaNormalizada = normalizarTareaSegunReglas(tarea)
+        val validacion = validarAutoasignacion(tareaNormalizada)
+        if (validacion.isFailure) {
+            return@withContext Result.failure(validacion.exceptionOrNull() ?: Exception("No se permite autoasignarse tareas"))
+        }
+
+        val t = tareaNormalizada.copy(id = UUID.randomUUID().toString())
         // Si el creador ofrece puntos, reservarlos en su cuenta
         if (!t.creadoPor.isNullOrBlank() && t.puntos > 0) {
             try {
@@ -42,22 +73,28 @@ class TareaRepositorioInMemory : TareaRepositorio {
         tareasFlow.map { lista -> lista.filter { it.grupoId == grupoId } }
 
     override suspend fun actualizarTarea(tarea: Tarea): Result<Tarea> = withContext(Dispatchers.Default) {
-        val idx = tareas.indexOfFirst { it.id == tarea.id }
+        val tareaNormalizada = normalizarTareaSegunReglas(tarea)
+        val validacion = validarAutoasignacion(tareaNormalizada)
+        if (validacion.isFailure) {
+            return@withContext Result.failure(validacion.exceptionOrNull() ?: Exception("No se permite autoasignarse tareas"))
+        }
+
+        val idx = tareas.indexOfFirst { it.id == tareaNormalizada.id }
         return@withContext if (idx >= 0) {
             val previo = tareas[idx]
-            tareas[idx] = tarea
+            tareas[idx] = tareaNormalizada
             tareasFlow.value = tareas.toList()
 
             // Si la tarea pasó a 'confirmada' desde 'completada', transferir puntos al asignado
             if (previo.estado == "completada" && tarea.estado == "confirmada") {
-                val asignado = tarea.asignadoA
-                val creador = tarea.creadoPor
+                val asignado = tareaNormalizada.asignadoA
+                val creador = tareaNormalizada.creadoPor
                 if (!asignado.isNullOrBlank() && !creador.isNullOrBlank()) {
                     try {
                         // sumar puntos al ejecutor con bonificación por racha
-                        LocalizadorServicios.repositorioAuth.sumarPuntosConBonificacion(asignado, tarea.puntos)
+                        LocalizadorServicios.repositorioAuth.sumarPuntosConBonificacion(asignado, tareaNormalizada.puntos)
                         // liberar los puntos reservados del creador (se han transferido)
-                        LocalizadorServicios.repositorioAuth.liberarPuntos(creador, tarea.puntos)
+                        LocalizadorServicios.repositorioAuth.liberarPuntos(creador, tareaNormalizada.puntos)
                     } catch (e: Exception) {
                         // ignore
                     }
@@ -65,18 +102,18 @@ class TareaRepositorioInMemory : TareaRepositorio {
             }
 
             // Si la tarea pasa de asignada a no asignada, liberar puntos del creador
-            if (!previo.asignadoA.isNullOrBlank() && tarea.asignadoA.isNullOrBlank()) {
-                val creador = tarea.creadoPor
+            if (!previo.asignadoA.isNullOrBlank() && tareaNormalizada.asignadoA.isNullOrBlank()) {
+                val creador = tareaNormalizada.creadoPor
                 if (!creador.isNullOrBlank()) {
                     try {
-                        LocalizadorServicios.repositorioAuth.liberarPuntos(creador, tarea.puntos)
+                        LocalizadorServicios.repositorioAuth.liberarPuntos(creador, tareaNormalizada.puntos)
                     } catch (e: Exception) {
                         // ignore
                     }
                 }
             }
 
-            Result.success(tarea)
+            Result.success(tareaNormalizada)
         } else {
             Result.failure(Exception("Tarea no encontrada"))
         }
@@ -120,6 +157,7 @@ class TareaRepositorioInMemory : TareaRepositorio {
         val idx = tareas.indexOfFirst { it.id == tareaId }
         if (idx < 0) return@withContext Result.failure(Exception("Tarea no encontrada"))
         val tarea = tareas[idx]
+        if (esAutoasignada(tarea)) return@withContext Result.failure(Exception("Tarea inválida: autoasignación no permitida"))
         if (tarea.estado != "pendiente") return@withContext Result.failure(Exception("Tarea no está en estado pendiente"))
 
         if (!tarea.requiereConfirmacion) {
@@ -147,6 +185,7 @@ class TareaRepositorioInMemory : TareaRepositorio {
         val idx = tareas.indexOfFirst { it.id == tareaId }
         if (idx < 0) return@withContext Result.failure(Exception("Tarea no encontrada"))
         val tarea = tareas[idx]
+        if (esAutoasignada(tarea)) return@withContext Result.failure(Exception("Tarea inválida: autoasignación no permitida"))
         if (tarea.estado != "pendiente_confirmacion" && tarea.estado != "completada") return@withContext Result.failure(Exception("La tarea no está en estado pendiente de confirmación"))
 
         // confirmar y transferir puntos al asignado

@@ -13,6 +13,31 @@ import kotlinx.coroutines.tasks.await
 class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()) : TareaRepositorio {
 
     private val coleccion = "tareas"
+    private val puntosFijosPersonalizada = 200
+
+    private fun esCategoriaPersonalizada(categoria: String?): Boolean {
+        return categoria.equals("personalizada", true) || categoria.equals("personalizado", true)
+    }
+
+    private fun normalizarTareaSegunReglas(tarea: Tarea): Tarea {
+        return if (esCategoriaPersonalizada(tarea.categoria)) {
+            tarea.copy(puntos = puntosFijosPersonalizada)
+        } else {
+            tarea
+        }
+    }
+
+    private fun validarAutoasignacion(tarea: Tarea): Result<Unit> {
+        return if (!tarea.creadoPor.isNullOrBlank() && !tarea.asignadoA.isNullOrBlank() && tarea.creadoPor == tarea.asignadoA) {
+            Result.failure(Exception("No se permite autoasignarse tareas"))
+        } else {
+            Result.success(Unit)
+        }
+    }
+
+    private fun esAutoasignada(tarea: Tarea): Boolean {
+        return !tarea.creadoPor.isNullOrBlank() && !tarea.asignadoA.isNullOrBlank() && tarea.creadoPor == tarea.asignadoA
+    }
 
     private fun docToTarea(doc: DocumentSnapshot): Tarea? {
         val data = doc.data ?: return null
@@ -49,38 +74,44 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
 
     override suspend fun crearTarea(tarea: Tarea): Result<Tarea> {
         return try {
+            val tareaNormalizada = normalizarTareaSegunReglas(tarea)
+            val validacion = validarAutoasignacion(tareaNormalizada)
+            if (validacion.isFailure) {
+                return Result.failure(validacion.exceptionOrNull() ?: Exception("No se permite autoasignarse tareas"))
+            }
+
             // reservar puntos en la cuenta del creador si aplica
-            if (!tarea.creadoPor.isNullOrBlank() && tarea.puntos > 0) {
+            if (!tareaNormalizada.creadoPor.isNullOrBlank() && tareaNormalizada.puntos > 0) {
                 try {
-                    com.example.tfg.service.LocalizadorServicios.repositorioAuth.reservarPuntos(tarea.creadoPor!!, tarea.puntos)
+                    com.example.tfg.service.LocalizadorServicios.repositorioAuth.reservarPuntos(tareaNormalizada.creadoPor!!, tareaNormalizada.puntos)
                 } catch (e: Exception) {
                     return Result.failure(Exception("No se pudieron reservar puntos: ${e.message}"))
                 }
             }
 
             val map = mutableMapOf<String, Any?>(
-                "titulo" to tarea.titulo,
-                "descripcion" to tarea.descripcion,
-                "categoria" to tarea.categoria,
-                "dificultad" to tarea.dificultad,
-                "puntos" to tarea.puntos,
-                "asignadoA" to tarea.asignadoA,
-                "creadoPor" to tarea.creadoPor,
-                "grupoId" to tarea.grupoId,
-                "estado" to tarea.estado,
-                "requiereConfirmacion" to tarea.requiereConfirmacion,
-                "fechaCreada" to (tarea.fechaCreada ?: Timestamp.now()),
-                "fechaProgramada" to tarea.fechaProgramada,
-                "esEmergencia" to tarea.esEmergencia,
-                "multiplicadorPuntos" to tarea.multiplicadorPuntos,
-                "esRecurrente" to tarea.esRecurrente,
-                "tipoRecurrencia" to tarea.tipoRecurrencia,
-                "rotarMiembros" to tarea.rotarMiembros,
-                "minutosAntes" to tarea.minutosAntes,
-                "esImportante" to tarea.esImportante
+                "titulo" to tareaNormalizada.titulo,
+                "descripcion" to tareaNormalizada.descripcion,
+                "categoria" to tareaNormalizada.categoria,
+                "dificultad" to tareaNormalizada.dificultad,
+                "puntos" to tareaNormalizada.puntos,
+                "asignadoA" to tareaNormalizada.asignadoA,
+                "creadoPor" to tareaNormalizada.creadoPor,
+                "grupoId" to tareaNormalizada.grupoId,
+                "estado" to tareaNormalizada.estado,
+                "requiereConfirmacion" to tareaNormalizada.requiereConfirmacion,
+                "fechaCreada" to (tareaNormalizada.fechaCreada ?: Timestamp.now()),
+                "fechaProgramada" to tareaNormalizada.fechaProgramada,
+                "esEmergencia" to tareaNormalizada.esEmergencia,
+                "multiplicadorPuntos" to tareaNormalizada.multiplicadorPuntos,
+                "esRecurrente" to tareaNormalizada.esRecurrente,
+                "tipoRecurrencia" to tareaNormalizada.tipoRecurrencia,
+                "rotarMiembros" to tareaNormalizada.rotarMiembros,
+                "minutosAntes" to tareaNormalizada.minutosAntes,
+                "esImportante" to tareaNormalizada.esImportante
             )
             val ref = firestore.collection(coleccion).add(map).await()
-            val nuevo = tarea.copy(id = ref.id, fechaCreada = (map["fechaCreada"] as? Timestamp))
+            val nuevo = tareaNormalizada.copy(id = ref.id, fechaCreada = (map["fechaCreada"] as? Timestamp))
             Result.success(nuevo)
         } catch (e: Exception) {
             Result.failure(e)
@@ -197,33 +228,39 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
 
     override suspend fun actualizarTarea(tarea: Tarea): Result<Tarea> {
         return try {
-            val docRef = firestore.collection(coleccion).document(tarea.id)
+            val tareaNormalizada = normalizarTareaSegunReglas(tarea)
+            val validacion = validarAutoasignacion(tareaNormalizada)
+            if (validacion.isFailure) {
+                return Result.failure(validacion.exceptionOrNull() ?: Exception("No se permite autoasignarse tareas"))
+            }
+
+            val docRef = firestore.collection(coleccion).document(tareaNormalizada.id)
             val snapPrev = docRef.get().await()
             val previo = docToTarea(snapPrev)
 
             val map = mutableMapOf<String, Any?>(
-                "titulo" to tarea.titulo,
-                "descripcion" to tarea.descripcion,
-                "categoria" to tarea.categoria,
-                "dificultad" to tarea.dificultad,
-                "puntos" to tarea.puntos,
-                "asignadoA" to tarea.asignadoA,
-                "creadoPor" to tarea.creadoPor,
-                "grupoId" to tarea.grupoId,
-                "estado" to tarea.estado,
-                "requiereConfirmacion" to tarea.requiereConfirmacion,
-                "fechaCreada" to (tarea.fechaCreada ?: Timestamp.now()),
-                "fechaProgramada" to tarea.fechaProgramada,
-                "fechaReclamada" to tarea.fechaReclamada,
-                "reclamadoPor" to tarea.reclamadoPor,
-                "motivoReclamo" to tarea.motivoReclamo,
-                "esEmergencia" to tarea.esEmergencia,
-                "multiplicadorPuntos" to tarea.multiplicadorPuntos,
-                "esRecurrente" to tarea.esRecurrente,
-                "tipoRecurrencia" to tarea.tipoRecurrencia,
-                "rotarMiembros" to tarea.rotarMiembros,
-                "minutosAntes" to tarea.minutosAntes,
-                "esImportante" to tarea.esImportante
+                "titulo" to tareaNormalizada.titulo,
+                "descripcion" to tareaNormalizada.descripcion,
+                "categoria" to tareaNormalizada.categoria,
+                "dificultad" to tareaNormalizada.dificultad,
+                "puntos" to tareaNormalizada.puntos,
+                "asignadoA" to tareaNormalizada.asignadoA,
+                "creadoPor" to tareaNormalizada.creadoPor,
+                "grupoId" to tareaNormalizada.grupoId,
+                "estado" to tareaNormalizada.estado,
+                "requiereConfirmacion" to tareaNormalizada.requiereConfirmacion,
+                "fechaCreada" to (tareaNormalizada.fechaCreada ?: Timestamp.now()),
+                "fechaProgramada" to tareaNormalizada.fechaProgramada,
+                "fechaReclamada" to tareaNormalizada.fechaReclamada,
+                "reclamadoPor" to tareaNormalizada.reclamadoPor,
+                "motivoReclamo" to tareaNormalizada.motivoReclamo,
+                "esEmergencia" to tareaNormalizada.esEmergencia,
+                "multiplicadorPuntos" to tareaNormalizada.multiplicadorPuntos,
+                "esRecurrente" to tareaNormalizada.esRecurrente,
+                "tipoRecurrencia" to tareaNormalizada.tipoRecurrencia,
+                "rotarMiembros" to tareaNormalizada.rotarMiembros,
+                "minutosAntes" to tareaNormalizada.minutosAntes,
+                "esImportante" to tareaNormalizada.esImportante
             )
             // reestructurar la transacción: leer TODO antes de escribir y usar las mismas DocumentReference
             firestore.runTransaction { t ->
@@ -231,9 +268,9 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 val previoTx = docToTarea(snapTx)
 
                 // determinar qué acciones se deben hacer en la transacción
-                val necesitaTransferir = (previoTx != null && previoTx.estado == "completada" && tarea.estado == "confirmada")
-                val necesitaReservar = (previoTx == null || (previoTx.asignadoA.isNullOrBlank() && !tarea.asignadoA.isNullOrBlank()))
-                val necesitaLiberarPorDesasignar = (previoTx != null && !previoTx.asignadoA.isNullOrBlank() && tarea.asignadoA.isNullOrBlank())
+                val necesitaTransferir = (previoTx != null && previoTx.estado == "completada" && tareaNormalizada.estado == "confirmada")
+                val necesitaReservar = (previoTx == null || (previoTx.asignadoA.isNullOrBlank() && !tareaNormalizada.asignadoA.isNullOrBlank()))
+                val necesitaLiberarPorDesasignar = (previoTx != null && !previoTx.asignadoA.isNullOrBlank() && tareaNormalizada.asignadoA.isNullOrBlank())
 
                 // referencias cacheadas
                 val refsPorUid = mutableMapOf<String, com.google.firebase.firestore.DocumentReference>()
@@ -242,8 +279,8 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 // preparar referencias y lecturas
                 if (necesitaReservar || necesitaLiberarPorDesasignar || necesitaTransferir) {
                     val uids = mutableSetOf<String>()
-                    if (!tarea.creadoPor.isNullOrBlank()) uids.add(tarea.creadoPor!!)
-                    if (!tarea.asignadoA.isNullOrBlank()) uids.add(tarea.asignadoA!!)
+                    if (!tareaNormalizada.creadoPor.isNullOrBlank()) uids.add(tareaNormalizada.creadoPor!!)
+                    if (!tareaNormalizada.asignadoA.isNullOrBlank()) uids.add(tareaNormalizada.asignadoA!!)
                     if (!previoTx?.creadoPor.isNullOrBlank()!!) uids.add(previoTx.creadoPor!!)
 
                     uids.forEach { uid ->
@@ -255,13 +292,13 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
 
                 // acciones sobre usuarios (leer antes)
                 if (necesitaReservar) {
-                    val creador = tarea.creadoPor
+                    val creador = tareaNormalizada.creadoPor
                     if (!creador.isNullOrBlank()) {
                         val creadRef = refsPorUid[creador] ?: firestore.collection("usuarios").document(creador)
                         val creadSnap = snapsLectura[creador] ?: t.get(creadRef)
                         val puntosAct = (creadSnap.getLong("puntos") ?: 0L).toInt()
                         val reservados = (creadSnap.getLong("puntosReservados") ?: 0L).toInt()
-                        t.update(creadRef, mapOf("puntos" to puntosAct, "puntosReservados" to (reservados + tarea.puntos)))
+                        t.update(creadRef, mapOf("puntos" to puntosAct, "puntosReservados" to (reservados + tareaNormalizada.puntos)))
                     }
                 }
 
@@ -272,7 +309,7 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                         val creadSnap = snapsLectura[creador] ?: t.get(creadRef)
                         val reservados = (creadSnap.getLong("puntosReservados") ?: 0L).toInt()
                         val puntosAct = (creadSnap.getLong("puntos") ?: 0L).toInt()
-                        val liberar = minOf(reservados, tarea.puntos)
+                        val liberar = minOf(reservados, tareaNormalizada.puntos)
                         t.update(creadRef, mapOf("puntosReservados" to (reservados - liberar), "puntos" to puntosAct))
                     }
                 }
@@ -280,7 +317,7 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 if (necesitaTransferir) {
                     val creador = previoTx?.creadoPor
                     val creadRef = if (!creador.isNullOrBlank()) refsPorUid[creador] ?: firestore.collection("usuarios").document(creador) else null
-                    val ejecUid = tarea.asignadoA ?: ""
+                    val ejecUid = tareaNormalizada.asignadoA ?: ""
                     val ejecRef = refsPorUid[ejecUid] ?: firestore.collection("usuarios").document(ejecUid)
                     val ejecSnap = snapsLectura[ejecUid] ?: t.get(ejecRef)
                     val puntosAct = (ejecSnap.getLong("puntos") ?: 0L).toInt()
@@ -289,11 +326,11 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                         // obtener snapshot del creador desde cache o leyendo
                         val creadSnapLocal = snapsLectura[creador] ?: t.get(creadRef)
                         val reservadosAct = (creadSnapLocal.getLong("puntosReservados") ?: 0L).toInt()
-                        val nuevoReservados = (reservadosAct - tarea.puntos).coerceAtLeast(0)
+                        val nuevoReservados = (reservadosAct - tareaNormalizada.puntos).coerceAtLeast(0)
                         t.update(creadRef, mapOf("puntosReservados" to nuevoReservados))
                     }
 
-                    t.update(ejecRef, mapOf("puntos" to puntosAct + tarea.puntos))
+                    t.update(ejecRef, mapOf("puntos" to puntosAct + tareaNormalizada.puntos))
                 }
 
                 // por último escribir la tarea actualizada (última escritura)
@@ -303,11 +340,11 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
             }.await()
 
             // Notificación fuera de la transacción: si se asignó ahora o se reasignó, crear notificación
-            if (!tarea.asignadoA.isNullOrBlank() && (previo == null || previo.asignadoA.isNullOrBlank() || previo.asignadoA != tarea.asignadoA)) {
+            if (!tareaNormalizada.asignadoA.isNullOrBlank() && (previo == null || previo.asignadoA.isNullOrBlank() || previo.asignadoA != tareaNormalizada.asignadoA)) {
                 try {
                     val repoNot = com.example.tfg.repositorio.RepositorioNotificaciones()
-                    val contenido = mapOf("tipo" to "asignacion", "tareaId" to tarea.id, "titulo" to tarea.titulo, "puntos" to tarea.puntos, "desde" to (tarea.creadoPor ?: ""))
-                    val destinatario = tarea.asignadoA!!
+                    val contenido = mapOf("tipo" to "asignacion", "tareaId" to tareaNormalizada.id, "titulo" to tareaNormalizada.titulo, "puntos" to tareaNormalizada.puntos, "desde" to (tareaNormalizada.creadoPor ?: ""))
+                    val destinatario = tareaNormalizada.asignadoA!!
                     val not = com.example.tfg.modelo.Notificacion(id = "", tipo = "asignacion", contenido = contenido, destinatario = destinatario, visto = false, fecha = com.google.firebase.Timestamp.now())
                     repoNot.enviarNotificacion(not)
                 } catch (e: Exception) {
@@ -315,7 +352,7 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 }
             }
 
-            Result.success(tarea)
+            Result.success(tareaNormalizada)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -352,6 +389,7 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
             val docRef = firestore.collection(coleccion).document(tareaId)
             val snap = docRef.get().await()
             val tarea = docToTarea(snap) ?: return Result.failure(Exception("Tarea no encontrada"))
+            if (esAutoasignada(tarea)) return Result.failure(Exception("Tarea inválida: autoasignación no permitida"))
 
             // Si requiere confirmación, marcar estado intermedio
             if (tarea.requiereConfirmacion) {
@@ -403,6 +441,7 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
             val snap = docRef.get().await()
             if (!snap.exists()) return Result.failure(Exception("Tarea no encontrada"))
             val tarea = docToTarea(snap) ?: return Result.failure(Exception("Tarea inválida"))
+            if (esAutoasignada(tarea)) return Result.failure(Exception("Tarea inválida: autoasignación no permitida"))
             if (tarea.estado != "pendiente_confirmacion" && tarea.estado != "completada")
                 return Result.failure(Exception("La tarea no está pendiente de confirmación"))
 
@@ -414,6 +453,7 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
             firestore.runTransaction { t ->
                 val snapTx = t.get(docRef)
                 val tareaTx = docToTarea(snapTx) ?: throw Exception("Tarea inválida en transacción")
+                if (esAutoasignada(tareaTx)) throw Exception("Tarea inválida: autoasignación no permitida")
                 if (tareaTx.estado != "pendiente_confirmacion" && tareaTx.estado != "completada")
                     throw Exception("Estado incorrecto para confirmar")
 

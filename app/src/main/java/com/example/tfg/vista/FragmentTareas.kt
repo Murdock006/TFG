@@ -35,6 +35,10 @@ import kotlinx.coroutines.launch
 
 class FragmentTareas : Fragment() {
 
+    companion object {
+        private const val PUNTOS_FIJOS_PERSONALIZADA = 200
+    }
+
     private var listaBinding: FragmentTareasListaBinding? = null
     private var crearBinding: FragmentTareasCrearBinding? = null
     private val parejaVM: ParejaViewModel by activityViewModels()
@@ -177,6 +181,13 @@ class FragmentTareas : Fragment() {
             adaptCat.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             b.spCategoria.adapter = adaptCat
 
+            val categoriaInicialArg = arguments?.getString("categoria")
+            val categoriaInicialPersonalizada = categoriaInicialArg.equals("personalizada", true) || categoriaInicialArg.equals("personalizado", true)
+            if (categoriaInicialPersonalizada) {
+                val idxPersonalizada = categorias.indexOfFirst { it.equals("Personalizada", true) }
+                if (idxPersonalizada >= 0) b.spCategoria.setSelection(idxPersonalizada)
+            }
+
             val dificultades = listOf("Fácil", "Media", "Difícil")
             val adaptDif = android.widget.ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, dificultades)
             adaptDif.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -186,6 +197,30 @@ class FragmentTareas : Fragment() {
             adaptMiembros.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             b.spAsignarA.adapter = adaptMiembros
 
+            fun isCategoriaPersonalizadaSeleccionada(): Boolean {
+                val cat = (b.spCategoria.selectedItem as? String)?.trim().orEmpty()
+                return cat.equals("Personalizada", true) || cat.equals("Personalizado", true)
+            }
+
+            fun actualizarUiPuntosSegunCategoria() {
+                val esPersonalizada = isCategoriaPersonalizadaSeleccionada()
+                b.tilPuntos.visibility = if (esPersonalizada) View.GONE else View.VISIBLE
+                b.tvPuntosFijos.visibility = if (esPersonalizada) View.VISIBLE else View.GONE
+                if (esPersonalizada) {
+                    b.etPuntos.setText(PUNTOS_FIJOS_PERSONALIZADA.toString())
+                }
+            }
+
+            b.spCategoria.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    actualizarUiPuntosSegunCategoria()
+                }
+                override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
+            }
+
+            // Ajuste inicial
+            actualizarUiPuntosSegunCategoria()
+
             // actualizar miembros cuando cambie el grupo
             lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -193,12 +228,14 @@ class FragmentTareas : Fragment() {
                         // construir lista de pairs (display, uid)
                         miembrosParaSpinner.clear()
                         miembrosParaSpinner.add(Pair("Sin asignar", ""))
+                        val uidActual = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                         g?.miembros?.keys?.forEach { uid ->
+                            if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                             val u = usuariosCacheGlobal.find { it.id == uid }
                             val display = when {
                                 u != null && u.nombre.isNotBlank() -> if (u.email.isNotBlank()) "${u.nombre} (${u.email})" else u.nombre
                                 u != null && u.email.isNotBlank() -> u.email
-                                else -> uid
+                                else -> "Usuario"
                             }
                             miembrosParaSpinner.add(Pair(display, uid))
                         }
@@ -257,14 +294,19 @@ class FragmentTareas : Fragment() {
 
             b.btnCrearTarea.setOnClickListener {
                 val titulo = b.etTitulo.text.toString().trim()
-                val puntos = b.etPuntos.text.toString().toIntOrNull() ?: 0
                 if (titulo.isEmpty()) { Toast.makeText(requireContext(), "Introduce título", Toast.LENGTH_SHORT).show(); return@setOnClickListener }
                 val creadorId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                 val categoria = b.spCategoria.selectedItem as String
+                val esCategoriaPersonalizada = categoria.equals("Personalizada", true) || categoria.equals("Personalizado", true)
+                val puntos = if (esCategoriaPersonalizada) PUNTOS_FIJOS_PERSONALIZADA else (b.etPuntos.text.toString().toIntOrNull() ?: 0)
                 val dificultadStr = b.spDificultad.selectedItem as String
                 val dificultad = when (dificultadStr) { "Fácil" -> 1; "Media" -> 2; else -> 3 }
                 val asignIdx = b.spAsignarA.selectedItemPosition
                 val asignadoUid = if (asignIdx > 0 && asignIdx < miembrosParaSpinner.size) miembrosParaSpinner[asignIdx].second else null
+                if (!creadorId.isNullOrBlank() && !asignadoUid.isNullOrBlank() && asignadoUid == creadorId) {
+                    Toast.makeText(requireContext(), "No podés autoasignarte tareas", Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
                 val multiplicador = if (esEmergenciaLocal) 1.5 else 1.0
 
                 val tarea = Tarea(
@@ -324,9 +366,15 @@ class FragmentTareas : Fragment() {
                                     val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
                                     val opciones = mutableListOf<Pair<String,String>>()
                                     if (grupo != null) {
+                                        val uidActual = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                                         grupo.miembros.keys.forEach { uid ->
+                                            if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                                             val u2 = usuarios.find { it.id == uid }
-                                            val display = if (u2 != null && u2.nombre.isNotBlank()) "${u2.nombre} (${if (u2.email.isNotBlank()) u2.email else u2.id})" else u2?.email ?: uid
+                                            val display = when {
+                                                u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
+                                                u2 != null && u2.email.isNotBlank() -> u2.email
+                                                else -> "Usuario"
+                                            }
                                             opciones.add(Pair(display, uid))
                                         }
                                     }
@@ -335,6 +383,10 @@ class FragmentTareas : Fragment() {
                                         androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
                                             lifecycleScope.launch {
                                                 val elegido = opciones[idx].second
+                                                if (!usuarioActualId.isBlank() && elegido == usuarioActualId) {
+                                                    Toast.makeText(requireContext(), "No podés autoasignarte tareas", Toast.LENGTH_LONG).show()
+                                                    return@launch
+                                                }
                                                 val nueva = tarea.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
                                                 val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
                                                 if (res2.isSuccess) {
@@ -472,9 +524,15 @@ class FragmentTareas : Fragment() {
                         val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
                         val opciones = mutableListOf<Pair<String,String>>()
                         if (grupo != null) {
+                            val uidActual = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                             grupo.miembros.keys.forEach { uid ->
+                                if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                                 val u2 = usuarios.find { it.id == uid }
-                                val display = if (u2 != null && u2.nombre.isNotBlank()) "${u2.nombre} (${if (u2.email.isNotBlank()) u2.email else u2.id})" else u2?.email ?: uid
+                                val display = when {
+                                    u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
+                                    u2 != null && u2.email.isNotBlank() -> u2.email
+                                    else -> "Usuario"
+                                }
                                 opciones.add(Pair(display, uid))
                             }
                         }
@@ -483,6 +541,10 @@ class FragmentTareas : Fragment() {
                             androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
                                 lifecycleScope.launch {
                                     val elegido = opciones[idx].second
+                                    if (!usuarioId.isBlank() && elegido == usuarioId) {
+                                        Toast.makeText(requireContext(), "No podés autoasignarte tareas", Toast.LENGTH_LONG).show()
+                                        return@launch
+                                    }
                                     val nueva = tarea.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
                                     val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
                                     if (res2.isSuccess) {
@@ -544,12 +606,14 @@ class FragmentTareas : Fragment() {
                     // permitir 'Sin asignar' para crear sin responsable
                     opciones.add(Pair(getString(R.string.asignado_por_defecto), ""))
                     if (grupo != null) {
+                        val uidActual = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                         grupo.miembros.keys.forEach { uid ->
+                            if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                             val u2 = usuarios.find { it.id == uid }
                             val display = when {
                                 u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
                                 u2 != null && u2.email.isNotBlank() -> u2.email
-                                else -> uid
+                                else -> "Usuario"
                             }
                             opciones.add(Pair(display, uid))
                         }
@@ -560,6 +624,10 @@ class FragmentTareas : Fragment() {
                         lifecycleScope.launch {
                             val elegidoUid = opciones[idx].second.ifBlank { null }
                             val creador = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
+                            if (!creador.isNullOrBlank() && !elegidoUid.isNullOrBlank() && elegidoUid == creador) {
+                                Toast.makeText(requireContext(), "No podés autoasignarte tareas", Toast.LENGTH_LONG).show()
+                                return@launch
+                            }
                             val dificultadInt = when (sug.dificultad.lowercase()) { "fácil", "facil" -> 1; "media" -> 2; else -> 3 }
                             // Las tareas preestablecidas se asignan para hoy si no se elige fecha
                             val hoy = com.google.firebase.Timestamp.now()
@@ -591,9 +659,20 @@ class FragmentTareas : Fragment() {
         val v = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_editar_tarea, null)
         val etTitulo = v.findViewById<android.widget.EditText>(R.id.etTituloEditar)
         val etPuntos = v.findViewById<android.widget.EditText>(R.id.etPuntosEditar)
+        val tilPuntos = v.findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.tilPuntosEditar)
+        val tvPuntosFijos = v.findViewById<TextView>(R.id.tvPuntosFijosEditar)
         val spDificultad = v.findViewById<android.widget.Spinner>(R.id.spDificultadEditar)
         etTitulo.setText(tarea.titulo)
         etPuntos.setText(tarea.puntos.toString())
+        val esPersonalizada = tarea.categoria.equals("personalizada", true) || tarea.categoria.equals("personalizado", true)
+        if (esPersonalizada) {
+            tilPuntos.visibility = View.GONE
+            tvPuntosFijos.visibility = View.VISIBLE
+            etPuntos.setText(PUNTOS_FIJOS_PERSONALIZADA.toString())
+        } else {
+            tilPuntos.visibility = View.VISIBLE
+            tvPuntosFijos.visibility = View.GONE
+        }
         val opciones = listOf("Fácil","Media","Difícil")
         val adapt = android.widget.ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, opciones)
         adapt.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -603,7 +682,7 @@ class FragmentTareas : Fragment() {
         androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Editar tarea").setView(v)
             .setPositiveButton("Guardar") { _, _ ->
                 val nuevoTitulo = etTitulo.text.toString().trim()
-                val nuevosPts = etPuntos.text.toString().toIntOrNull() ?: tarea.puntos
+                val nuevosPts = if (esPersonalizada) PUNTOS_FIJOS_PERSONALIZADA else (etPuntos.text.toString().toIntOrNull() ?: tarea.puntos)
                 val nuevaDif = when(spDificultad.selectedItemPosition) {0->1;1->2;else->3}
                 lifecycleScope.launch {
                     val nueva = tarea.copy(titulo = nuevoTitulo, puntos = nuevosPts, dificultad = nuevaDif)
@@ -634,12 +713,14 @@ class FragmentTareas : Fragment() {
                 val opciones = mutableListOf<Pair<String,String>>()
                 opciones.add(Pair(getString(R.string.asignado_por_defecto), ""))
                 if (grupo != null) {
+                    val uidActual = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                     grupo.miembros.keys.forEach { uid ->
+                        if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                         val u2 = usuarios.find { it.id == uid }
                         val display = when {
                             u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
                             u2 != null && u2.email.isNotBlank() -> u2.email
-                            else -> uid
+                            else -> "Usuario"
                         }
                         opciones.add(Pair(display, uid))
                     }
@@ -651,6 +732,10 @@ class FragmentTareas : Fragment() {
                         lifecycleScope.launch {
                             val elegidoUid = opciones[idx].second.ifBlank { null }
                             val creador = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
+                            if (!creador.isNullOrBlank() && !elegidoUid.isNullOrBlank() && elegidoUid == creador) {
+                                Toast.makeText(requireContext(), "No podés autoasignarte tareas", Toast.LENGTH_LONG).show()
+                                return@launch
+                            }
                             val nueva = Tarea(
                                 titulo = tarea.titulo,
                                 descripcion = tarea.descripcion,
@@ -685,9 +770,15 @@ class FragmentTareas : Fragment() {
                     val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<com.example.tfg.modelo.Usuario>() }
                     val opciones = mutableListOf<Pair<String,String>>()
                     if (grupo != null) {
+                        val uidActual = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                         grupo.miembros.keys.forEach { uid ->
+                            if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                             val u2 = usuarios.find { it.id == uid }
-                            val display = if (u2 != null && u2.nombre.isNotBlank()) "${u2.nombre} (${if (u2.email.isNotBlank()) u2.email else u2.id})" else u2?.email ?: uid
+                            val display = when {
+                                u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
+                                u2 != null && u2.email.isNotBlank() -> u2.email
+                                else -> "Usuario"
+                            }
                             opciones.add(Pair(display, uid))
                         }
                     }
@@ -696,6 +787,10 @@ class FragmentTareas : Fragment() {
                         androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
                             lifecycleScope.launch {
                                 val elegido = opciones[idx].second
+                                if (!usuarioActualId.isBlank() && elegido == usuarioActualId) {
+                                    Toast.makeText(requireContext(), "No podés autoasignarte tareas", Toast.LENGTH_LONG).show()
+                                    return@launch
+                                }
                                 val nueva = tarea.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
                                 val res = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
                                 if (res.isSuccess) {
