@@ -111,4 +111,5 @@
     <string name="eliminar_cuenta_texto_incorrecto">Confirmación incorrecta. Escribí ELIMINAR en mayúsculas.</string>
     <string name="eliminar_cuenta_ok">Tu cuenta fue eliminada correctamente.</string>
     <string name="eliminar_cuenta_requiere_login_reciente">Por seguridad, cerrá sesión, iniciá sesión de nuevo y repetí la eliminación.</string>
+    <string name="cuenta_y_seguridad">Cuenta y seguridad</string>
 </resources>

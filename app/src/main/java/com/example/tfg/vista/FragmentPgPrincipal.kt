@@ -15,6 +15,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.tfg.R
 import com.example.tfg.databinding.FragmentPgPrincipalBinding
 import com.example.tfg.viewmodel.VistaModeloPrincipal
 import com.example.tfg.viewmodel.ParejaViewModel
@@ -54,6 +55,10 @@ class FragmentPgPrincipal : Fragment() {
         }
 
         vistaModelo.actualizarTexto()
+
+        binding.btnCuentaSeguridad.setOnClickListener {
+            findNavController().navigate(R.id.fragment_Perfil)
+        }
 
         // Conectar botones de UI a acciones de navegación (usar id de categoría en minúsculas)
         binding.categoriaCocina.setOnClickListener {
