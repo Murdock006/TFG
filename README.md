@@ -320,6 +320,29 @@ Errores comunes:
 
 ---
 
+## 🔐 Cumplimiento Play Store (eliminación de cuenta)
+
+Se añadió una página web para solicitudes de eliminación de cuenta, requerida por Google Play para apps con creación de cuentas:
+
+- Archivo local: `docs/playstore/eliminacion-cuenta.html`
+- Email de contacto oficial de la app: `hello@sintaxys.es`
+
+### Publicación sugerida (GitHub Pages)
+
+1. Subir cambios al repositorio remoto.
+2. En GitHub: **Settings → Pages**.
+3. Source: `Deploy from a branch`.
+4. Branch: `master` (o `main` según corresponda), carpeta `/docs`.
+5. URL esperada tras publicar:
+   - `https://<tu-usuario>.github.io/TFG2/playstore/eliminacion-cuenta.html`
+
+### Dónde colocarla en Play Console
+
+En **Contenido de la app → Seguridad de los datos → Eliminación de cuenta**, usar la URL publicada.
+La página debe ser accesible sin login y ofrecer una ruta clara de solicitud (incluida en el HTML).
+
+---
+
 ## 🤝 Contribuir
 
 1. Fork el repositorio
