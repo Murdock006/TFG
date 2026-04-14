@@ -21,6 +21,9 @@ class VistaModeloAuth(
     private val _error = MutableLiveData<String?>(null)
     val error: LiveData<String?> = _error
 
+    private val _eliminacionCuenta = MutableLiveData<Result<Unit>?>(null)
+    val eliminacionCuenta: LiveData<Result<Unit>?> = _eliminacionCuenta
+
     private val TAG = "VistaModeloAuth"
 
     fun registrar(nombre: String, edad: Int?, ciudad: String?, email: String, password: String) {
@@ -78,6 +81,30 @@ class VistaModeloAuth(
 
     fun logout() {
         viewModelScope.launch { try { repositorio.logout() } catch (_: Exception) { } ; _usuario.value = null }
+    }
+
+    fun eliminarCuentaActual() {
+        viewModelScope.launch {
+            try {
+                val res = repositorio.eliminarCuentaActual()
+                if (res.isSuccess) {
+                    _usuario.value = null
+                    _error.value = null
+                } else {
+                    val msg = res.exceptionOrNull()?.message ?: "No se pudo eliminar la cuenta"
+                    _error.value = msg
+                }
+                _eliminacionCuenta.value = res
+            } catch (e: Exception) {
+                val msg = e.message ?: "No se pudo eliminar la cuenta"
+                _error.value = msg
+                _eliminacionCuenta.value = Result.failure(Exception(msg))
+            }
+        }
+    }
+
+    fun resetEliminacionCuentaState() {
+        _eliminacionCuenta.value = null
     }
 
     // Nuevo: login usando token de proveedor externo (ej. Google idToken)

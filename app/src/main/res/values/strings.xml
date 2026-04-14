@@ -99,4 +99,16 @@
 
     <!-- Google Sign-In -->
     <string name="google_client_id">680542959178-j04kes04m6jpf6v7omp51f9522qbcjbq.apps.googleusercontent.com</string>
+
+    <!-- Cumplimiento Play Store: eliminación de cuenta -->
+    <string name="eliminar_cuenta">Eliminar cuenta</string>
+    <string name="eliminar_cuenta_titulo">Eliminar cuenta definitivamente</string>
+    <string name="eliminar_cuenta_mensaje">Esta acción elimina tu cuenta y tus datos asociados. Es irreversible.</string>
+    <string name="eliminar_cuenta_confirmacion">Escribí ELIMINAR para confirmar</string>
+    <string name="eliminar_cuenta_hint">ELIMINAR</string>
+    <string name="eliminar_cuenta_confirmar">Eliminar definitivamente</string>
+    <string name="eliminar_cuenta_cancelar">Cancelar</string>
+    <string name="eliminar_cuenta_texto_incorrecto">Confirmación incorrecta. Escribí ELIMINAR en mayúsculas.</string>
+    <string name="eliminar_cuenta_ok">Tu cuenta fue eliminada correctamente.</string>
+    <string name="eliminar_cuenta_requiere_login_reciente">Por seguridad, cerrá sesión, iniciá sesión de nuevo y repetí la eliminación.</string>
 </resources>

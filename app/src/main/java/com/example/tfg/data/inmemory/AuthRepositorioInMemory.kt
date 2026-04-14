@@ -44,6 +44,16 @@ class AuthRepositorioInMemory : AuthRepositorio {
         usuarioLogueado = null
     }
 
+    override suspend fun eliminarCuentaActual(): Result<Unit> {
+        return withContext(Dispatchers.Default) {
+            val actual = usuarioLogueado ?: return@withContext Result.failure(Exception("No hay sesión activa"))
+            val eliminado = usuarios.removeIf { it.id == actual.id }
+            usuarioLogueado = null
+            usuariosFlow.value = usuarios.toList()
+            if (eliminado) Result.success(Unit) else Result.failure(Exception("No se pudo eliminar la cuenta local"))
+        }
+    }
+
     override fun usuarioActual(): Usuario? = usuarioLogueado
 
     override fun observarUsuarios(): Flow<List<Usuario>> = usuariosFlow

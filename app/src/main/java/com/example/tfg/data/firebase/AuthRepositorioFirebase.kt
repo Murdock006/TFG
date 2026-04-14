@@ -4,10 +4,12 @@ import android.util.Log
 import com.example.tfg.modelo.Usuario
 import com.example.tfg.repositorio.AuthRepositorio
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.Flow
@@ -169,6 +171,142 @@ class AuthRepositorioFirebase : AuthRepositorio {
     override suspend fun logout() {
         _usuarioCache = null
         auth.signOut()
+    }
+
+    override suspend fun eliminarCuentaActual(): Result<Unit> {
+        val usuarioActual = auth.currentUser ?: return Result.failure(Exception("No hay sesión activa"))
+        val uid = usuarioActual.uid
+
+        return try {
+            // 1) Limpiar datos asociados en Firestore/Storage (mejor esfuerzo)
+            limpiarDatosAsociados(uid)
+
+            // 2) Borrar cuenta de Firebase Auth (puede requerir login reciente)
+            usuarioActual.delete().await()
+
+            // 3) Limpiar caché/sesión local
+            _usuarioCache = null
+            auth.signOut()
+
+            Result.success(Unit)
+        } catch (e: FirebaseAuthRecentLoginRequiredException) {
+            Log.w(TAG, "eliminarCuentaActual requiere reautenticación", e)
+            Result.failure(Exception("Por seguridad, volvé a iniciar sesión y repetí la eliminación de cuenta."))
+        } catch (e: Exception) {
+            Log.e(TAG, "eliminarCuentaActual error", e)
+            Result.failure(Exception(e.message ?: "No se pudo eliminar la cuenta"))
+        }
+    }
+
+    private suspend fun limpiarDatosAsociados(uid: String) {
+        // Eliminar documento principal del usuario
+        try {
+            firestore.collection("usuarios").document(uid).delete().await()
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudo borrar documento de usuario uid=$uid", e)
+        }
+
+        // Quitar al usuario de grupos donde participa (y borrar grupo si queda vacío)
+        try {
+            val grupos = firestore.collection("grupos").get().await()
+            for (doc in grupos.documents) {
+                val miembrosRaw = doc.get("miembros") as? Map<*, *> ?: continue
+                if (!miembrosRaw.containsKey(uid)) continue
+
+                val miembros = miembrosRaw
+                    .mapNotNull { (k, v) ->
+                        val key = k as? String ?: return@mapNotNull null
+                        val value = v as? String ?: return@mapNotNull null
+                        key to value
+                    }
+                    .toMap()
+                    .toMutableMap()
+
+                miembros.remove(uid)
+                if (miembros.isEmpty()) {
+                    doc.reference.delete().await()
+                } else {
+                    doc.reference.update("miembros", miembros).await()
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudieron limpiar grupos para uid=$uid", e)
+        }
+
+        // Limpiar tareas creadas por el usuario
+        try {
+            val creadas = firestore.collection("tareas").whereEqualTo("creadoPor", uid).get().await()
+            for (doc in creadas.documents) {
+                doc.reference.delete().await()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudieron borrar tareas creadas por uid=$uid", e)
+        }
+
+        // Limpiar tareas asignadas al usuario (si no son creadas por él)
+        try {
+            val asignadas = firestore.collection("tareas").whereEqualTo("asignadoA", uid).get().await()
+            for (doc in asignadas.documents) {
+                if (doc.getString("creadoPor") == uid) continue
+                doc.reference.update(
+                    mapOf(
+                        "asignadoA" to null,
+                        "estado" to "pendiente",
+                        "fechaReclamada" to null,
+                        "reclamadoPor" to null,
+                        "motivoReclamo" to null
+                    )
+                ).await()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudieron limpiar tareas asignadas a uid=$uid", e)
+        }
+
+        // Eliminar invitaciones creadas por el usuario
+        borrarDocumentosPorCampo("invitaciones", "creadoPor", uid)
+
+        // Eliminar notificaciones recibidas por el usuario
+        borrarDocumentosPorCampo("notificaciones", "destinatario", uid)
+
+        // Eliminar notificaciones emitidas por el usuario (contenido.desde)
+        borrarDocumentosPorCampo("notificaciones", "contenido.desde", uid)
+
+        // Eliminar recompensas personalizadas creadas por el usuario
+        borrarDocumentosPorCampo("recompensas", "creadoPor", uid)
+
+        // Eliminar canjes del usuario
+        borrarDocumentosPorCampo("canjes", "usuarioUid", uid)
+
+        // Eliminar disputas del usuario y sus fotos de prueba
+        try {
+            val disputas = firestore.collection("disputas").whereEqualTo("iniciador", uid).get().await()
+            for (doc in disputas.documents) {
+                val pruebas = doc.get("pruebas") as? List<*>
+                pruebas
+                    ?.mapNotNull { it as? String }
+                    ?.forEach { url ->
+                        try {
+                            FirebaseStorage.getInstance().getReferenceFromUrl(url).delete().await()
+                        } catch (e: Exception) {
+                            Log.w(TAG, "No se pudo borrar evidencia de disputa: $url", e)
+                        }
+                    }
+                doc.reference.delete().await()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudieron limpiar disputas de uid=$uid", e)
+        }
+    }
+
+    private suspend fun borrarDocumentosPorCampo(coleccion: String, campo: String, valor: String) {
+        try {
+            val snap = firestore.collection(coleccion).whereEqualTo(campo, valor).get().await()
+            for (doc in snap.documents) {
+                doc.reference.delete().await()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudieron borrar documentos en $coleccion por $campo=$valor", e)
+        }
     }
 
     override fun usuarioActual(): Usuario? {

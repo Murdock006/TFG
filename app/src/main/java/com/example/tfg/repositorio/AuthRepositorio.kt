@@ -7,6 +7,7 @@ interface AuthRepositorio {
     suspend fun registrar(usuario: Usuario, password: String): Result<Usuario>
     suspend fun login(email: String, password: String): Result<Usuario>
     suspend fun logout()
+    suspend fun eliminarCuentaActual(): Result<Unit>
     fun usuarioActual(): Usuario?
     fun observarUsuarios(): Flow<List<Usuario>>
 
