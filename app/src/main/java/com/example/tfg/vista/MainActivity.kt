@@ -356,27 +356,48 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun observarUsuarioDrawerHeader() {
+private fun observarUsuarioDrawerHeader() {
+        // Solo observar si hay usuario logueado - evita crash al inicio sin sesión
+        val usuario = LocalizadorServicios.repositorioAuth.usuarioActual()
+        if (usuario == null) {
+            android.util.Log.d("MainActivity", "Sin usuario, no se observa header drawer")
+            return
+        }
         lifecycleScope.launch {
             repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
-                LocalizadorServicios.repositorioAuth.observarUsuarios().collect {
-                    refrescarHeaderDrawer()
+                try {
+                    LocalizadorServicios.repositorioAuth.observarUsuarios().collect {
+                        refrescarHeaderDrawer()
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "Error observando usuarios para drawer", e)
                 }
             }
         }
     }
 
     private fun refrescarHeaderDrawer() {
-        val header = navigationView.getHeaderView(0) ?: return
-        val tvNombre = header.findViewById<TextView>(com.example.tfg.R.id.tvDrawerNombre)
-        val tvEmail = header.findViewById<TextView>(com.example.tfg.R.id.tvDrawerEmail)
-        val usuario = LocalizadorServicios.repositorioAuth.usuarioActual()
-        if (usuario != null) {
-            tvNombre.text = usuario.nombre.ifBlank { getString(com.example.tfg.R.string.no_hay_usuario) }
-            tvEmail.text = usuario.email
-        } else {
-            tvNombre.text = getString(com.example.tfg.R.string.no_hay_usuario)
-            tvEmail.text = ""
+        try {
+            val header = navigationView.getHeaderView(0) ?: run {
+                android.util.Log.w("MainActivity", "Header drawer no disponible")
+                return
+            }
+            val tvNombre = header.findViewById<TextView>(com.example.tfg.R.id.tvDrawerNombre)
+            val tvEmail = header.findViewById<TextView>(com.example.tfg.R.id.tvDrawerEmail)
+            if (tvNombre == null || tvEmail == null) {
+                android.util.Log.w("MainActivity", "TextViews del header no encontrados")
+                return
+            }
+            val usuario = LocalizadorServicios.repositorioAuth.usuarioActual()
+            if (usuario != null) {
+                tvNombre.text = usuario.nombre.ifBlank { getString(com.example.tfg.R.string.no_hay_usuario) }
+                tvEmail.text = usuario.email
+            } else {
+                tvNombre.text = getString(com.example.tfg.R.string.no_hay_usuario)
+                tvEmail.text = ""
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Error en refrescarHeaderDrawer", e)
         }
     }
 
