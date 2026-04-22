@@ -21,8 +21,7 @@ import androidx.navigation.Navigation
 import com.example.tfg.databinding.ActivityMainBinding
 import com.example.tfg.service.NotificationScheduler
 import com.example.tfg.viewmodel.ParejaViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import androidx.core.view.WindowInsetsCompat
 
@@ -36,6 +35,8 @@ class MainActivity : AppCompatActivity() {
 
     // control doble retroceso
     private var ultimoRetrocesoMs: Long = 0L
+    private var notificacionesJob: Job? = null
+    private var notificacionesUidObservado: String? = null
     
     // Launcher para pedir permiso de notificaciones
     private val requestNotificationPermissionLauncher = registerForActivityResult(
@@ -103,46 +104,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        // Observar notificaciones para el usuario actual y mostrar locales (lifecycle-aware)
-        // Usar lifecycleScope para que se cancele automáticamente cuando la Activity se destruya
-        lifecycleScope.launch {
-            try {
-                android.util.Log.d("MainActivity", "Iniciando observación de notificaciones (lifecycle-aware)...")
-                val uid = com.example.tfg.service.LocalizadorServicios.repositorioAuth.usuarioActual()?.id
-                android.util.Log.d("MainActivity", "UID actual: $uid")
-                if (!uid.isNullOrBlank()) {
-                    val repoNot = com.example.tfg.repositorio.RepositorioNotificaciones()
-                    // usar flow observer - se cancela automáticamente si la Activity se destruye
-                    repoNot.observarNotificaciones(uid).collect { lista ->
-                        // Verificar que la Activity sigue en ciclo válido antes de tocar la UI
-                        if (lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) {
-                            android.util.Log.d("MainActivity", "Recibidas ${lista.size} notificaciones")
-                            lista.filter { !it.visto }.forEach { not ->
-                                try {
-                                    // mostrar notificación local
-                                    val title = when (not.tipo) { "asignacion" -> "Tarea asignada"; else -> "Notificación" }
-                                    val message = (not.contenido["titulo"] as? String) ?: (not.contenido["texto"] as? String) ?: "Tienes una notificación"
-                                    val tareaId = (not.contenido["tareaId"] as? String)
-                                    NotificationScheduler.showImmediateNotification(this@MainActivity, (not.id.hashCode()), title, message, tareaId)
-                                    // marcar como vista (en IO dispatcher, pero cancela automáticamente con lifecycleScope)
-                                    lifecycleScope.launch {
-                                        repoNot.marcarNotificacionVista(not.id)
-                                    }
-                                } catch (e: Exception) {
-                                    android.util.Log.e("MainActivity", "Error procesando notificación ${not.id}", e)
-                                }
-                            }
-                        } else {
-                            android.util.Log.d("MainActivity", "Activity no en estado RESUMED, ignorando notificaciones")
-                        }
-                    }
-                } else {
-                    android.util.Log.d("MainActivity", "No hay usuario actual, saltando observación de notificaciones")
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Error en observarNotificaciones", e)
-            }
-        }
+        iniciarObservacionNotificacionesParaSesionActual()
 
         // manejar si la activity fue lanzada con openTaskId
         intent?.getStringExtra("openTaskId")?.let { tid ->
@@ -193,6 +155,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        iniciarObservacionNotificacionesParaSesionActual()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        notificacionesJob?.cancel()
+        notificacionesJob = null
+        notificacionesUidObservado = null
+    }
+
     private fun handleOpenTaskId(taskId: String) {
         try {
             val bundle = android.os.Bundle().apply { putString("taskId", taskId) }
@@ -203,7 +177,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun verificarSesionActiva() {
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleScope.launch {
             try {
                 android.util.Log.d("MainActivity", "verificarSesionActiva: iniciando...")
                 // Verificar Firebase Auth
@@ -254,6 +228,49 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 android.util.Log.e("MainActivity", "Error verificando sesión activa", e)
+            }
+        }
+    }
+
+    private fun iniciarObservacionNotificacionesParaSesionActual() {
+        val uid = com.example.tfg.service.LocalizadorServicios.repositorioAuth.usuarioActual()?.id
+        if (uid.isNullOrBlank()) {
+            notificacionesJob?.cancel()
+            notificacionesJob = null
+            notificacionesUidObservado = null
+            android.util.Log.d("MainActivity", "No hay usuario actual, observación de notificaciones detenida")
+            return
+        }
+
+        if (notificacionesJob?.isActive == true && notificacionesUidObservado == uid) {
+            return
+        }
+
+        notificacionesJob?.cancel()
+        notificacionesUidObservado = uid
+        val repoNot = com.example.tfg.repositorio.RepositorioNotificaciones()
+
+        notificacionesJob = lifecycleScope.launch {
+            try {
+                android.util.Log.d("MainActivity", "Iniciando observación de notificaciones para uid=$uid")
+                repoNot.observarNotificaciones(uid).collect { lista ->
+                    if (!lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) return@collect
+                    lista.filter { !it.visto }.forEach { not ->
+                        try {
+                            val title = when (not.tipo) { "asignacion" -> "Tarea asignada"; else -> "Notificación" }
+                            val message = (not.contenido["titulo"] as? String) ?: (not.contenido["texto"] as? String) ?: "Tienes una notificación"
+                            val tareaId = (not.contenido["tareaId"] as? String)
+                            NotificationScheduler.showImmediateNotification(this@MainActivity, not.id.hashCode(), title, message, tareaId)
+                            lifecycleScope.launch {
+                                repoNot.marcarNotificacionVista(not.id)
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.e("MainActivity", "Error procesando notificación ${not.id}", e)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Error en observarNotificaciones", e)
             }
         }
     }

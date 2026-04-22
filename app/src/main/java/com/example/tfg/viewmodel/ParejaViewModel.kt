@@ -10,6 +10,8 @@ import com.example.tfg.repositorio.RepositorioPareja
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -31,12 +33,6 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
      
      private val _crearInvitacionState = MutableStateFlow<Result<String>?>(null)
      val crearInvitacionState: StateFlow<Result<String>?> = _crearInvitacionState
-     
-     private val _aceptarInvitacionState = MutableStateFlow<Result<String>?>(null)
-     val aceptarInvitacionState: StateFlow<Result<String>?> = _aceptarInvitacionState
-     
-     private val _buscarInvitacionesState = MutableStateFlow<Result<List<com.example.tfg.modelo.Invitacion>>?>(null)
-     val buscarInvitacionesState: StateFlow<Result<List<com.example.tfg.modelo.Invitacion>>?> = _buscarInvitacionesState
      
      private val TAG = "ParejaViewModel"
 
@@ -138,13 +134,10 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
      // Versión con callback para compatibilidad hacia atrás (DEPRECATED)
      fun salirGrupo(usuarioUid: String, onResult: (Result<Unit>) -> Unit) {
          viewModelScope.launch {
+             _salirGrupoState.value = null
              salirGrupo(usuarioUid)
-             // Observar el estado una sola vez
-             salirGrupoState.collect { res ->
-                 if (res != null) {
-                     onResult(res)
-                 }
-             }
+             val res = salirGrupoState.filterNotNull().first()
+             onResult(res)
          }
      }
 
@@ -171,13 +164,10 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
      // nueva función: crear grupo y devolver resultado mediante StateFlow
      fun crearGrupo(nombre: String, creadorUid: String, onResult: (Result<String>) -> Unit) {
          viewModelScope.launch {
+             _crearGrupoState.value = null
              crearGrupo(nombre, creadorUid)
-             // Observar el estado una sola vez
-             crearGrupoState.collect { res ->
-                 if (res != null) {
-                     onResult(res)
-                 }
-             }
+             val res = crearGrupoState.filterNotNull().first()
+             onResult(res)
          }
      }
 
@@ -208,12 +198,10 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
      // Versión con callback para compatibilidad hacia atrás (DEPRECATED)
      fun crearInvitacion(grupoId: String, creadoPor: String, correoDestino: String? = null, horasExpiracion: Int? = 72, onResult: (Result<String>) -> Unit) {
          viewModelScope.launch {
+             _crearInvitacionState.value = null
              crearInvitacion(grupoId, creadoPor, correoDestino, horasExpiracion)
-             crearInvitacionState.collect { res ->
-                 if (res != null) {
-                     onResult(res)
-                 }
-             }
+             val res = crearInvitacionState.filterNotNull().first()
+             onResult(res)
          }
      }
 

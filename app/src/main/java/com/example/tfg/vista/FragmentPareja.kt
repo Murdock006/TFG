@@ -39,6 +39,7 @@ class FragmentPareja : Fragment() {
 
     private val parejaVM: ParejaViewModel by activityViewModels()
     private lateinit var adapter: MiembrosAdapter
+    private var usuariosCacheActual: List<Usuario> = emptyList()
 
     // Vistas (reemplazan binding)
     private lateinit var rootView: View
@@ -160,6 +161,7 @@ class FragmentPareja : Fragment() {
                 launch {
                     LocalizadorServicios.repositorioAuth.observarUsuarios().collect { lista ->
                         android.util.Log.d("FragmentPareja", "observarUsuarios: recibidos ${lista.size} usuarios")
+                        usuariosCacheActual = lista
                         // actualizar miembros si hay grupo
                         val g = parejaVM.grupo.value
                         if (g != null) {
@@ -559,6 +561,17 @@ class FragmentPareja : Fragment() {
         return result
     }
 
+    private fun extraerIdentificadorDeDisplay(nombreCompleto: String): String? {
+        val inicio = nombreCompleto.lastIndexOf('(')
+        val fin = nombreCompleto.lastIndexOf(')')
+        if (inicio >= 0 && fin > inicio) {
+            val dentro = nombreCompleto.substring(inicio + 1, fin).trim()
+            if (dentro.isNotBlank()) return dentro
+        }
+        val texto = nombreCompleto.trim()
+        return if (texto.isBlank()) null else texto
+    }
+
     private inner class MiembrosAdapter : RecyclerView.Adapter<MiembrosAdapter.VH>() {
         private var items: List<Pair<String,String>> = emptyList()
         // Almacenar también puntos por uid para mostrar en el badge
@@ -590,7 +603,13 @@ class FragmentPareja : Fragment() {
             holder.tvAvatar.text  = inicial
             holder.tvNombre.text  = nombre.ifBlank { email }
             holder.tvEmail.text   = if (email.isNotBlank()) "$email • $rol" else rol
-            holder.tvPuntos.text  = "0 pts"  // valor por defecto; se actualizará con puntosMap si se pasa
+            val identificador = extraerIdentificadorDeDisplay(nombreCompleto)
+            val puntosDesdeMap = identificador?.let { puntosMap[it] }
+            val puntosDesdeCache = identificador?.let { idOrEmail ->
+                usuariosCacheActual.find { it.id == idOrEmail || it.email == idOrEmail }?.puntos
+            }
+            val puntos = puntosDesdeMap ?: puntosDesdeCache ?: 0
+            holder.tvPuntos.text  = "$puntos pts"
         }
 
         override fun getItemCount(): Int = items.size

@@ -88,7 +88,7 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseFires
 
     suspend fun aceptarInvitacion(codigo: String, usuarioUid: String): Result<String> {
         return try {
-            val docRef = firestore.collection(coleccionInvitaciones).document(codigo)
+            var docRef = firestore.collection(coleccionInvitaciones).document(codigo)
             var doc = docRef.get().await()
             if (!doc.exists()) {
                 Log.w(TAG, "aceptarInvitacion: documento id=$codigo no existe, intentando búsqueda por campo 'codigo'")
@@ -101,6 +101,7 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseFires
                         val found = q.documents.first()
                         encontradoDocId = found.id
                         doc = found
+                        docRef = firestore.collection(coleccionInvitaciones).document(found.id)
                         Log.d(TAG, "aceptarInvitacion: encontrado invitación por campo codigo='$alt' id=${found.id}")
                         break
                     }
@@ -122,7 +123,7 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseFires
                 val nuevos = HashMap(miembros)
                 nuevos[usuarioUid] = "miembro"
                 t.update(grupoRef, "miembros", nuevos)
-                t.update(firestore.collection(coleccionInvitaciones).document(invitacion.codigo), "estado", "aceptada")
+                t.update(docRef, "estado", "aceptada")
                 // también actualizar campo grupoId del usuario que acepta para persistir vínculo
                 try {
                     t.set(userRef, mapOf("grupoId" to invitacion.grupoId), SetOptions.merge())

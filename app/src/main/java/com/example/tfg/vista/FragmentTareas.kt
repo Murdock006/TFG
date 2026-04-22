@@ -49,6 +49,7 @@ class FragmentTareas : Fragment() {
     private var usuariosCacheGlobal: List<com.example.tfg.modelo.Usuario> = emptyList()
     private var miembrosParaSpinner: MutableList<Pair<String,String>> = mutableListOf()
     private val TAG = "FragmentTareas"
+    private var ultimoBotonConfirmar: Button? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val modo = arguments?.getString("modo") ?: "lista"
@@ -126,6 +127,8 @@ class FragmentTareas : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 tareasVM.confirmarTareaState.collect { result ->
                     result?.let {
+                        ultimoBotonConfirmar?.isEnabled = true
+                        ultimoBotonConfirmar = null
                         if (it.isSuccess) {
                             Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show()
                         } else {
@@ -423,9 +426,9 @@ class FragmentTareas : Fragment() {
                                         "Confirmar" -> {
                                             // deshabilitar botón para evitar doble click
                                             btnAccion.isEnabled = false
+                                            ultimoBotonConfirmar = btnAccion
                                             tareasVM.confirmarTarea(tarea.id, tarea.creadoPor ?: "")
-                                            // El observer maneja el resultado y muestra Toast
-                                            // TODO: re-habilitar botón si falla (necesita refactor para manejar UI state)
+                                            // El observer maneja el resultado y re-habilita el botón
                                         }
                                         "Reclamar" -> { pendingTareaParaDisputa = tarea; pickImageLauncher?.launch("image/*") }
                                     }
@@ -438,6 +441,7 @@ class FragmentTareas : Fragment() {
                                 btnAccion.text = "Confirmar"
                                 btnAccion.setOnClickListener {
                                     btnAccion.isEnabled = false
+                                    ultimoBotonConfirmar = btnAccion
                                     tareasVM.confirmarTarea(tarea.id, tarea.creadoPor ?: "")
                                     // El observer maneja el resultado y muestra Toast
                                 }
