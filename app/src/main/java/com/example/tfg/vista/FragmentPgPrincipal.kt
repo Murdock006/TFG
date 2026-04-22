@@ -56,10 +56,6 @@ class FragmentPgPrincipal : Fragment() {
 
         vistaModelo.actualizarTexto()
 
-        binding.btnCuentaSeguridad.setOnClickListener {
-            findNavController().navigate(R.id.fragment_Perfil)
-        }
-
         // Conectar botones de UI a acciones de navegación (usar id de categoría en minúsculas)
         binding.categoriaCocina.setOnClickListener {
             val bundle = Bundle().apply { putString("categoria", "cocina") }
@@ -289,6 +285,7 @@ class FragmentPgPrincipal : Fragment() {
         // ocultar el texto del repositorio ya que no lo queremos mostrar
         try {
             binding.textViewResultados.visibility = View.GONE
+            binding.btnCuentaSeguridad.visibility = View.GONE
         } catch (_: Exception) { }
 
         // Conectar botones 'Asignar' para abrir directamente el flujo de asignación

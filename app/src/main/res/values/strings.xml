@@ -112,4 +112,9 @@
     <string name="eliminar_cuenta_ok">Tu cuenta fue eliminada correctamente.</string>
     <string name="eliminar_cuenta_requiere_login_reciente">Por seguridad, cerrá sesión, iniciá sesión de nuevo y repetí la eliminación.</string>
     <string name="cuenta_y_seguridad">Cuenta y seguridad</string>
+    <string name="cerrar_sesion">Cerrar sesión</string>
+    <string name="avatar_usuario">Avatar de usuario</string>
+    <string name="no_hay_usuario">Sin usuario</string>
+    <string name="logout_confirm_titulo">Cerrar sesión</string>
+    <string name="logout_confirm_mensaje">¿Querés cerrar sesión ahora?</string>
 </resources>

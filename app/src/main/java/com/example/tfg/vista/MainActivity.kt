@@ -4,7 +4,9 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,20 +17,25 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import androidx.navigation.Navigation
 import com.example.tfg.databinding.ActivityMainBinding
 import com.example.tfg.service.NotificationScheduler
+import com.example.tfg.service.LocalizadorServicios
 import com.example.tfg.viewmodel.ParejaViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import androidx.core.view.WindowInsetsCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import com.google.android.material.navigation.NavigationView
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val parejaVM: ParejaViewModel by viewModels()
+    private lateinit var navigationView: NavigationView
 
     // NavController guardado para uso en callbacks
     private lateinit var navController: androidx.navigation.NavController
@@ -81,6 +88,10 @@ class MainActivity : AppCompatActivity() {
         // Configurar BottomNavigation
         binding.bottomNavigation.setupWithNavController(navController)
 
+        navigationView = binding.navigationView
+        setupDrawer()
+        observarUsuarioDrawerHeader()
+
         // Ajustar insets: padding fijo superior moderado + padding inferior dinámico para navigation bar
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
             // Solo manejar navigation bar (barra inferior) dinámicamente
@@ -116,8 +127,16 @@ class MainActivity : AppCompatActivity() {
             when (destination.id) {
                 com.example.tfg.R.id.fragment_Presentacion,
                 com.example.tfg.R.id.fragment_Login,
-                com.example.tfg.R.id.fragment_Registro -> binding.bottomNavigation.visibility = View.GONE
-                else -> binding.bottomNavigation.visibility = View.VISIBLE
+                com.example.tfg.R.id.fragment_Registro -> {
+                    binding.bottomNavigation.visibility = View.GONE
+                    binding.topAppBar.visibility = View.GONE
+                    binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+                }
+                else -> {
+                    binding.bottomNavigation.visibility = View.VISIBLE
+                    binding.topAppBar.visibility = View.VISIBLE
+                    binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+                }
             }
         }
 
@@ -125,6 +144,10 @@ class MainActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 try {
+                    if (binding.drawerLayout.isDrawerOpen(Gravity.START)) {
+                        binding.drawerLayout.closeDrawer(Gravity.START)
+                        return
+                    }
                     val destId = navController.currentDestination?.id
                     // considerar fragment_PgPrincipal como la pantalla principal
                     if (destId == com.example.tfg.R.id.fragment_PgPrincipal) {
@@ -299,6 +322,97 @@ class MainActivity : AppCompatActivity() {
                     requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
+        }
+    }
+
+    private fun setupDrawer() {
+        binding.topAppBar.setNavigationOnClickListener {
+            binding.drawerLayout.openDrawer(Gravity.START)
+        }
+
+        binding.drawerLayout.addDrawerListener(object : DrawerLayout.SimpleDrawerListener() {
+            override fun onDrawerOpened(drawerView: View) {
+                super.onDrawerOpened(drawerView)
+                refrescarHeaderDrawer()
+            }
+        })
+
+        navigationView.setNavigationItemSelectedListener { item ->
+            when (item.itemId) {
+                com.example.tfg.R.id.menuCuentaSeguridad -> {
+                    if (navController.currentDestination?.id != com.example.tfg.R.id.fragment_Perfil) {
+                        navController.navigate(com.example.tfg.R.id.fragment_Perfil)
+                    }
+                    binding.drawerLayout.closeDrawer(Gravity.START)
+                    true
+                }
+                com.example.tfg.R.id.menuCerrarSesion -> {
+                    binding.drawerLayout.closeDrawer(Gravity.START)
+                    mostrarDialogoCerrarSesion()
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    private fun observarUsuarioDrawerHeader() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                LocalizadorServicios.repositorioAuth.observarUsuarios().collect {
+                    refrescarHeaderDrawer()
+                }
+            }
+        }
+    }
+
+    private fun refrescarHeaderDrawer() {
+        val header = navigationView.getHeaderView(0) ?: return
+        val tvNombre = header.findViewById<TextView>(com.example.tfg.R.id.tvDrawerNombre)
+        val tvEmail = header.findViewById<TextView>(com.example.tfg.R.id.tvDrawerEmail)
+        val usuario = LocalizadorServicios.repositorioAuth.usuarioActual()
+        if (usuario != null) {
+            tvNombre.text = usuario.nombre.ifBlank { getString(com.example.tfg.R.string.no_hay_usuario) }
+            tvEmail.text = usuario.email
+        } else {
+            tvNombre.text = getString(com.example.tfg.R.string.no_hay_usuario)
+            tvEmail.text = ""
+        }
+    }
+
+    private fun mostrarDialogoCerrarSesion() {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(getString(com.example.tfg.R.string.logout_confirm_titulo))
+            .setMessage(getString(com.example.tfg.R.string.logout_confirm_mensaje))
+            .setNegativeButton(getString(com.example.tfg.R.string.cancelar), null)
+            .setPositiveButton(getString(com.example.tfg.R.string.cerrar_sesion)) { _, _ ->
+                cerrarSesionYVolverALogin()
+            }
+            .show()
+    }
+
+    private fun cerrarSesionYVolverALogin() {
+        lifecycleScope.launch {
+            try {
+                LocalizadorServicios.repositorioAuth.logout()
+            } catch (_: Exception) {
+            }
+
+            try {
+                getSharedPreferences("tfg_prefs", MODE_PRIVATE).edit().remove("grupoId").apply()
+            } catch (_: Exception) {
+            }
+
+            notificacionesJob?.cancel()
+            notificacionesJob = null
+            notificacionesUidObservado = null
+
+            try {
+                val opciones = androidx.navigation.NavOptions.Builder()
+                    .setPopUpTo(com.example.tfg.R.id.fragment_Presentacion, true)
+                    .build()
+                navController.navigate(com.example.tfg.R.id.fragment_Login, null, opciones)
+            } catch (_: Exception) {}
         }
     }
 }
