@@ -123,7 +123,7 @@
     <string name="reset_password_error">No se pudo enviar el email. Intentá de nuevo.</string>
     <string name="soporte_asunto">Soporte TFG2</string>
     <string name="ayuda_titulo">Ayuda</string>
-    <string name="ayuda_texto">¿Necesitás ayuda?\n\n- Revisá tus tareas pendientes\n- Verificá tu conexión si algo no carga\n- Si el problema sigue, escribinos desde "Contactar soporte"\n</string>
+    <string name="ayuda_texto">¿Necesitás ayuda? Acá tenés una guía rápida:\n\n- Crear o entrar a un grupo: desde Pareja, creá un grupo o aceptá una invitación.\n- Asignar tareas: en Tareas podés crear tareas y asignarlas a tu pareja.\n- Puntos: ganás puntos al completar tareas; se descuentan cuando canjeás recompensas.\n- Recompensas: en Recompensas podés canjear puntos por premios.\n- Racha: representa los días seguidos completando tareas.\n- Si algo falla: revisá tu conexión y, si sigue, escribinos desde "Contactar soporte".\n</string>
     <string name="avatar_usuario">Avatar de usuario</string>
     <string name="no_hay_usuario">Sin usuario</string>
     <string name="logout_confirm_titulo">Cerrar sesión</string>
