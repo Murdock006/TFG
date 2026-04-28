@@ -48,6 +48,26 @@
             android:text=""
             android:textColor="@color/texto_secundario"
             android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvDrawerGrupo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@string/drawer_pareja_sin_grupo"
+            android:textColor="@color/texto_secundario"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvDrawerRacha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text=""
+            android:textColor="@color/texto_secundario"
+            android:textSize="13sp" />
     </LinearLayout>
 
 </LinearLayout>

@@ -113,6 +113,17 @@
     <string name="eliminar_cuenta_requiere_login_reciente">Por seguridad, cerrá sesión, iniciá sesión de nuevo y repetí la eliminación.</string>
     <string name="cuenta_y_seguridad">Cuenta y seguridad</string>
     <string name="cerrar_sesion">Cerrar sesión</string>
+    <string name="cambiar_contrasena">Cambiar contraseña</string>
+    <string name="ayuda">Ayuda</string>
+    <string name="contactar_soporte">Contactar soporte</string>
+    <string name="drawer_pareja_sin_grupo">Sin grupo</string>
+    <string name="drawer_pareja_format">%1$s %2$s</string>
+    <string name="drawer_racha_format">Racha: %1$d días</string>
+    <string name="reset_password_enviado">Te enviamos un email para cambiar la contraseña.</string>
+    <string name="reset_password_error">No se pudo enviar el email. Intentá de nuevo.</string>
+    <string name="soporte_asunto">Soporte TFG2</string>
+    <string name="ayuda_titulo">Ayuda</string>
+    <string name="ayuda_texto">¿Necesitás ayuda?\n\n- Revisá tus tareas pendientes\n- Verificá tu conexión si algo no carga\n- Si el problema sigue, escribinos desde "Contactar soporte"\n</string>
     <string name="avatar_usuario">Avatar de usuario</string>
     <string name="no_hay_usuario">Sin usuario</string>
     <string name="logout_confirm_titulo">Cerrar sesión</string>

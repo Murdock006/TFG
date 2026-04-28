@@ -6,6 +6,21 @@
             android:id="@+id/menuCuentaSeguridad"
             android:icon="@drawable/perfil"
             android:title="@string/cuenta_y_seguridad" />
+
+        <item
+            android:id="@+id/menuCambiarContrasena"
+            android:icon="@android:drawable/ic_menu_edit"
+            android:title="@string/cambiar_contrasena" />
+
+        <item
+            android:id="@+id/menuAyuda"
+            android:icon="@android:drawable/ic_menu_help"
+            android:title="@string/ayuda" />
+
+        <item
+            android:id="@+id/menuContactarSoporte"
+            android:icon="@android:drawable/ic_dialog_email"
+            android:title="@string/contactar_soporte" />
     </group>
 
     <item

@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.content.Intent
+import android.net.Uri
 import android.view.Gravity
 import android.view.View
 import android.widget.ImageView
@@ -38,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val parejaVM: ParejaViewModel by viewModels()
     private lateinit var navigationView: NavigationView
+    private val helpDialogTag = "help_dialog"
 
     // NavController guardado para uso en callbacks
     private lateinit var navController: androidx.navigation.NavController
@@ -348,6 +351,21 @@ class MainActivity : AppCompatActivity() {
                     binding.drawerLayout.closeDrawer(Gravity.START)
                     true
                 }
+                com.example.tfg.R.id.menuCambiarContrasena -> {
+                    binding.drawerLayout.closeDrawer(Gravity.START)
+                    enviarResetContrasena()
+                    true
+                }
+                com.example.tfg.R.id.menuAyuda -> {
+                    binding.drawerLayout.closeDrawer(Gravity.START)
+                    mostrarAyuda()
+                    true
+                }
+                com.example.tfg.R.id.menuContactarSoporte -> {
+                    binding.drawerLayout.closeDrawer(Gravity.START)
+                    contactarSoporte()
+                    true
+                }
                 com.example.tfg.R.id.menuCerrarSesion -> {
                     binding.drawerLayout.closeDrawer(Gravity.START)
                     mostrarDialogoCerrarSesion()
@@ -386,9 +404,11 @@ private fun observarUsuarioDrawerHeader() {
             }
             val tvNombre = header.findViewById<TextView>(com.example.tfg.R.id.tvDrawerNombre)
             val tvEmail = header.findViewById<TextView>(com.example.tfg.R.id.tvDrawerEmail)
+            val tvGrupo = header.findViewById<TextView>(com.example.tfg.R.id.tvDrawerGrupo)
+            val tvRacha = header.findViewById<TextView>(com.example.tfg.R.id.tvDrawerRacha)
             val ivAvatar = header.findViewById<ImageView>(com.example.tfg.R.id.ivDrawerAvatar)
             
-            if (tvNombre == null || tvEmail == null) {
+            if (tvNombre == null || tvEmail == null || tvGrupo == null || tvRacha == null) {
                 android.util.Log.w("MainActivity", "TextViews del header no encontrados")
                 return
             }
@@ -397,6 +417,17 @@ private fun observarUsuarioDrawerHeader() {
             if (usuario != null) {
                 tvNombre.text = usuario.nombre.ifBlank { getString(com.example.tfg.R.string.no_hay_usuario) }
                 tvEmail.text = usuario.email
+                tvRacha.text = getString(com.example.tfg.R.string.drawer_racha_format, usuario.rachaDias)
+                val grupo = parejaVM.grupo.value
+                if (grupo != null) {
+                    tvGrupo.text = getString(
+                        com.example.tfg.R.string.drawer_pareja_format,
+                        grupo.emoji,
+                        grupo.nombre
+                    )
+                } else {
+                    tvGrupo.text = getString(com.example.tfg.R.string.drawer_pareja_sin_grupo)
+                }
                 
                 // Cargar avatar local si existe
                 val avatarPath = getSharedPreferences("tfg_prefs", MODE_PRIVATE)
@@ -415,11 +446,50 @@ private fun observarUsuarioDrawerHeader() {
             } else {
                 tvNombre.text = getString(com.example.tfg.R.string.no_hay_usuario)
                 tvEmail.text = ""
+                tvGrupo.text = getString(com.example.tfg.R.string.drawer_pareja_sin_grupo)
+                tvRacha.text = ""
                 Glide.with(this).clear(ivAvatar)
                 ivAvatar.setImageResource(com.example.tfg.R.drawable.perfil)
             }
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Error en refrescarHeaderDrawer", e)
+        }
+    }
+
+    private fun enviarResetContrasena() {
+        val email = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.email
+        if (email.isNullOrBlank()) {
+            Toast.makeText(this, getString(com.example.tfg.R.string.no_hay_usuario), Toast.LENGTH_LONG).show()
+            return
+        }
+        com.google.firebase.auth.FirebaseAuth.getInstance()
+            .sendPasswordResetEmail(email)
+            .addOnSuccessListener {
+                Toast.makeText(this, getString(com.example.tfg.R.string.reset_password_enviado), Toast.LENGTH_LONG).show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, getString(com.example.tfg.R.string.reset_password_error), Toast.LENGTH_LONG).show()
+            }
+    }
+
+    private fun mostrarAyuda() {
+        if (supportFragmentManager.findFragmentByTag(helpDialogTag) != null) return
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(getString(com.example.tfg.R.string.ayuda_titulo))
+            .setMessage(getString(com.example.tfg.R.string.ayuda_texto))
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
+    }
+
+    private fun contactarSoporte() {
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("mailto:hello@sintaxys.es")
+            putExtra(Intent.EXTRA_SUBJECT, getString(com.example.tfg.R.string.soporte_asunto))
+        }
+        try {
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(this, getString(com.example.tfg.R.string.reset_password_error), Toast.LENGTH_LONG).show()
         }
     }
 
