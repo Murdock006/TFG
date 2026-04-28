@@ -45,6 +45,22 @@ class FragmentPerfil : Fragment() {
     private lateinit var pbCargandoAvatar: ProgressBar
     private lateinit var tvErrorAvatar: TextView
 
+    // Launcher para pedir permisos de lectura de imágenes
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permiso concedido, abrir selector
+            seleccionarImagenLauncher.launch("image/*")
+        } else {
+            Toast.makeText(
+                requireContext(),
+                "Necesitas dar permisos para seleccionar imágenes",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     // Launcher para seleccionar imagen de la galería
     private val seleccionarImagenLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -152,7 +168,7 @@ class FragmentPerfil : Fragment() {
     private fun configurarAvatarUI() {
         // Click en botón para seleccionar imagen
         btnSeleccionarAvatar.setOnClickListener {
-            seleccionarImagenLauncher.launch("image/*")
+            solicitarPermisosYSeleccionarImagen()
         }
 
         // Observar carga del avatar
@@ -170,7 +186,7 @@ class FragmentPerfil : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 avatarVM.avatarState.collect { resultado ->
                     if (resultado == null) return@collect
-                    
+
                     if (resultado.isSuccess) {
                         tvErrorAvatar.visibility = View.GONE
                         Toast.makeText(requireContext(), "Avatar actualizado ✓", Toast.LENGTH_SHORT).show()
@@ -202,6 +218,27 @@ class FragmentPerfil : Fragment() {
                     }
                 }
             }
+        }
+    }
+
+    private fun solicitarPermisosYSeleccionarImagen() {
+        val permiso = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+: usar READ_MEDIA_IMAGES
+            android.Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            // Android < 13: usar READ_EXTERNAL_STORAGE
+            android.Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+        val permisoYaConcedido = androidx.core.content.ContextCompat.checkSelfPermission(
+            requireContext(),
+            permiso
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        if (permisoYaConcedido) {
+            seleccionarImagenLauncher.launch("image/*")
+        } else {
+            requestPermissionLauncher.launch(permiso)
         }
     }
 
