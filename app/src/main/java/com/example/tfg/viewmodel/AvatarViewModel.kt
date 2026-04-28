@@ -1,7 +1,8 @@
 package com.example.tfg.viewmodel
 
+import android.app.Application
 import android.net.Uri
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tfg.data.firebase.AvatarRepositorioFirebase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,9 +11,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
 
-class AvatarViewModel : ViewModel() {
+class AvatarViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val avatarRepo = AvatarRepositorioFirebase()
+    private val avatarRepo = AvatarRepositorioFirebase(application.applicationContext)
     private val TAG = "AvatarViewModel"
 
     // Estado de carga del avatar

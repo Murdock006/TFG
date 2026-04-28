@@ -1,5 +1,6 @@
 package com.example.tfg.data.firebase
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.google.firebase.auth.ktx.auth
@@ -9,7 +10,7 @@ import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
-class AvatarRepositorioFirebase {
+class AvatarRepositorioFirebase(private val context: Context? = null) {
 
     private val auth = Firebase.auth
     private val firestore = Firebase.firestore
@@ -26,13 +27,32 @@ class AvatarRepositorioFirebase {
         return try {
             val uid = auth.currentUser?.uid ?: throw Exception("No hay usuario autenticado")
             
+            // Leer contenido del Uri (es más confiable que putFile)
+            val imageData = if (context != null) {
+                try {
+                    context.contentResolver.openInputStream(imageUri)?.use { it.readBytes() }
+                        ?: throw Exception("No se puede leer la imagen del Uri: stream nulo")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error leyendo Uri con context, intentando putFile: ${e.message}")
+                    null
+                }
+            } else {
+                null
+            }
+            
             // Generar nombre único para la imagen
             val nombreArchivo = "avatares/$uid/${UUID.randomUUID()}.jpg"
-            
-            // Subir a Firebase Storage
             Log.d(TAG, "Subiendo avatar a $nombreArchivo")
             val ref = storage.reference.child(nombreArchivo)
-            ref.putFile(imageUri).await()
+            
+            // Subir usando putBytes si se pudo leer, sino putFile
+            if (imageData != null) {
+                ref.putBytes(imageData).await()
+                Log.d(TAG, "Avatar subido con putBytes (${imageData.size} bytes)")
+            } else {
+                ref.putFile(imageUri).await()
+                Log.d(TAG, "Avatar subido con putFile")
+            }
             
             // Obtener URL de descarga
             val downloadUrl = ref.downloadUrl.await().toString()
