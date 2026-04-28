@@ -25,6 +25,62 @@
             android:textColor="@color/texto_principal"
             android:layout_marginBottom="16dp" />
 
+        <!-- Sección Avatar -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/white"
+            app:strokeColor="@color/divisor"
+            app:strokeWidth="1dp"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:background="#F8F8F8"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/ivAvatarPerfil"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="Avatar del usuario"
+                    android:background="@drawable/bg_drawer_avatar"
+                    android:src="@drawable/perfil" />
+
+                <Button
+                    android:id="@+id/btnSeleccionarAvatar"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="12dp"
+                    android:text="Cambiar avatar"
+                    android:textAllCaps="false"
+                    android:backgroundTint="@color/acento" />
+
+                <ProgressBar
+                    android:id="@+id/pbCargandoAvatar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvErrorAvatar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/error"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

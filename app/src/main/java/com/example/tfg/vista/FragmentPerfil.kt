@@ -8,9 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -19,9 +22,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.example.tfg.R
 import com.example.tfg.modelo.Usuario
 import com.example.tfg.service.LocalizadorServicios
+import com.example.tfg.viewmodel.AvatarViewModel
 import com.example.tfg.viewmodel.ParejaViewModel
 import com.example.tfg.viewmodel.VistaModeloAuth
 import kotlinx.coroutines.flow.first
@@ -31,9 +36,30 @@ class FragmentPerfil : Fragment() {
 
     private val parejaVM: ParejaViewModel by activityViewModels()
     private val vistaModeloAuth: VistaModeloAuth by viewModels()
+    private val avatarVM: AvatarViewModel by viewModels()
 
     private lateinit var tvInfo: TextView
     private lateinit var btnEliminarCuenta: Button
+    private lateinit var ivAvatarPerfil: ImageView
+    private lateinit var btnSeleccionarAvatar: Button
+    private lateinit var pbCargandoAvatar: ProgressBar
+    private lateinit var tvErrorAvatar: TextView
+
+    // Launcher para seleccionar imagen de la galería
+    private val seleccionarImagenLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { imageUri ->
+        if (imageUri != null) {
+            // Mostrar preview mientras se sube
+            Glide.with(this)
+                .load(imageUri)
+                .circleCrop()
+                .into(ivAvatarPerfil)
+            
+            // Subir avatar a Firebase
+            avatarVM.subirAvatar(imageUri)
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -45,11 +71,19 @@ class FragmentPerfil : Fragment() {
 
         tvInfo = view.findViewById(R.id.tv_perfil_info)
         btnEliminarCuenta = view.findViewById(R.id.btnEliminarCuenta)
+        ivAvatarPerfil = view.findViewById(R.id.ivAvatarPerfil)
+        btnSeleccionarAvatar = view.findViewById(R.id.btnSeleccionarAvatar)
+        pbCargandoAvatar = view.findViewById(R.id.pbCargandoAvatar)
+        tvErrorAvatar = view.findViewById(R.id.tvErrorAvatar)
 
         mostrarUsuarioInicial()
         observarUsuarioYGrupo()
+        configurarAvatarUI()
         configurarEliminacionCuenta()
         observarResultadoEliminacionCuenta()
+        
+        // Cargar avatar actual al iniciar
+        avatarVM.cargarAvatarActual()
     }
 
     private fun construirInfoUsuario(usuarioId: String?, lista: List<Usuario>?): String {
@@ -109,6 +143,62 @@ class FragmentPerfil : Fragment() {
                         tvInfo.text = baseUsuario + groupInfo
                     } else {
                         tvInfo.text = baseUsuario
+                    }
+                }
+            }
+        }
+    }
+
+    private fun configurarAvatarUI() {
+        // Click en botón para seleccionar imagen
+        btnSeleccionarAvatar.setOnClickListener {
+            seleccionarImagenLauncher.launch("image/*")
+        }
+
+        // Observar carga del avatar
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                avatarVM.cargando.collect { cargando ->
+                    pbCargandoAvatar.visibility = if (cargando) View.VISIBLE else View.GONE
+                    btnSeleccionarAvatar.isEnabled = !cargando
+                }
+            }
+        }
+
+        // Observar resultado de subida
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                avatarVM.avatarState.collect { resultado ->
+                    if (resultado == null) return@collect
+                    
+                    if (resultado.isSuccess) {
+                        tvErrorAvatar.visibility = View.GONE
+                        Toast.makeText(requireContext(), "Avatar actualizado ✓", Toast.LENGTH_SHORT).show()
+                        avatarVM.resetAvatarState()
+                    } else {
+                        val msg = resultado.exceptionOrNull()?.message ?: "Error desconocido"
+                        tvErrorAvatar.text = msg
+                        tvErrorAvatar.visibility = View.VISIBLE
+                        Toast.makeText(requireContext(), "Error: $msg", Toast.LENGTH_LONG).show()
+                        avatarVM.resetAvatarState()
+                    }
+                }
+            }
+        }
+
+        // Observar URL del avatar actual para mostrar en pantalla
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                avatarVM.avatarUrlActual.collect { url ->
+                    if (url != null) {
+                        Glide.with(this@FragmentPerfil)
+                            .load(url)
+                            .circleCrop()
+                            .placeholder(R.drawable.perfil)
+                            .into(ivAvatarPerfil)
+                    } else {
+                        Glide.with(this@FragmentPerfil).clear(ivAvatarPerfil)
+                        ivAvatarPerfil.setImageResource(R.drawable.perfil)
                     }
                 }
             }

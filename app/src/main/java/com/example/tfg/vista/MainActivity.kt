@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -21,6 +22,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import androidx.navigation.Navigation
+import com.bumptech.glide.Glide
 import com.example.tfg.databinding.ActivityMainBinding
 import com.example.tfg.service.NotificationScheduler
 import com.example.tfg.service.LocalizadorServicios
@@ -384,17 +386,36 @@ private fun observarUsuarioDrawerHeader() {
             }
             val tvNombre = header.findViewById<TextView>(com.example.tfg.R.id.tvDrawerNombre)
             val tvEmail = header.findViewById<TextView>(com.example.tfg.R.id.tvDrawerEmail)
+            val ivAvatar = header.findViewById<ImageView>(com.example.tfg.R.id.ivDrawerAvatar)
+            
             if (tvNombre == null || tvEmail == null) {
                 android.util.Log.w("MainActivity", "TextViews del header no encontrados")
                 return
             }
+            
             val usuario = LocalizadorServicios.repositorioAuth.usuarioActual()
             if (usuario != null) {
                 tvNombre.text = usuario.nombre.ifBlank { getString(com.example.tfg.R.string.no_hay_usuario) }
                 tvEmail.text = usuario.email
+                
+                // Cargar avatar si existe
+                if (usuario.avatarUrl != null && usuario.avatarUrl.isNotEmpty()) {
+                    Glide.with(this)
+                        .load(usuario.avatarUrl)
+                        .circleCrop()
+                        .placeholder(com.example.tfg.R.drawable.perfil)
+                        .into(ivAvatar)
+                    android.util.Log.d("MainActivity", "Avatar cargado en drawer")
+                } else {
+                    // Si no hay avatar, mostrar el icono por defecto
+                    Glide.with(this).clear(ivAvatar)
+                    ivAvatar.setImageResource(com.example.tfg.R.drawable.perfil)
+                }
             } else {
                 tvNombre.text = getString(com.example.tfg.R.string.no_hay_usuario)
                 tvEmail.text = ""
+                Glide.with(this).clear(ivAvatar)
+                ivAvatar.setImageResource(com.example.tfg.R.drawable.perfil)
             }
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Error en refrescarHeaderDrawer", e)
