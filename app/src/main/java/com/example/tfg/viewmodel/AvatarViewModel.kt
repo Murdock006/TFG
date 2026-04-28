@@ -2,18 +2,18 @@ package com.example.tfg.viewmodel
 
 import android.app.Application
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.tfg.data.firebase.AvatarRepositorioFirebase
+import com.example.tfg.data.local.AvatarRepositorioLocal
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import android.util.Log
 
 class AvatarViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val avatarRepo = AvatarRepositorioFirebase(application.applicationContext)
+    private val avatarRepo = AvatarRepositorioLocal(application.applicationContext)
     private val TAG = "AvatarViewModel"
 
     // Estado de carga del avatar
@@ -59,7 +59,7 @@ class AvatarViewModel(application: Application) : AndroidViewModel(application) 
     fun cargarAvatarActual() {
         viewModelScope.launch {
             try {
-                val url = avatarRepo.obtenerAvatarUrlActual()
+                val url = avatarRepo.obtenerAvatarPathActual()
                 _avatarUrlActual.value = url
                 Log.d(TAG, "Avatar actual cargado: ${url ?: "sin avatar"}")
             } catch (e: Exception) {
@@ -75,7 +75,7 @@ class AvatarViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             _cargando.value = true
             try {
-                val res = avatarRepo.eliminarAvatar()
+                val res = avatarRepo.eliminarAvatarActual()
                 if (res.isSuccess) {
                     _avatarUrlActual.value = null
                     _avatarState.value = Result.success("")

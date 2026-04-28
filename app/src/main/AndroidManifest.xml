@@ -5,10 +5,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Permiso para notificaciones (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Permisos para lectura de imágenes de galería -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <!-- Para Android 13+, usar READ_MEDIA_IMAGES en su lugar -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
         android:name="com.example.tfg.TFGApplication"

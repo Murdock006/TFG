@@ -398,16 +398,17 @@ private fun observarUsuarioDrawerHeader() {
                 tvNombre.text = usuario.nombre.ifBlank { getString(com.example.tfg.R.string.no_hay_usuario) }
                 tvEmail.text = usuario.email
                 
-                // Cargar avatar si existe
-                if (usuario.avatarUrl != null && usuario.avatarUrl.isNotEmpty()) {
+                // Cargar avatar local si existe
+                val avatarPath = getSharedPreferences("tfg_prefs", MODE_PRIVATE)
+                    .getString("avatar_path_${usuario.id}", null)
+                if (!avatarPath.isNullOrBlank()) {
                     Glide.with(this)
-                        .load(usuario.avatarUrl)
+                        .load(java.io.File(avatarPath))
                         .circleCrop()
                         .placeholder(com.example.tfg.R.drawable.perfil)
                         .into(ivAvatar)
-                    android.util.Log.d("MainActivity", "Avatar cargado en drawer")
+                    android.util.Log.d("MainActivity", "Avatar local cargado en drawer")
                 } else {
-                    // Si no hay avatar, mostrar el icono por defecto
                     Glide.with(this).clear(ivAvatar)
                     ivAvatar.setImageResource(com.example.tfg.R.drawable.perfil)
                 }
