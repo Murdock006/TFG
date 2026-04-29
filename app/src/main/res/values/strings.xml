@@ -68,7 +68,14 @@
     <string name="iniciar_sesion">Iniciar sesión</string>
 
     <string name="nombre_hint">Nombre</string>
-    <string name="edad_hint">Edad</string>
+    <string name="fecha_nacimiento_hint">Fecha de nacimiento (DD/MM/AAAA)</string>
+    <string name="sexo_hint">Sexo</string>
+    <string name="sexo_opcion_masculino">Masculino</string>
+    <string name="sexo_opcion_femenino">Femenino</string>
+    <string name="sexo_opcion_otro">Otro</string>
+    <string name="sexo_opcion_no_decir">Prefiero no decir</string>
+    <string name="registro_intro_titulo">Tu cuenta en 1 minuto</string>
+    <string name="registro_intro_texto">Creá o unite a un grupo con tu pareja, asignen tareas y ganen puntos para canjear recompensas. Tu cuenta se activa con verificación por email.</string>
     <string name="ciudad_hint">Ciudad</string>
     <string name="email_hint">Email</string>
     <string name="registrar">Registrar</string>

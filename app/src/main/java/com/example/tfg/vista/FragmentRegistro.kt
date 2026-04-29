@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import android.widget.ArrayAdapter
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.tfg.databinding.FragmentRegistroBinding
@@ -27,19 +28,30 @@ class FragmentRegistro : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val sexoOpciones = listOf(
+            getString(com.example.tfg.R.string.sexo_opcion_masculino),
+            getString(com.example.tfg.R.string.sexo_opcion_femenino),
+            getString(com.example.tfg.R.string.sexo_opcion_otro),
+            getString(com.example.tfg.R.string.sexo_opcion_no_decir)
+        )
+        val sexoAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, sexoOpciones)
+        binding.spSexo.setAdapter(sexoAdapter)
+        binding.spSexo.setText(sexoOpciones.last(), false)
+
         binding.btnRegistrar.setOnClickListener {
             val nombre = binding.etNombre.text.toString().trim()
-            val edad = binding.etEdad.text.toString().toIntOrNull()
+            val fechaNacimiento = binding.etFechaNacimiento.text.toString().trim()
+            val sexo = binding.spSexo.text?.toString()?.trim().takeIf { !it.isNullOrBlank() }
             val ciudad = binding.etCiudad.text.toString().trim()
             val email = binding.etEmail.text.toString().trim()
             val pass = binding.etPassword.text.toString().trim()
 
-            if (nombre.isEmpty() || email.isEmpty() || pass.isEmpty()) {
-                Toast.makeText(requireContext(), "Completa los campos obligatorios", Toast.LENGTH_SHORT).show()
+            if (nombre.isEmpty() || fechaNacimiento.isEmpty() || email.isEmpty() || pass.isEmpty()) {
+                Toast.makeText(requireContext(), "Completá los campos obligatorios", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            vistaModeloAuth.registrar(nombre, edad, ciudad, email, pass)
+            vistaModeloAuth.registrar(nombre, fechaNacimiento, sexo, ciudad, email, pass)
         }
 
         vistaModeloAuth.usuario.observe(viewLifecycleOwner) { usuario ->

@@ -24,7 +24,41 @@
             android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="@color/texto_principal"
-            android:layout_marginBottom="20dp" />
+            android:layout_marginBottom="12dp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/white"
+            app:strokeColor="@color/divisor"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/registro_intro_titulo"
+                    android:textColor="@color/texto_principal"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/registro_intro_texto"
+                    android:textColor="@color/texto_secundario"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardRegistro"
@@ -62,22 +96,42 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/til_edad"
+                    android:id="@+id/til_fecha_nacimiento"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:hint="@string/edad_hint"
+                    android:hint="@string/fecha_nacimiento_hint"
                     app:boxBackgroundColor="#F5F5F5"
                     app:boxStrokeColor="@color/negro"
                     app:hintTextColor="@color/gris">
 
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etEdad"
+                        android:id="@+id/etFechaNacimiento"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:imeOptions="flagNoExtractUi"
-                        android:inputType="number"
+                        android:inputType="date"
+                        android:textColor="@color/texto_principal"
+                        android:textColorHint="@color/gris" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/til_sexo"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:hint="@string/sexo_hint"
+                    app:boxBackgroundColor="#F5F5F5"
+                    app:boxStrokeColor="@color/negro"
+                    app:hintTextColor="@color/gris">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/spSexo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
                         android:textColor="@color/texto_principal"
                         android:textColorHint="@color/gris" />
                 </com.google.android.material.textfield.TextInputLayout>

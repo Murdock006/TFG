@@ -26,8 +26,15 @@ class VistaModeloAuth(
 
     private val TAG = "VistaModeloAuth"
 
-    fun registrar(nombre: String, edad: Int?, ciudad: String?, email: String, password: String) {
-        val usuarioObj = Usuario(id = "", nombre = nombre, edad = edad, ciudad = ciudad, email = email)
+    fun registrar(nombre: String, fechaNacimiento: String?, sexo: String?, ciudad: String?, email: String, password: String) {
+        val usuarioObj = Usuario(
+            id = "",
+            nombre = nombre,
+            fechaNacimiento = fechaNacimiento,
+            sexo = sexo,
+            ciudad = ciudad,
+            email = email
+        )
         viewModelScope.launch {
             try {
                 // intentar cerrar sesión previa para evitar problemas de estado

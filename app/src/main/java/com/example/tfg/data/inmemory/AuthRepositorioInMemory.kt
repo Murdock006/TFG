@@ -140,7 +140,15 @@ class AuthRepositorioInMemory : AuthRepositorio {
                 usuariosFlow.value = usuarios.toList()
                 Result.success(existente)
             } else {
-                val nuevo = Usuario(id = UUID.randomUUID().toString(), nombre = "Usuario ${proveedor.capitalize()}", edad = null, ciudad = null, email = email, puntos = 1000)
+                val nuevo = Usuario(
+                    id = UUID.randomUUID().toString(),
+                    nombre = "Usuario ${proveedor.capitalize()}",
+                    fechaNacimiento = null,
+                    sexo = null,
+                    ciudad = null,
+                    email = email,
+                    puntos = 1000
+                )
                 usuarios.add(nuevo)
                 usuarioLogueado = nuevo
                 usuariosFlow.value = usuarios.toList()

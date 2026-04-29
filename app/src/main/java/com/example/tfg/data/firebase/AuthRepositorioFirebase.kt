@@ -39,7 +39,8 @@ class AuthRepositorioFirebase : AuthRepositorio {
             // Guardar datos adicionales en Firestore
             val data = mapOf(
                 "nombre" to usuario.nombre,
-                "edad" to usuario.edad,
+                "fechaNacimiento" to usuario.fechaNacimiento,
+                "sexo" to usuario.sexo,
                 "ciudad" to usuario.ciudad,
                 "email" to usuario.email,
                 "puntos" to 1000,
@@ -53,7 +54,16 @@ class AuthRepositorioFirebase : AuthRepositorio {
             auth.signOut()
             Log.d(TAG, "Sesión cerrada. Usuario debe verificar email antes de iniciar sesión.")
             
-            Result.success(Usuario(id = firebaseUser.uid, nombre = usuario.nombre, edad = usuario.edad, ciudad = usuario.ciudad, email = firebaseUser.email ?: usuario.email))
+            Result.success(
+                Usuario(
+                    id = firebaseUser.uid,
+                    nombre = usuario.nombre,
+                    fechaNacimiento = usuario.fechaNacimiento,
+                    sexo = usuario.sexo,
+                    ciudad = usuario.ciudad,
+                    email = firebaseUser.email ?: usuario.email
+                )
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Error registrar", e)
             // Mejora de mensajes para errores comunes
@@ -88,7 +98,8 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 Log.w(TAG, "Documento usuario no existe, creando por defecto uid=${firebaseUser.uid}")
                 val dataDefault = mapOf(
                     "nombre" to (firebaseUser.displayName ?: ""),
-                    "edad" to null,
+                    "fechaNacimiento" to null,
+                    "sexo" to null,
                     "ciudad" to null,
                     "email" to (firebaseUser.email ?: email),
                     "puntos" to 1000,
@@ -100,12 +111,23 @@ class AuthRepositorioFirebase : AuthRepositorio {
 
             val reloaded = docRef.get().await()
             val nombre = reloaded.getString("nombre") ?: ""
-            val edad = reloaded.getLong("edad")?.toInt()
+            val fechaNacimiento = reloaded.getString("fechaNacimiento")
+            val sexo = reloaded.getString("sexo")
             val ciudad = reloaded.getString("ciudad")
             val puntos = reloaded.getLong("puntos")?.toInt() ?: 0
             val puntosReservados = reloaded.getLong("puntosReservados")?.toInt() ?: 0
             val puntosRecompensa = reloaded.getLong("puntosRecompensa")?.toInt() ?: 0
-            val user = Usuario(id = firebaseUser.uid, nombre = nombre, edad = edad, ciudad = ciudad, email = firebaseUser.email ?: email, puntos = puntos, puntosReservados = puntosReservados, puntosRecompensa = puntosRecompensa)
+            val user = Usuario(
+                id = firebaseUser.uid,
+                nombre = nombre,
+                fechaNacimiento = fechaNacimiento,
+                sexo = sexo,
+                ciudad = ciudad,
+                email = firebaseUser.email ?: email,
+                puntos = puntos,
+                puntosReservados = puntosReservados,
+                puntosRecompensa = puntosRecompensa
+            )
             Log.d(TAG, "usuario cargado desde Firestore uid=${firebaseUser.uid} puntos=$puntos")
             _usuarioCache = user
             Result.success(user)
@@ -143,7 +165,8 @@ class AuthRepositorioFirebase : AuthRepositorio {
             if (!doc.exists()) {
                 val dataDefault = mapOf(
                     "nombre" to (firebaseUser.displayName ?: ""),
-                    "edad" to null,
+                    "fechaNacimiento" to null,
+                    "sexo" to null,
                     "ciudad" to null,
                     "email" to (firebaseUser.email ?: ""),
                     "puntos" to 1000,
@@ -154,12 +177,23 @@ class AuthRepositorioFirebase : AuthRepositorio {
             }
             val reloaded = docRef.get().await()
              val nombre = reloaded.getString("nombre") ?: (firebaseUser.displayName ?: "")
-             val edad = reloaded.getLong("edad")?.toInt()
+             val fechaNacimiento = reloaded.getString("fechaNacimiento")
+             val sexo = reloaded.getString("sexo")
              val ciudad = reloaded.getString("ciudad")
              val puntos = reloaded.getLong("puntos")?.toInt() ?: 0
              val puntosReservados = reloaded.getLong("puntosReservados")?.toInt() ?: 0
              val puntosRecompensa = reloaded.getLong("puntosRecompensa")?.toInt() ?: 0
-             val user = Usuario(id = firebaseUser.uid, nombre = nombre, edad = edad, ciudad = ciudad, email = firebaseUser.email ?: "", puntos = puntos, puntosReservados = puntosReservados, puntosRecompensa = puntosRecompensa)
+             val user = Usuario(
+                 id = firebaseUser.uid,
+                 nombre = nombre,
+                 fechaNacimiento = fechaNacimiento,
+                 sexo = sexo,
+                 ciudad = ciudad,
+                 email = firebaseUser.email ?: "",
+                 puntos = puntos,
+                 puntosReservados = puntosReservados,
+                 puntosRecompensa = puntosRecompensa
+             )
             _usuarioCache = user
             Result.success(user)
         } catch (e: Exception) {
@@ -314,7 +348,14 @@ class AuthRepositorioFirebase : AuthRepositorio {
         Log.d(TAG, "usuarioActual uid=${u.uid} email=${u.email}")
         // Devolver caché si coincide con el usuario autenticado (tiene puntos y puntosRecompensa reales)
         return _usuarioCache?.takeIf { it.id == u.uid }
-            ?: Usuario(id = u.uid, nombre = u.displayName ?: "", edad = null, ciudad = null, email = u.email ?: "")
+            ?: Usuario(
+                id = u.uid,
+                nombre = u.displayName ?: "",
+                fechaNacimiento = null,
+                sexo = null,
+                ciudad = null,
+                email = u.email ?: ""
+            )
     }
 
     override fun observarUsuarios(): Flow<List<Usuario>> = callbackFlow {
@@ -327,13 +368,20 @@ class AuthRepositorioFirebase : AuthRepositorio {
             val list = snapshot?.documents?.mapNotNull { doc ->
                 val id = doc.id
                 val nombre = doc.getString("nombre") ?: ""
-                val edad = doc.getLong("edad")?.toInt()
+                val fechaNacimiento = doc.getString("fechaNacimiento")
+                val sexo = doc.getString("sexo")
                 val ciudad = doc.getString("ciudad")
                 val email = doc.getString("email") ?: ""
                 val puntos = doc.getLong("puntos")?.toInt() ?: 0
                 val puntosReservados = doc.getLong("puntosReservados")?.toInt() ?: 0
                 val puntosRecompensa = doc.getLong("puntosRecompensa")?.toInt() ?: 0
-                Usuario(id = id, nombre = nombre, edad = edad, ciudad = ciudad, email = email,
+                Usuario(
+                    id = id,
+                    nombre = nombre,
+                    fechaNacimiento = fechaNacimiento,
+                    sexo = sexo,
+                    ciudad = ciudad,
+                    email = email,
                     puntos = puntos, puntosReservados = puntosReservados, puntosRecompensa = puntosRecompensa)
             } ?: emptyList()
             // Actualizar caché del usuario actual con los datos frescos de Firestore

@@ -5,7 +5,8 @@ import com.google.firebase.Timestamp
 data class Usuario(
     val id: String = "",
     val nombre: String = "",
-    val edad: Int? = null,
+    val fechaNacimiento: String? = null,
+    val sexo: String? = null,
     val ciudad: String? = null,
     val email: String = "",
     val puntos: Int = 0,                    // puntos de actividad (se ganan y gastan en tareas)
