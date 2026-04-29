@@ -145,6 +145,7 @@ class AuthRepositorioInMemory : AuthRepositorio {
                     nombre = "Usuario ${proveedor.capitalize()}",
                     fechaNacimiento = null,
                     sexo = null,
+                    pais = null,
                     ciudad = null,
                     email = email,
                     puntos = 1000

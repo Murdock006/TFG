@@ -26,12 +26,21 @@ class VistaModeloAuth(
 
     private val TAG = "VistaModeloAuth"
 
-    fun registrar(nombre: String, fechaNacimiento: String?, sexo: String?, ciudad: String?, email: String, password: String) {
+    fun registrar(
+        nombre: String,
+        fechaNacimiento: String?,
+        sexo: String?,
+        pais: String?,
+        ciudad: String?,
+        email: String,
+        password: String
+    ) {
         val usuarioObj = Usuario(
             id = "",
             nombre = nombre,
             fechaNacimiento = fechaNacimiento,
             sexo = sexo,
+            pais = pais,
             ciudad = ciudad,
             email = email
         )

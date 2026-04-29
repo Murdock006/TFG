@@ -7,6 +7,7 @@ data class Usuario(
     val nombre: String = "",
     val fechaNacimiento: String? = null,
     val sexo: String? = null,
+    val pais: String? = null,
     val ciudad: String? = null,
     val email: String = "",
     val puntos: Int = 0,                    // puntos de actividad (se ganan y gastan en tareas)

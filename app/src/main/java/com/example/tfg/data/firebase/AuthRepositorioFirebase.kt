@@ -41,6 +41,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 "nombre" to usuario.nombre,
                 "fechaNacimiento" to usuario.fechaNacimiento,
                 "sexo" to usuario.sexo,
+                "pais" to usuario.pais,
                 "ciudad" to usuario.ciudad,
                 "email" to usuario.email,
                 "puntos" to 1000,
@@ -60,6 +61,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                     nombre = usuario.nombre,
                     fechaNacimiento = usuario.fechaNacimiento,
                     sexo = usuario.sexo,
+                    pais = usuario.pais,
                     ciudad = usuario.ciudad,
                     email = firebaseUser.email ?: usuario.email
                 )
@@ -100,6 +102,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                     "nombre" to (firebaseUser.displayName ?: ""),
                     "fechaNacimiento" to null,
                     "sexo" to null,
+                    "pais" to null,
                     "ciudad" to null,
                     "email" to (firebaseUser.email ?: email),
                     "puntos" to 1000,
@@ -113,6 +116,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
             val nombre = reloaded.getString("nombre") ?: ""
             val fechaNacimiento = reloaded.getString("fechaNacimiento")
             val sexo = reloaded.getString("sexo")
+            val pais = reloaded.getString("pais")
             val ciudad = reloaded.getString("ciudad")
             val puntos = reloaded.getLong("puntos")?.toInt() ?: 0
             val puntosReservados = reloaded.getLong("puntosReservados")?.toInt() ?: 0
@@ -122,6 +126,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 nombre = nombre,
                 fechaNacimiento = fechaNacimiento,
                 sexo = sexo,
+                pais = pais,
                 ciudad = ciudad,
                 email = firebaseUser.email ?: email,
                 puntos = puntos,
@@ -167,6 +172,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                     "nombre" to (firebaseUser.displayName ?: ""),
                     "fechaNacimiento" to null,
                     "sexo" to null,
+                    "pais" to null,
                     "ciudad" to null,
                     "email" to (firebaseUser.email ?: ""),
                     "puntos" to 1000,
@@ -179,6 +185,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
              val nombre = reloaded.getString("nombre") ?: (firebaseUser.displayName ?: "")
              val fechaNacimiento = reloaded.getString("fechaNacimiento")
              val sexo = reloaded.getString("sexo")
+             val pais = reloaded.getString("pais")
              val ciudad = reloaded.getString("ciudad")
              val puntos = reloaded.getLong("puntos")?.toInt() ?: 0
              val puntosReservados = reloaded.getLong("puntosReservados")?.toInt() ?: 0
@@ -188,6 +195,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                  nombre = nombre,
                  fechaNacimiento = fechaNacimiento,
                  sexo = sexo,
+                 pais = pais,
                  ciudad = ciudad,
                  email = firebaseUser.email ?: "",
                  puntos = puntos,
@@ -353,6 +361,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 nombre = u.displayName ?: "",
                 fechaNacimiento = null,
                 sexo = null,
+                pais = null,
                 ciudad = null,
                 email = u.email ?: ""
             )
@@ -370,6 +379,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 val nombre = doc.getString("nombre") ?: ""
                 val fechaNacimiento = doc.getString("fechaNacimiento")
                 val sexo = doc.getString("sexo")
+                val pais = doc.getString("pais")
                 val ciudad = doc.getString("ciudad")
                 val email = doc.getString("email") ?: ""
                 val puntos = doc.getLong("puntos")?.toInt() ?: 0
@@ -380,6 +390,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                     nombre = nombre,
                     fechaNacimiento = fechaNacimiento,
                     sexo = sexo,
+                    pais = pais,
                     ciudad = ciudad,
                     email = email,
                     puntos = puntos, puntosReservados = puntosReservados, puntosRecompensa = puntosRecompensa)

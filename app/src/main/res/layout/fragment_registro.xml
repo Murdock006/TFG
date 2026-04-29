@@ -137,6 +137,26 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/til_pais"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:hint="@string/pais_hint"
+                    app:boxBackgroundColor="#F5F5F5"
+                    app:boxStrokeColor="@color/negro"
+                    app:hintTextColor="@color/gris">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/etPais"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="flagNoExtractUi"
+                        android:textColor="@color/texto_principal"
+                        android:textColorHint="@color/gris" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_ciudad"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
@@ -147,7 +167,7 @@
                     app:boxStrokeColor="@color/negro"
                     app:hintTextColor="@color/gris">
 
-                    <com.google.android.material.textfield.TextInputEditText
+                    <AutoCompleteTextView
                         android:id="@+id/etCiudad"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

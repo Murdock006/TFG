@@ -3,10 +3,13 @@ package com.example.tfg.vista
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.app.DatePickerDialog
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import android.widget.ArrayAdapter
+import android.widget.Toast
+import java.util.Calendar
+import java.util.Locale
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.tfg.databinding.FragmentRegistroBinding
@@ -37,21 +40,43 @@ class FragmentRegistro : Fragment() {
         val sexoAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, sexoOpciones)
         binding.spSexo.setAdapter(sexoAdapter)
         binding.spSexo.setText(sexoOpciones.last(), false)
+        binding.spSexo.keyListener = null
+
+        val paises = Locale.getISOCountries()
+            .map { Locale("es", it).displayCountry }
+            .sorted()
+        val paisAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, paises)
+        binding.etPais.setAdapter(paisAdapter)
+
+        val prefs = requireContext().getSharedPreferences("tfg_prefs", android.content.Context.MODE_PRIVATE)
+        val ciudades = prefs.getStringSet("registro_ciudades", emptySet())?.toList()?.sorted() ?: emptyList()
+        val ciudadAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, ciudades)
+        binding.etCiudad.setAdapter(ciudadAdapter)
+
+        binding.etFechaNacimiento.keyListener = null
+        binding.etFechaNacimiento.setOnClickListener {
+            mostrarDatePicker()
+        }
+        binding.etFechaNacimiento.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) mostrarDatePicker()
+        }
 
         binding.btnRegistrar.setOnClickListener {
             val nombre = binding.etNombre.text.toString().trim()
             val fechaNacimiento = binding.etFechaNacimiento.text.toString().trim()
             val sexo = binding.spSexo.text?.toString()?.trim().takeIf { !it.isNullOrBlank() }
+            val pais = binding.etPais.text.toString().trim()
             val ciudad = binding.etCiudad.text.toString().trim()
             val email = binding.etEmail.text.toString().trim()
             val pass = binding.etPassword.text.toString().trim()
 
-            if (nombre.isEmpty() || fechaNacimiento.isEmpty() || email.isEmpty() || pass.isEmpty()) {
+            if (nombre.isEmpty() || fechaNacimiento.isEmpty() || pais.isEmpty() || ciudad.isEmpty() || email.isEmpty() || pass.isEmpty()) {
                 Toast.makeText(requireContext(), "Completá los campos obligatorios", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            vistaModeloAuth.registrar(nombre, fechaNacimiento, sexo, ciudad, email, pass)
+            guardarCiudadReciente(ciudad)
+            vistaModeloAuth.registrar(nombre, fechaNacimiento, sexo, pais, ciudad, email, pass)
         }
 
         vistaModeloAuth.usuario.observe(viewLifecycleOwner) { usuario ->
@@ -67,5 +92,27 @@ class FragmentRegistro : Fragment() {
                 Toast.makeText(requireContext(), err, Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun mostrarDatePicker() {
+        val cal = Calendar.getInstance()
+        val dialog = DatePickerDialog(
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                val fecha = String.format(Locale.getDefault(), "%02d/%02d/%04d", dayOfMonth, month + 1, year)
+                binding.etFechaNacimiento.setText(fecha)
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        )
+        dialog.show()
+    }
+
+    private fun guardarCiudadReciente(ciudad: String) {
+        val prefs = requireContext().getSharedPreferences("tfg_prefs", android.content.Context.MODE_PRIVATE)
+        val actuales = prefs.getStringSet("registro_ciudades", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
+        actuales.add(ciudad)
+        prefs.edit().putStringSet("registro_ciudades", actuales).apply()
     }
 }
