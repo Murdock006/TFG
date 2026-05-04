@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val parejaVM: ParejaViewModel by viewModels()
     private lateinit var navigationView: NavigationView
+    private lateinit var navigationViewFooter: NavigationView
     private val helpDialogTag = "help_dialog"
 
     // NavController guardado para uso en callbacks
@@ -94,6 +95,7 @@ class MainActivity : AppCompatActivity() {
         binding.bottomNavigation.setupWithNavController(navController)
 
         navigationView = binding.navigationView
+        navigationViewFooter = binding.navigationViewFooter
         setupDrawer()
         observarUsuarioDrawerHeader()
 
@@ -366,6 +368,12 @@ class MainActivity : AppCompatActivity() {
                     contactarSoporte()
                     true
                 }
+                else -> false
+            }
+        }
+
+        navigationViewFooter.setNavigationItemSelectedListener { item ->
+            return@setNavigationItemSelectedListener when (item.itemId) {
                 com.example.tfg.R.id.menuCerrarSesion -> {
                     binding.drawerLayout.closeDrawer(Gravity.START)
                     mostrarDialogoCerrarSesion()

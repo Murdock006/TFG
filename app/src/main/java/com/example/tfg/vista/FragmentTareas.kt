@@ -228,6 +228,12 @@ class FragmentTareas : Fragment() {
             lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     parejaVM.grupo.collect { g ->
+                        if (usuariosCacheGlobal.isEmpty()) {
+                            try {
+                                usuariosCacheGlobal = LocalizadorServicios.repositorioAuth.observarUsuarios().first()
+                            } catch (_: Exception) {
+                            }
+                        }
                         // construir lista de pairs (display, uid)
                         miembrosParaSpinner.clear()
                         miembrosParaSpinner.add(Pair("Sin asignar", ""))
@@ -238,7 +244,7 @@ class FragmentTareas : Fragment() {
                             val display = when {
                                 u != null && u.nombre.isNotBlank() -> if (u.email.isNotBlank()) "${u.nombre} (${u.email})" else u.nombre
                                 u != null && u.email.isNotBlank() -> u.email
-                                else -> "Usuario"
+                                else -> uid
                             }
                             miembrosParaSpinner.add(Pair(display, uid))
                         }

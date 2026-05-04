@@ -68,15 +68,34 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/navigationView"
+    <LinearLayout
+        android:id="@+id/drawerContainer"
         android:layout_width="320dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@color/white"
-        app:headerLayout="@layout/nav_header_drawer"
-        app:itemIconTint="@color/texto_principal"
-        app:itemTextColor="@color/texto_principal"
-        app:menu="@menu/drawer_menu" />
+        android:orientation="vertical"
+        android:background="@color/white">
+
+        <com.google.android.material.navigation.NavigationView
+            android:id="@+id/navigationView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@color/white"
+            app:headerLayout="@layout/nav_header_drawer"
+            app:itemIconTint="@color/texto_principal"
+            app:itemTextColor="@color/texto_principal"
+            app:menu="@menu/drawer_menu" />
+
+        <com.google.android.material.navigation.NavigationView
+            android:id="@+id/navigationViewFooter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            app:itemIconTint="@color/texto_principal"
+            app:itemTextColor="@color/texto_principal"
+            app:menu="@menu/drawer_menu_footer" />
+
+    </LinearLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>
