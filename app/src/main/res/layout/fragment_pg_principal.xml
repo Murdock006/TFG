@@ -91,7 +91,7 @@
                         android:layout_marginBottom="12dp" />
 
                     <TextView
-                        android:text="@string/comprar_puntos"
+                        android:text="@string/comprar_puntos_info"
                         android:textSize="10sp"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"

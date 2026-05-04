@@ -5,7 +5,7 @@
 
     <!-- Puntos y UI general -->
     <string name="tus_puntos">Tus puntos</string>
-    <string name="comprar_puntos">Puedes comprar más puntos: 1000 = 5€ \n Más info en el Menú lateral</string>
+    <string name="comprar_puntos_info">Puedes comprar más puntos: 1000 = 5€ \n Más info en el Menú lateral</string>
     <string name="tu_companero">Puntos del grupo</string>
     <string name="vincula_pareja">Vincula a tu pareja para ver sus puntos</string>
     <string name="asignar_tareas">Asignar Tareas</string>
@@ -124,6 +124,9 @@
     <string name="cambiar_contrasena">Cambiar contraseña</string>
     <string name="ayuda">Ayuda</string>
     <string name="contactar_soporte">Contactar soporte</string>
+    <string name="comprar_puntos">Comprar puntos</string>
+    <string name="suscripcion">Suscripción</string>
+    <string name="proximamente">Próximamente</string>
     <string name="drawer_pareja_sin_grupo">Sin grupo</string>
     <string name="drawer_pareja_format">%1$s %2$s</string>
     <string name="drawer_racha_format">Racha: %1$d días</string>

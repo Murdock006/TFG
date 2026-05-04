@@ -368,6 +368,16 @@ class MainActivity : AppCompatActivity() {
                     contactarSoporte()
                     true
                 }
+                com.example.tfg.R.id.menuComprarPuntos -> {
+                    binding.drawerLayout.closeDrawer(Gravity.START)
+                    Toast.makeText(this, getString(com.example.tfg.R.string.proximamente), Toast.LENGTH_SHORT).show()
+                    true
+                }
+                com.example.tfg.R.id.menuSuscripcion -> {
+                    binding.drawerLayout.closeDrawer(Gravity.START)
+                    Toast.makeText(this, getString(com.example.tfg.R.string.proximamente), Toast.LENGTH_SHORT).show()
+                    true
+                }
                 else -> false
             }
         }

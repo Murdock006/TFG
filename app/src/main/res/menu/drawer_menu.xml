@@ -21,6 +21,16 @@
             android:id="@+id/menuContactarSoporte"
             android:icon="@android:drawable/ic_dialog_email"
             android:title="@string/contactar_soporte" />
+
+        <item
+            android:id="@+id/menuComprarPuntos"
+            android:icon="@android:drawable/ic_menu_add"
+            android:title="@string/comprar_puntos" />
+
+        <item
+            android:id="@+id/menuSuscripcion"
+            android:icon="@android:drawable/ic_menu_myplaces"
+            android:title="@string/suscripcion" />
     </group>
 
 </menu>
