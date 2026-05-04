@@ -115,7 +115,7 @@ class FragmentPgPrincipal : Fragment() {
                         binding.puntosReservados.text = getString(com.example.tfg.R.string.reservados_format, 0)
                     }
 
-                    // Si hay grupo, mostrar puntos del primer compañero distinto
+                    // Si hay grupo, mostrar puntos de todos los miembros
                     val grupo = parejaVM.grupo.value
                     if (grupo == null) {
                         binding.puntosCompanero.text = "-"
@@ -124,15 +124,15 @@ class FragmentPgPrincipal : Fragment() {
                     } else {
                         binding.nombreGrupo.text = grupo.nombre ?: getString(com.example.tfg.R.string.guion)
                         binding.miembrosCount.text = getString(com.example.tfg.R.string.miembros_format, grupo.miembros.size)
-                        val otroUid = grupo.miembros.keys.firstOrNull { it != myId }
-                        if (otroUid != null) {
-                            val otro = listaUsuarios.find { it.id == otroUid }
-                            binding.puntosCompanero.text = (otro?.puntos ?: 0).toString()
-                        } else {
-                            binding.puntosCompanero.text = "-"
+                        val miembrosList = grupo.miembros.keys.map { uid ->
+                            listaUsuarios.find { it.id == uid } ?: Usuario(id = uid, nombre = uid, email = "", puntos = 0)
                         }
+                        val puntosTexto = miembrosList.joinToString("\n") { u ->
+                            val nombre = u.nombre.ifBlank { u.id }
+                            "$nombre: ${u.puntos}"
+                        }
+                        binding.puntosCompanero.text = if (puntosTexto.isBlank()) "-" else puntosTexto
                         // poblar recycler miembros
-                        val miembrosList = grupo.miembros.keys.map { uid -> listaUsuarios.find { it.id == uid } ?: Usuario(id = uid, nombre = uid, email = "", puntos = 0) }
                         actualizarMiembros(miembrosList)
                     }
 
