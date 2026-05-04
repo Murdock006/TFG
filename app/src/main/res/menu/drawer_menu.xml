@@ -26,6 +26,7 @@
     <item
         android:id="@+id/menuCerrarSesion"
         android:icon="@android:drawable/ic_lock_power_off"
-        android:title="@string/cerrar_sesion" />
+        android:title="@string/cerrar_sesion"
+        android:orderInCategory="100" />
 
 </menu>
