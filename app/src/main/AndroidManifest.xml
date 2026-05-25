@@ -26,6 +26,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.example.tfg.vista.EliminacionCuentaActivity"
+            android:exported="false"
+            android:label="@string/info_eliminacion_titulo"
+            android:parentActivityName="com.example.tfg.vista.MainActivity" />
     </application>
 
 </manifest>

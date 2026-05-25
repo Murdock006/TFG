@@ -139,4 +139,6 @@
     <string name="no_hay_usuario">Sin usuario</string>
     <string name="logout_confirm_titulo">Cerrar sesión</string>
     <string name="logout_confirm_mensaje">¿Quieres cerrar sesión ahora?</string>
+    <string name="info_eliminacion_titulo">Información sobre eliminación de cuenta</string>
+    <string name="ayuda_info_eliminacion">Más información sobre eliminación de cuenta</string>
 </resources>

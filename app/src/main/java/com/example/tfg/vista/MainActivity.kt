@@ -496,6 +496,9 @@ private fun observarUsuarioDrawerHeader() {
             .setTitle(getString(com.example.tfg.R.string.ayuda_titulo))
             .setMessage(getString(com.example.tfg.R.string.ayuda_texto))
             .setPositiveButton(android.R.string.ok, null)
+            .setNeutralButton(getString(com.example.tfg.R.string.ayuda_info_eliminacion)) { _, _ ->
+                startActivity(Intent(this, EliminacionCuentaActivity::class.java))
+            }
             .show()
     }
 

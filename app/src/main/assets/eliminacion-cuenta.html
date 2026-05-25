@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TeamTask — Solicitud de eliminación de cuenta</title>
+  <meta name="description" content="Solicita la eliminación de tu cuenta y datos de TeamTask." />
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1a1e27;
+      --muted: #5f6b7a;
+      --line: #e4e8ef;
+      --primary: #2f6fed;
+      --danger: #c62828;
+      --ok: #1b8a3c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    h1, h2 { margin: 0 0 10px; line-height: 1.25; }
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.1rem; margin-top: 6px; }
+    p { margin: 8px 0; }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    li { margin: 6px 0; }
+    .muted { color: var(--muted); }
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: .83rem;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+    }
+    .cta {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #fff;
+      background: var(--primary);
+      font-weight: 600;
+    }
+    .danger { color: var(--danger); font-weight: 600; }
+    .ok { color: var(--ok); font-weight: 600; }
+    code {
+      background: #f2f5fb;
+      border: 1px solid #e8edf7;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: .92em;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <span class="pill">TeamTask · Eliminación de cuenta</span>
+      <h1>Solicitud de eliminación de cuenta y datos</h1>
+      <p>
+        Si quieres eliminar tu cuenta de <strong>TeamTask</strong>, puedes hacerlo directamente desde la app o solicitarlo por correo.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Opción recomendada (desde la app)</h2>
+      <p>
+        Abre TeamTask y sigue esta ruta:
+      </p>
+      <p><code>Inicio → Cuenta y seguridad → Eliminar cuenta</code></p>
+      <p class="muted">
+        La app te pedirá una confirmación explícita antes de eliminar la cuenta.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Opción por web/correo (sin abrir la app)</h2>
+      <p>
+        Envía un correo a <a href="mailto:hello@sintaxys.es?subject=Solicitud%20de%20eliminaci%C3%B3n%20de%20cuenta%20TeamTask">hello@sintaxys.es</a>
+        con el asunto <code>Solicitud de eliminación de cuenta TeamTask</code>.
+      </p>
+      <p>
+        Para localizar tu cuenta, incluye el email con el que te registraste en TeamTask.
+      </p>
+      <a class="cta" href="mailto:hello@sintaxys.es?subject=Solicitud%20de%20eliminaci%C3%B3n%20de%20cuenta%20TeamTask">
+        Solicitar eliminación por correo
+      </a>
+    </section>
+
+    <section class="card">
+      <h2>Qué datos se eliminan</h2>
+      <ul>
+        <li>Cuenta de autenticación del usuario.</li>
+        <li>Perfil de usuario y datos asociados dentro de TeamTask.</li>
+        <li>Datos operativos relacionados con uso de la cuenta (según el alcance funcional de la app).</li>
+      </ul>
+      <p class="muted">
+        Algunos registros mínimos pueden conservarse temporalmente cuando exista obligación legal,
+        prevención de fraude o requisitos de seguridad.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Plazo de procesamiento</h2>
+      <p>
+        Procesamos la solicitud en un plazo razonable desde su recepción y validación.
+      </p>
+      <p class="ok">Estado del servicio: recepción de solicitudes activa.</p>
+      <p class="muted">Última actualización: 14/04/2026</p>
+    </section>
+
+    <section class="card">
+      <h2>Soporte</h2>
+      <p>
+        Si tienes dudas sobre privacidad o eliminación de datos, escríbenos a
+        <a href="mailto:hello@sintaxys.es">hello@sintaxys.es</a>.
+      </p>
+      <p class="danger">Importante: la eliminación de cuenta es irreversible.</p>
+    </section>
+  </main>
+</body>
+</html>
