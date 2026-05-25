@@ -215,15 +215,30 @@ class AuthRepositorioFirebase : AuthRepositorio {
         auth.signOut()
     }
 
-    override suspend fun eliminarCuentaActual(): Result<Unit> {
+    override suspend fun eliminarCuentaActual(password: String?): Result<Unit> {
         val usuarioActual = auth.currentUser ?: return Result.failure(Exception("No hay sesión activa"))
         val uid = usuarioActual.uid
 
         return try {
+            // Re-autenticar si se proporciona contraseña (requerido por Firebase para eliminar cuenta)
+            if (!password.isNullOrBlank()) {
+                try {
+                    val email = usuarioActual.email
+                    if (!email.isNullOrBlank()) {
+                        val credential = com.google.firebase.auth.EmailAuthProvider.getCredential(email, password)
+                        usuarioActual.reauthenticate(credential).await()
+                        Log.d(TAG, "Re-autenticación exitosa para uid=$uid")
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Re-autenticación fallida para uid=$uid", e)
+                    return Result.failure(Exception("Contraseña incorrecta. No se puede eliminar la cuenta sin verificar tu identidad."))
+                }
+            }
+
             // 1) Limpiar datos asociados en Firestore/Storage (mejor esfuerzo)
             limpiarDatosAsociados(uid)
 
-            // 2) Borrar cuenta de Firebase Auth (puede requerir login reciente)
+            // 2) Borrar cuenta de Firebase Auth
             usuarioActual.delete().await()
 
             // 3) Limpiar caché/sesión local
@@ -233,7 +248,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
             Result.success(Unit)
         } catch (e: FirebaseAuthRecentLoginRequiredException) {
             Log.w(TAG, "eliminarCuentaActual requiere reautenticación", e)
-            Result.failure(Exception("Por seguridad, volvé a iniciar sesión y repetí la eliminación de cuenta."))
+            Result.failure(Exception("Por seguridad, introduce tu contraseña para confirmar la eliminación."))
         } catch (e: Exception) {
             Log.e(TAG, "eliminarCuentaActual error", e)
             Result.failure(Exception(e.message ?: "No se pudo eliminar la cuenta"))

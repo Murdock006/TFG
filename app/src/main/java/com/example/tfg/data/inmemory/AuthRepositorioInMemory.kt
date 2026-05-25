@@ -44,7 +44,7 @@ class AuthRepositorioInMemory : AuthRepositorio {
         usuarioLogueado = null
     }
 
-    override suspend fun eliminarCuentaActual(): Result<Unit> {
+    override suspend fun eliminarCuentaActual(password: String?): Result<Unit> {
         return withContext(Dispatchers.Default) {
             val actual = usuarioLogueado ?: return@withContext Result.failure(Exception("No hay sesión activa"))
             val eliminado = usuarios.removeIf { it.id == actual.id }

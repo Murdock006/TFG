@@ -212,9 +212,17 @@ class FragmentPerfil : Fragment() {
     }
 
     private fun mostrarDialogoConfirmacionEliminacion() {
-        val input = EditText(requireContext()).apply {
+        val inputConfirmacion = EditText(requireContext()).apply {
             hint = getString(R.string.eliminar_cuenta_hint)
             setSingleLine(true)
+        }
+
+        val inputPassword = EditText(requireContext()).apply {
+            hint = "Contraseña (necesaria para confirmar eliminación)"
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setSingleLine(true)
+            val topMargin = (12 * resources.displayMetrics.density).toInt()
+            setPadding(0, topMargin, 0, 0)
         }
 
         val container = LinearLayout(requireContext()).apply {
@@ -222,7 +230,14 @@ class FragmentPerfil : Fragment() {
             val pad = (20 * resources.displayMetrics.density).toInt()
             setPadding(pad, pad / 2, pad, 0)
             addView(
-                input,
+                inputConfirmacion,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            )
+            addView(
+                inputPassword,
                 LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
@@ -240,13 +255,18 @@ class FragmentPerfil : Fragment() {
 
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val texto = input.text?.toString()?.trim() ?: ""
-                if (texto != "ELIMINAR") {
+                val textoConfirmacion = inputConfirmacion.text?.toString()?.trim() ?: ""
+                val password = inputPassword.text?.toString()?.trim() ?: ""
+                if (textoConfirmacion != "ELIMINAR") {
                     Toast.makeText(requireContext(), getString(R.string.eliminar_cuenta_texto_incorrecto), Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
+                if (password.isBlank()) {
+                    Toast.makeText(requireContext(), "Introduce tu contraseña para confirmar", Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
                 btnEliminarCuenta.isEnabled = false
-                vistaModeloAuth.eliminarCuentaActual()
+                vistaModeloAuth.eliminarCuentaActual(password)
                 dialog.dismiss()
             }
         }

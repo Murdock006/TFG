@@ -39,8 +39,8 @@ class FragmentRegistro : Fragment() {
         )
         val sexoAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, sexoOpciones)
         binding.spSexo.setAdapter(sexoAdapter)
+        binding.spSexo.threshold = 0
         binding.spSexo.setText(sexoOpciones.last(), false)
-        binding.spSexo.keyListener = null
 
         val paises = Locale.getISOCountries()
             .map { Locale("es", it).displayCountry }
@@ -71,7 +71,7 @@ class FragmentRegistro : Fragment() {
             val pass = binding.etPassword.text.toString().trim()
 
             if (nombre.isEmpty() || fechaNacimiento.isEmpty() || pais.isEmpty() || ciudad.isEmpty() || email.isEmpty() || pass.isEmpty()) {
-                Toast.makeText(requireContext(), "Completá los campos obligatorios", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Completa los campos obligatorios", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 

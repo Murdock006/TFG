@@ -112,13 +112,13 @@
     <string name="eliminar_cuenta">Eliminar cuenta</string>
     <string name="eliminar_cuenta_titulo">Eliminar cuenta definitivamente</string>
     <string name="eliminar_cuenta_mensaje">Esta acción elimina tu cuenta y tus datos asociados. Es irreversible.</string>
-    <string name="eliminar_cuenta_confirmacion">Escribí ELIMINAR para confirmar</string>
+    <string name="eliminar_cuenta_confirmacion">Escribe ELIMINAR para confirmar</string>
     <string name="eliminar_cuenta_hint">ELIMINAR</string>
     <string name="eliminar_cuenta_confirmar">Eliminar definitivamente</string>
     <string name="eliminar_cuenta_cancelar">Cancelar</string>
-    <string name="eliminar_cuenta_texto_incorrecto">Confirmación incorrecta. Escribí ELIMINAR en mayúsculas.</string>
-    <string name="eliminar_cuenta_ok">Tu cuenta fue eliminada correctamente.</string>
-    <string name="eliminar_cuenta_requiere_login_reciente">Por seguridad, cerrá sesión, iniciá sesión de nuevo y repetí la eliminación.</string>
+    <string name="eliminar_cuenta_texto_incorrecto">Confirmación incorrecta. Escribe ELIMINAR en mayúsculas.</string>
+    <string name="eliminar_cuenta_ok">Tu cuenta ha sido eliminada correctamente.</string>
+    <string name="eliminar_cuenta_requiere_login_reciente">Por seguridad, introduce tu contraseña para confirmar la eliminación.</string>
     <string name="cuenta_y_seguridad">Cuenta y seguridad</string>
     <string name="cerrar_sesion">Cerrar sesión</string>
     <string name="cambiar_contrasena">Cambiar contraseña</string>
@@ -131,12 +131,12 @@
     <string name="drawer_pareja_format">%1$s %2$s</string>
     <string name="drawer_racha_format">Racha: %1$d días</string>
     <string name="reset_password_enviado">Te enviamos un email para cambiar la contraseña.</string>
-    <string name="reset_password_error">No se pudo enviar el email. Intentá de nuevo.</string>
+    <string name="reset_password_error">No se pudo enviar el email. Inténtalo de nuevo.</string>
     <string name="soporte_asunto">Soporte TFG2</string>
     <string name="ayuda_titulo">Ayuda</string>
     <string name="ayuda_texto">¿Necesitas ayuda? Aquí tienes una guía rápida:\n\n- Crear o entrar en un grupo: desde Pareja, crea un grupo o acepta una invitación.\n- Asignar tareas: en Tareas puedes crear tareas y asignarlas a tu pareja.\n- Puntos: ganas puntos al completar tareas; se descuentan al canjear recompensas.\n- Recompensas: en Recompensas puedes canjear puntos por premios.\n- Racha: representa los días seguidos completando tareas.\n- Si algo falla: revisa tu conexión y, si sigue, escríbenos desde "Contactar soporte".\n</string>
     <string name="avatar_usuario">Avatar de usuario</string>
     <string name="no_hay_usuario">Sin usuario</string>
     <string name="logout_confirm_titulo">Cerrar sesión</string>
-    <string name="logout_confirm_mensaje">¿Querés cerrar sesión ahora?</string>
+    <string name="logout_confirm_mensaje">¿Quieres cerrar sesión ahora?</string>
 </resources>

@@ -99,10 +99,10 @@ class VistaModeloAuth(
         viewModelScope.launch { try { repositorio.logout() } catch (_: Exception) { } ; _usuario.value = null }
     }
 
-    fun eliminarCuentaActual() {
+    fun eliminarCuentaActual(password: String? = null) {
         viewModelScope.launch {
             try {
-                val res = repositorio.eliminarCuentaActual()
+                val res = repositorio.eliminarCuentaActual(password)
                 if (res.isSuccess) {
                     _usuario.value = null
                     _error.value = null
