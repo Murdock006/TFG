@@ -78,6 +78,19 @@
                 android:text="📅"
                 android:textColor="@color/texto_principal"
                 android:textAllCaps="false" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnExportarCalendario"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                app:cornerRadius="8dp"
+                app:strokeColor="@color/negro"
+                app:strokeWidth="1dp"
+                android:text="📤"
+                android:textColor="@color/texto_principal"
+                android:textAllCaps="false" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

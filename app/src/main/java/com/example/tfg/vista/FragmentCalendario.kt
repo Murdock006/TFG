@@ -77,6 +77,16 @@ class FragmentCalendario : Fragment() {
             ).show()
         }
 
+        b.btnExportarCalendario.setOnClickListener {
+            val tareasDelDia = obtenerTareasDelDia()
+            if (tareasDelDia.isEmpty()) {
+                Toast.makeText(requireContext(), getString(com.example.tfg.R.string.exportar_calendario_sin_fecha), Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), getString(com.example.tfg.R.string.exportar_calendario_ok), Toast.LENGTH_SHORT).show()
+                com.example.tfg.service.IcsExporter.exportarTareas(requireContext(), tareasDelDia)
+            }
+        }
+
         // Observar grupo y suscribir tareas
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -111,14 +121,18 @@ class FragmentCalendario : Fragment() {
     }
 
     private fun filtrarYMostrar(adapter: TareasCalendarioAdapter, b: FragmentCalendarioBinding) {
+        val tareasDelDia = obtenerTareasDelDia()
+        adapter.setItems(tareasDelDia)
+        actualizarResumen(b, tareasDelDia)
+    }
+
+    private fun obtenerTareasDelDia(): List<Tarea> {
         val inicio = inicioDia(fechaSeleccionada)
         val fin = finDia(fechaSeleccionada)
-        val del_dia = todasLasTareas.filter { t ->
+        return todasLasTareas.filter { t ->
             val ts = t.fechaProgramada ?: return@filter false
             ts.toDate().time in inicio.timeInMillis..fin.timeInMillis
         }.sortedWith(compareByDescending<Tarea> { it.esImportante }.thenBy { it.fechaProgramada?.seconds ?: 0L })
-        adapter.setItems(del_dia)
-        actualizarResumen(b, del_dia)
     }
 
     private fun actualizarCabecera(b: FragmentCalendarioBinding) {
@@ -227,6 +241,9 @@ class FragmentCalendario : Fragment() {
             })
         }
         opciones.add(Opcion("Cambiar recordatorio (${tarea.minutosAntes} min)") { elegirMinutosRecordatorio(tarea) })
+        opciones.add(Opcion("📤 Añadir al calendario") {
+            com.example.tfg.service.IcsExporter.exportarTarea(requireContext(), tarea)
+        })
 
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setTitle(tarea.titulo)

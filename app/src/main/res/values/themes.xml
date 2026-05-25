@@ -10,4 +10,13 @@
         <item name="fullscreenBackgroundColor">@color/primario</item>
         <item name="fullscreenTextColor">@color/on_acento</item>
     </style>
+
+    <!-- Tema para DatePickerDialog: asegura texto oscuro sobre fondo claro -->
+    <style name="Theme.TFG.DatePickerDialog" parent="ThemeOverlay.MaterialComponents.Dialog">
+        <item name="colorOnSurface">@color/texto_principal</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimary">@color/primario</item>
+        <item name="android:textColorPrimary">@color/texto_principal</item>
+        <item name="android:textColorSecondary">@color/texto_secundario</item>
+    </style>
 </resources>

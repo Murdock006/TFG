@@ -98,6 +98,7 @@ class FragmentRegistro : Fragment() {
         val cal = Calendar.getInstance()
         val dialog = DatePickerDialog(
             requireContext(),
+            com.example.tfg.R.style.Theme_TFG_DatePickerDialog,
             { _, year, month, dayOfMonth ->
                 val fecha = String.format(Locale.getDefault(), "%02d/%02d/%04d", dayOfMonth, month + 1, year)
                 binding.etFechaNacimiento.setText(fecha)
