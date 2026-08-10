@@ -93,7 +93,9 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
                         try {
                             val prefs = getApplication<Application>().getSharedPreferences(prefsName, Context.MODE_PRIVATE)
                             prefs.edit().remove(keyGrupoId).apply()
-                        } catch (_: Exception) {}
+                     } catch (e: Exception) {
+                         Log.w(TAG, "Error limpiando prefs tras salir de grupo: ${e.message}")
+                     }
                     }
                 }
             } catch (e: Exception) {
@@ -118,7 +120,9 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
                      try {
                          val prefs = getApplication<Application>().getSharedPreferences(prefsName, Context.MODE_PRIVATE)
                          prefs.edit().remove(keyGrupoId).apply()
-                     } catch (_: Exception) {}
+                                } catch (e: Exception) {
+                                    Log.w(TAG, "Error limpiando grupoId en Firestore: ${e.message}")
+                                }
                      // cancelar observador
                      grupoObserverJob?.cancel()
                      grupoObserverJob = null
@@ -302,7 +306,9 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
                                 // inconsistencia: borrar grupoId del usuario en Firestore
                                 try {
                                     repo.limpiarGrupoIdUsuario(usuarioUid)
-                                } catch (_: Exception) {}
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Error limpiando prefs de grupo tras borrado remoto: ${e.message}")
+                        }
                                 // continuar: no asignar grupo
                             }
                         }
@@ -314,7 +320,9 @@ class ParejaViewModel(application: Application, private val repo: RepositorioPar
             try {
                 val prefs = getApplication<Application>().getSharedPreferences(prefsName, Context.MODE_PRIVATE)
                 prefs.edit().remove(keyGrupoId).apply()
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                Log.w(TAG, "Error limpiando prefs de grupo sin grupo válido: ${e.message}")
+            }
         } catch (e: Exception) {
             Log.e(TAG, "cargarGrupoPorUsuario(Exception)", e)
         }

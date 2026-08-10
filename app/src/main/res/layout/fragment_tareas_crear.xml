@@ -20,10 +20,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/crear_tarea"
-            android:textSize="22sp"
-            android:textStyle="bold"
+            android:textAppearance="@style/TextAppearance.TFG.Headline"
             android:textColor="@color/texto_principal"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="@dimen/spacing_lg" />
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -42,13 +41,10 @@
 
                 <!-- Título de la tarea -->
                 <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.TFG.TextInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/titulo_hint"
-                    app:boxBackgroundColor="#F5F5F5"
-                    app:boxStrokeColor="@color/negro"
-                    app:hintTextColor="@color/gris">
+                    android:hint="@string/titulo_hint">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etTitulo"
@@ -65,11 +61,11 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Categoría"
-                    android:textSize="12sp"
-                    android:textColor="@color/gris"
-                    android:layout_marginTop="14dp"
-                    android:layout_marginBottom="4dp" />
+                    android:text="@string/categoria"
+                    android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
+                    android:textColor="@color/texto_principal"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:layout_marginBottom="@dimen/spacing_xs" />
 
                 <Spinner
                     android:id="@+id/spCategoria"
@@ -82,11 +78,11 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Dificultad"
-                    android:textSize="12sp"
-                    android:textColor="@color/gris"
-                    android:layout_marginTop="14dp"
-                    android:layout_marginBottom="4dp" />
+                    android:text="@string/dificultad"
+                    android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
+                    android:textColor="@color/texto_principal"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:layout_marginBottom="@dimen/spacing_xs" />
 
                 <Spinner
                     android:id="@+id/spDificultad"
@@ -98,14 +94,11 @@
                 <!-- Puntos -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/tilPuntos"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.TFG.TextInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/puntos_hint"
-                    android:layout_marginTop="14dp"
-                    app:boxBackgroundColor="#F5F5F5"
-                    app:boxStrokeColor="@color/negro"
-                    app:hintTextColor="@color/gris">
+                    android:layout_marginTop="@dimen/spacing_md">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etPuntos"
@@ -123,7 +116,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="Puntos fijos: 200 pts"
+                    android:text="@string/puntos_fijos_200"
                     android:textColor="@color/texto_secundario"
                     android:textSize="12sp"
                     android:visibility="gone" />
@@ -132,11 +125,11 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Asignar a"
-                    android:textSize="12sp"
-                    android:textColor="@color/gris"
-                    android:layout_marginTop="14dp"
-                    android:layout_marginBottom="4dp" />
+                    android:text="@string/asignar_a"
+                    android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
+                    android:textColor="@color/texto_principal"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:layout_marginBottom="@dimen/spacing_xs" />
 
                 <Spinner
                     android:id="@+id/spAsignarA"
@@ -151,7 +144,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="@dimen/spacing_md"
                     android:gravity="center_vertical" android:paddingBottom="76dp">
 
                     <TextView
@@ -160,21 +153,17 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/fecha_hoy"
-                        android:padding="10dp"
+                        android:padding="@dimen/spacing_sm"
                         android:textColor="@color/texto_principal"
                         android:background="@drawable/bg_input_campo" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnElegirFecha"
+                        style="@style/Widget.TFG.Boton.Contorno"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        app:cornerRadius="8dp"
-                        app:strokeColor="@color/negro"
-                        app:strokeWidth="1dp"
+                        android:layout_marginStart="@dimen/spacing_sm"
                         android:text="@string/elegir"
-                        android:textColor="@color/texto_principal"
                         android:textAllCaps="false" />
 
                 </LinearLayout>
@@ -182,33 +171,23 @@
                 <!-- Opciones extra -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnOpcionesExtra"
+                    style="@style/Widget.TFG.Boton.Contorno"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    app:cornerRadius="8dp"
-                    app:strokeColor="@color/divisor"
-                    app:strokeWidth="1dp"
-                    android:text="⚙️ Opciones extra (emergencia, recurrencia…)"
-                    android:textSize="12sp"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:text="@string/opciones_extra"
                     android:textColor="@color/texto_secundario"
                     android:textAllCaps="false" />
 
                 <!-- Botón crear -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCrearTarea"
+                    style="@style/Widget.TFG.Boton.Relleno"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    style="@style/Widget.MaterialComponents.Button"
-                    app:cornerRadius="10dp"
-                    android:backgroundTint="@color/negro"
+                    android:layout_marginTop="@dimen/spacing_xl"
                     android:text="@string/crear"
-                    android:textColor="@color/white"
-                    android:textAllCaps="false"
-                    android:textSize="16sp"
-                    android:paddingTop="14dp"
-                    android:paddingBottom="14dp" />
+                    android:textAllCaps="false" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

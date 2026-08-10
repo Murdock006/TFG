@@ -30,14 +30,15 @@ import com.example.tfg.service.NotificationScheduler
 import com.example.tfg.viewmodel.ParejaViewModel
 import com.example.tfg.viewmodel.TareasViewModel
 import com.example.tfg.repositorio.CategoriasRepositorio
+import com.example.tfg.repositorio.RepositorioNotificaciones
+import com.example.tfg.modelo.Notificacion
+import com.example.tfg.util.Constants
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class FragmentTareas : Fragment() {
 
-    companion object {
-        private const val PUNTOS_FIJOS_PERSONALIZADA = 200
-    }
+class FragmentTareas : Fragment() {
 
     private var listaBinding: FragmentTareasListaBinding? = null
     private var crearBinding: FragmentTareasCrearBinding? = null
@@ -73,6 +74,16 @@ class FragmentTareas : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Cambiar título de la tarjeta según la categoría
+        val categoriaArg = arguments?.getString("categoria")
+        if (!categoriaArg.isNullOrBlank()) {
+            try {
+                view.findViewById<TextView>(R.id.tvTituloTareas)?.text = categoriaArg.uppercase()
+            } catch (e: Exception) {
+                Log.w(TAG, "Error actualizando título de categoría: ${e.message}")
+            }
+        }
+
         // launcher para seleccionar imagen (evidencias)
         pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             lifecycleScope.launch {
@@ -84,10 +95,10 @@ class FragmentTareas : Fragment() {
                             val url = subida.getOrNull()
                             val disputa = Disputa(id = "", tareaId = tarea.id, iniciador = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: "", estado = "abierta", pruebas = if (url != null) listOf(url) else emptyList(), fechaCreacion = com.google.firebase.Timestamp.now())
                             repoDisputas.abrirDisputa(disputa)
-                            Toast.makeText(requireContext(), "Disputa creada", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), getString(R.string.disputa_creada), Toast.LENGTH_SHORT).show()
                         }
                     } catch (e: Exception) {
-                        Toast.makeText(requireContext(), "Error subida: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), getString(R.string.error_subida, e.message), Toast.LENGTH_SHORT).show()
                     }
                 }
                 pendingTareaParaDisputa = null
@@ -107,12 +118,12 @@ class FragmentTareas : Fragment() {
                 tareasVM.marcarCompletadaState.collect { result ->
                     result?.let {
                         if (it.isSuccess) {
-                            Toast.makeText(requireContext(), "Tarea marcada como completada", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), getString(R.string.tarea_marcar_completada), Toast.LENGTH_SHORT).show()
                         } else {
                             val msg = it.exceptionOrNull()?.message ?: "Error"
                             Log.e(TAG, "marcarCompletada failed: $msg")
                             if (msg.contains("PERMISSION_DENIED") || msg.contains("permission", true)) {
-                                Toast.makeText(requireContext(), "Permisos Firestore insuficientes", Toast.LENGTH_LONG).show()
+                                Toast.makeText(requireContext(), getString(R.string.permisos_firestore), Toast.LENGTH_LONG).show()
                             } else {
                                 Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
                             }
@@ -130,7 +141,7 @@ class FragmentTareas : Fragment() {
                         ultimoBotonConfirmar?.isEnabled = true
                         ultimoBotonConfirmar = null
                         if (it.isSuccess) {
-                            Toast.makeText(requireContext(), "Tarea confirmada", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), getString(R.string.tarea_confirmada), Toast.LENGTH_SHORT).show()
                         } else {
                             Toast.makeText(requireContext(), it.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
                         }
@@ -145,13 +156,25 @@ class FragmentTareas : Fragment() {
             if (!categoriaArg.isNullOrBlank()) {
                 // Mostrar plantillas/sugerencias de la categoría y permitir crear nuevas instancias (reasignables)
                 b.rvTareas.layoutManager = LinearLayoutManager(requireContext())
-                lifecycleScope.launch {
-                    val repoCat = CategoriasRepositorio(requireContext())
-                    val cats = try { repoCat.cargarCategoriasDesdeRaw() } catch (e: Exception) { emptyList() }
-                    val cat = cats.find { it.id.equals(categoriaArg, true) || it.nombre.equals(categoriaArg, true) }
-                    val sugeridas = cat?.tareas ?: emptyList()
-                    val adapter = SugeridasAdapter(sugeridas, categoriaArg)
-                    b.rvTareas.adapter = adapter
+                b.progressBar.visibility = View.VISIBLE
+                viewLifecycleOwner.lifecycleScope.launch {
+                    viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                        val repoCat = CategoriasRepositorio(requireContext())
+                        val cats = try { repoCat.cargarCategoriasDesdeRaw() } catch (e: Exception) { emptyList() }
+                        val cat = cats.find { it.id.equals(categoriaArg, true) || it.nombre.equals(categoriaArg, true) }
+                        val sugeridas = cat?.tareas ?: emptyList()
+                        val adapter = SugeridasAdapter(sugeridas, categoriaArg)
+                        b.rvTareas.adapter = adapter
+                        b.progressBar.visibility = View.GONE
+
+                        if (sugeridas.isEmpty()) {
+                            b.rvTareas.visibility = View.GONE
+                            b.emptyState.visibility = View.VISIBLE
+                        } else {
+                            b.rvTareas.visibility = View.VISIBLE
+                            b.emptyState.visibility = View.GONE
+                        }
+                    }
                 }
             } else {
                 // comportamiento original: mostrar tareas reales (creadas / asignadas / del grupo)
@@ -160,18 +183,34 @@ class FragmentTareas : Fragment() {
                 b.rvTareas.adapter = adapter
 
                 // observar tareas
-                lifecycleScope.launch {
-                    LocalizadorServicios.repositorioTarea.observarTareas().collect { list -> adapter.setItems(list) }
+                b.progressBar.visibility = View.VISIBLE
+                viewLifecycleOwner.lifecycleScope.launch {
+                    viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                        LocalizadorServicios.repositorioTarea.observarTareas().collect { list ->
+                            adapter.setItems(list)
+                            b.progressBar.visibility = View.GONE
+
+                            if (list.isEmpty()) {
+                                b.rvTareas.visibility = View.GONE
+                                b.emptyState.visibility = View.VISIBLE
+                            } else {
+                                b.rvTareas.visibility = View.VISIBLE
+                                b.emptyState.visibility = View.GONE
+                            }
+                        }
+                    }
                 }
 
                 // si viene taskId abrir detalles
                 val taskIdArg = arguments?.getString("taskId")
                 if (!taskIdArg.isNullOrBlank()) {
-                    lifecycleScope.launch {
-                        val res = LocalizadorServicios.repositorioTarea.obtenerTareas()
-                        if (res.isSuccess) {
-                            val tarea = res.getOrNull()?.firstOrNull { it.id == taskIdArg }
-                            if (tarea != null) mostrarDialogoTareaDetalles(tarea)
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                            val res = LocalizadorServicios.repositorioTarea.obtenerTareas()
+                            if (res.isSuccess) {
+                                val tarea = res.getOrNull()?.firstOrNull { it.id == taskIdArg }
+                                if (tarea != null) mostrarDialogoTareaDetalles(tarea)
+                            }
                         }
                     }
                 }
@@ -210,7 +249,7 @@ class FragmentTareas : Fragment() {
                 b.tilPuntos.visibility = if (esPersonalizada) View.GONE else View.VISIBLE
                 b.tvPuntosFijos.visibility = if (esPersonalizada) View.VISIBLE else View.GONE
                 if (esPersonalizada) {
-                    b.etPuntos.setText(PUNTOS_FIJOS_PERSONALIZADA.toString())
+                    b.etPuntos.setText(Constants.PUNTOS_FIJOS_PERSONALIZADA.toString())
                 }
             }
 
@@ -282,7 +321,7 @@ class FragmentTareas : Fragment() {
                     "🔁 Recurrencia: ${tipoRecurrenciaLocal ?: "ninguna"}"
                 )
                 androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                    .setTitle("Opciones extra")
+                    .setTitle(getString(R.string.opciones_extra_title))
                     .setItems(opts) { _, i ->
                         when (i) {
                             0 -> { esImportanteLocal = !esImportanteLocal; Toast.makeText(requireContext(), if (esImportanteLocal) "Marcada como importante" else "Importante desactivado", Toast.LENGTH_SHORT).show() }
@@ -290,11 +329,11 @@ class FragmentTareas : Fragment() {
                             2 -> {
                                 val tipos = arrayOf("Ninguna", "Diaria", "Semanal", "Mensual")
                                 androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                                    .setTitle("Tipo de recurrencia")
+                                    .setTitle(getString(R.string.tipo_recurrencia_title))
                                     .setItems(tipos) { _, ti ->
                                         tipoRecurrenciaLocal = if (ti == 0) null else tipos[ti].lowercase()
                                         esRecurrenteLocal = ti != 0
-                                        Toast.makeText(requireContext(), "Recurrencia: ${tipoRecurrenciaLocal ?: "ninguna"}", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(requireContext(), getString(R.string.recurrencia_msg, tipoRecurrenciaLocal ?: getString(R.string.ninguna)), Toast.LENGTH_SHORT).show()
                                     }.show()
                             }
                         }
@@ -303,20 +342,20 @@ class FragmentTareas : Fragment() {
 
             b.btnCrearTarea.setOnClickListener {
                 val titulo = b.etTitulo.text.toString().trim()
-                if (titulo.isEmpty()) { Toast.makeText(requireContext(), "Introduce título", Toast.LENGTH_SHORT).show(); return@setOnClickListener }
+                if (titulo.isEmpty()) { Toast.makeText(requireContext(), getString(R.string.introduce_titulo), Toast.LENGTH_SHORT).show(); return@setOnClickListener }
                 val creadorId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                 val categoria = b.spCategoria.selectedItem as String
                 val esCategoriaPersonalizada = categoria.equals("Personalizada", true) || categoria.equals("Personalizado", true)
-                val puntos = if (esCategoriaPersonalizada) PUNTOS_FIJOS_PERSONALIZADA else (b.etPuntos.text.toString().toIntOrNull() ?: 0)
+                val puntos = if (esCategoriaPersonalizada) Constants.PUNTOS_FIJOS_PERSONALIZADA else (b.etPuntos.text.toString().toIntOrNull() ?: 0)
                 val dificultadStr = b.spDificultad.selectedItem as String
                 val dificultad = when (dificultadStr) { "Fácil" -> 1; "Media" -> 2; else -> 3 }
                 val asignIdx = b.spAsignarA.selectedItemPosition
                 val asignadoUid = if (asignIdx > 0 && asignIdx < miembrosParaSpinner.size) miembrosParaSpinner[asignIdx].second else null
                 if (!creadorId.isNullOrBlank() && !asignadoUid.isNullOrBlank() && asignadoUid == creadorId) {
-                    Toast.makeText(requireContext(), "No podés autoasignarte tareas", Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), getString(R.string.no_autoasignar), Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
-                val multiplicador = if (esEmergenciaLocal) 1.5 else 1.0
+                val multiplicador = if (esEmergenciaLocal) Constants.MULTIPLICADOR_EMERGENCIA else 1.0
 
                 val tarea = Tarea(
                     titulo = titulo, puntos = puntos, creadoPor = creadorId,
@@ -332,10 +371,22 @@ class FragmentTareas : Fragment() {
                     if (res.isSuccess) {
                         val creado = res.getOrNull()
                         if (creado != null && creado.fechaProgramada != null) {
-                            val trigger = creado.fechaProgramada!!.toDate().time - 30 * 60 * 1000L
+                            val trigger = creado.fechaProgramada!!.toDate().time - 30 * com.example.tfg.util.Constants.SECONDS_PER_MINUTE * com.example.tfg.util.Constants.MILLIS_PER_SECOND
                             NotificationScheduler.scheduleReminder(requireContext(), creado.id, "Tarea: ${creado.titulo}", "Tarea programada para ${b.tvFechaProgramada.text}", trigger)
                         }
-                        Toast.makeText(requireContext(), "Tarea creada", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), getString(R.string.tarea_creada), Toast.LENGTH_SHORT).show()
+                        // Notificar al asignado vía Firebase
+                        if (!asignadoUid.isNullOrBlank() && creado != null) {
+                            Log.d(TAG, "Enviando notificación Firebase (formulario): tipo=asignacion, destinatario=$asignadoUid, tareaId=${creado.id}")
+                            val repoNot = RepositorioNotificaciones()
+                            repoNot.enviarNotificacion(
+                                Notificacion(
+                                    id = "", tipo = "asignacion",
+                                    contenido = mapOf("tareaId" to creado.id, "titulo" to creado.titulo, "desde" to (creadorId ?: "")),
+                                    destinatario = asignadoUid, visto = false, fecha = Timestamp.now()
+                                )
+                            )
+                        }
                         findNavController().navigate(R.id.fragment_PgPrincipal)
                     } else Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
                 }
@@ -354,13 +405,14 @@ class FragmentTareas : Fragment() {
             val btnMas = view.findViewById<Button>(R.id.btnDetalleMas)
             val btnAsignar = view.findViewById<Button>(R.id.btnDetalleAsignar)
 
-            lifecycleScope.launch {
-                val res = LocalizadorServicios.repositorioTarea.obtenerTareas()
-                if (res.isSuccess) {
-                    val tarea = res.getOrNull()?.firstOrNull { it.id == taskIdArg }
-                    if (tarea != null) {
-                        tvTitulo.text = tarea.titulo
-                        val dif = when (tarea.dificultad) {1->"Fácil";2->"Media";else->"Difícil"}
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    val res = LocalizadorServicios.repositorioTarea.obtenerTareas()
+                    if (res.isSuccess) {
+                        val tarea = res.getOrNull()?.firstOrNull { it.id == taskIdArg }
+                        if (tarea != null) {
+                            tvTitulo.text = tarea.titulo
+                            val dif = when (tarea.dificultad) {1->"Fácil";2->"Media";else->"Difícil"}
                         tvMeta.text = "${tarea.puntos} pts · $dif"
                         tvDesc.text = tarea.descripcion ?: ""
 
@@ -389,22 +441,31 @@ class FragmentTareas : Fragment() {
                                     }
                                     if (opciones.isEmpty()) Toast.makeText(requireContext(), getString(R.string.no_hay_miembros), Toast.LENGTH_SHORT).show() else {
                                         val names = opciones.map { it.first }.toTypedArray()
-                                        androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
+                                        androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle(getString(R.string.selecciona_miembro)).setItems(names) { _, idx ->
                                             lifecycleScope.launch {
                                                 val elegido = opciones[idx].second
                                                 if (!usuarioActualId.isBlank() && elegido == usuarioActualId) {
-                                                    Toast.makeText(requireContext(), "No podés autoasignarte tareas", Toast.LENGTH_LONG).show()
+                                                    Toast.makeText(requireContext(), getString(R.string.no_autoasignar), Toast.LENGTH_LONG).show()
                                                     return@launch
                                                 }
                                                 val nueva = tarea.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
                                                 val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
                                                 if (res2.isSuccess) {
-                                                    Toast.makeText(requireContext(), "Tarea asignada", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(requireContext(), getString(R.string.tarea_asignada), Toast.LENGTH_SHORT).show()
+                                                    // Notificar al asignado vía Firebase
+                                                    val repoNot = RepositorioNotificaciones()
+                                                    repoNot.enviarNotificacion(
+                                                        Notificacion(
+                                                            id = "", tipo = "asignacion",
+                                                            contenido = mapOf("tareaId" to nueva.id, "titulo" to nueva.titulo, "desde" to usuarioActualId),
+                                                            destinatario = elegido, visto = false, fecha = Timestamp.now()
+                                                        )
+                                                    )
                                                 } else {
                                                     Toast.makeText(requireContext(), res2.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
                                                 }
                                             }
-                                        }.setNegativeButton("Cancelar", null).show()
+                                        }.setNegativeButton(getString(R.string.cancelar), null).show()
                                     }
                                 }
                             }
@@ -417,34 +478,34 @@ class FragmentTareas : Fragment() {
                             val uid2 = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
                             val esPersonalizada = tarea.categoria.equals("personalizado", true) || tarea.categoria.equals("personalizada", true)
                             val opciones = when {
-                                tarea.estado == "completada" && uid2 == tarea.creadoPor -> arrayOf("Confirmar", "Reclamar")
-                                tarea.estado == "pendiente" && esPersonalizada && uid2 == tarea.creadoPor -> arrayOf("Editar", "Eliminar")
-                                tarea.estado == "pendiente" && uid2 == tarea.creadoPor -> arrayOf("Eliminar")
+                                tarea.estado == "completada" && uid2 == tarea.creadoPor -> arrayOf(getString(R.string.confirmar), getString(R.string.reclamar))
+                                tarea.estado == "pendiente" && esPersonalizada && uid2 == tarea.creadoPor -> arrayOf(getString(R.string.editar), getString(R.string.eliminar))
+                                tarea.estado == "pendiente" && uid2 == tarea.creadoPor -> arrayOf(getString(R.string.eliminar))
                                 else -> emptyArray()
                             }
                             if (opciones.isEmpty()) return@setOnClickListener
-                            androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Opciones")
+                            androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle(getString(R.string.opciones))
                                 .setItems(opciones) { _, idx ->
                                     // acciones simples para ejemplo
                                     when (opciones[idx]) {
-                                        "Editar" -> mostrarDialogoEditar(tarea)
-                                        "Eliminar" -> lifecycleScope.launch { LocalizadorServicios.repositorioTarea.actualizarTarea(tarea.copy(estado = "eliminada")) }
-                                        "Confirmar" -> {
+                                        getString(R.string.editar) -> mostrarDialogoEditar(tarea)
+                                        getString(R.string.eliminar) -> lifecycleScope.launch { LocalizadorServicios.repositorioTarea.actualizarTarea(tarea.copy(estado = "eliminada")) }
+                                        getString(R.string.confirmar) -> {
                                             // deshabilitar botón para evitar doble click
                                             btnAccion.isEnabled = false
                                             ultimoBotonConfirmar = btnAccion
                                             tareasVM.confirmarTarea(tarea.id, tarea.creadoPor ?: "")
                                             // El observer maneja el resultado y re-habilita el botón
                                         }
-                                        "Reclamar" -> { pendingTareaParaDisputa = tarea; pickImageLauncher?.launch("image/*") }
+                                        getString(R.string.reclamar) -> { pendingTareaParaDisputa = tarea; pickImageLauncher?.launch("image/*") }
                                     }
-                                }.setNegativeButton("Cancelar", null).show()
+                                }.setNegativeButton(getString(R.string.cancelar), null).show()
                         }
 
                         val uid = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
                         when {
                             !uid.isBlank() && uid == tarea.creadoPor && tarea.estado == "completada" -> {
-                                btnAccion.text = "Confirmar"
+                                btnAccion.text = getString(R.string.confirmar)
                                 btnAccion.setOnClickListener {
                                     btnAccion.isEnabled = false
                                     ultimoBotonConfirmar = btnAccion
@@ -453,7 +514,7 @@ class FragmentTareas : Fragment() {
                                 }
                             }
                             !uid.isBlank() && uid == tarea.asignadoA && tarea.estado == "pendiente" -> {
-                                btnAccion.text = "Completar"
+                                btnAccion.text = getString(R.string.completar_btn)
                                 btnAccion.setOnClickListener {
                                     tareasVM.marcarCompletada(tarea.id, uid)
                                     // El observer maneja el resultado y muestra Toast
@@ -464,6 +525,7 @@ class FragmentTareas : Fragment() {
                             }
                         }
                     }
+                }
                 }
             }
         }
@@ -518,7 +580,7 @@ class FragmentTareas : Fragment() {
             if (!usuarioId.isBlank() && usuarioId == tarea.asignadoA && tarea.estado == "pendiente") {
                 holder.btnAccion.visibility = View.VISIBLE
                 holder.btnAccion.isEnabled = true
-                holder.btnAccion.text = "Completar"
+                holder.btnAccion.text = getString(R.string.completar_btn)
                 holder.btnAccion.setOnClickListener {
                     tareasVM.marcarCompletada(tarea.id, usuarioId)
                     // El observer maneja el resultado y muestra Toast
@@ -527,7 +589,7 @@ class FragmentTareas : Fragment() {
                 // Si soy el creador y la tarea está pendiente, permitir asignar/reasignar desde la lista
                 holder.btnAccion.visibility = View.VISIBLE
                 holder.btnAccion.isEnabled = true
-                holder.btnAccion.text = "Asignar"
+                holder.btnAccion.text = getString(R.string.asignar)
                 holder.btnAccion.setOnClickListener {
                     lifecycleScope.launch {
                         val grupo = parejaVM.grupo.value
@@ -548,22 +610,31 @@ class FragmentTareas : Fragment() {
                         }
                         if (opciones.isEmpty()) Toast.makeText(requireContext(), getString(R.string.no_hay_miembros), Toast.LENGTH_SHORT).show() else {
                             val names = opciones.map { it.first }.toTypedArray()
-                            androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
+                            androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle(getString(R.string.selecciona_miembro)).setItems(names) { _, idx ->
                                 lifecycleScope.launch {
                                     val elegido = opciones[idx].second
                                     if (!usuarioId.isBlank() && elegido == usuarioId) {
-                                        Toast.makeText(requireContext(), "No podés autoasignarte tareas", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(requireContext(), getString(R.string.no_autoasignar), Toast.LENGTH_LONG).show()
                                         return@launch
                                     }
                                     val nueva = tarea.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
                                     val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
                                     if (res2.isSuccess) {
-                                        Toast.makeText(requireContext(), "Tarea asignada", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(requireContext(), getString(R.string.tarea_asignada), Toast.LENGTH_SHORT).show()
+                                        // Notificar al asignado vía Firebase
+                                        val repoNot = RepositorioNotificaciones()
+                                        repoNot.enviarNotificacion(
+                                            Notificacion(
+                                                id = "", tipo = "asignacion",
+                                                contenido = mapOf("tareaId" to nueva.id, "titulo" to nueva.titulo, "desde" to usuarioId),
+                                                destinatario = elegido, visto = false, fecha = Timestamp.now()
+                                            )
+                                        )
                                     } else {
                                         Toast.makeText(requireContext(), res2.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
                                     }
                                 }
-                            }.setNegativeButton("Cancelar", null).show()
+                            }.setNegativeButton(getString(R.string.cancelar), null).show()
                         }
                     }
                 }
@@ -637,7 +708,7 @@ class FragmentTareas : Fragment() {
                             val elegidoUid = opciones[idx].second.ifBlank { null }
                             val creador = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                             if (!creador.isNullOrBlank() && !elegidoUid.isNullOrBlank() && elegidoUid == creador) {
-                                Toast.makeText(requireContext(), "No podés autoasignarte tareas", Toast.LENGTH_LONG).show()
+                                Toast.makeText(requireContext(), getString(R.string.no_autoasignar), Toast.LENGTH_LONG).show()
                                 return@launch
                             }
                             val dificultadInt = when (sug.dificultad.lowercase()) { "fácil", "facil" -> 1; "media" -> 2; else -> 3 }
@@ -649,6 +720,30 @@ class FragmentTareas : Fragment() {
                             if (res.isSuccess) {
                                 Log.d(TAG, "Tarea creada OK: ${res.getOrNull()?.id}")
                                 Toast.makeText(requireContext(), getString(R.string.tarea_asignada_ok, opciones[idx].first), Toast.LENGTH_SHORT).show()
+                                // Notificar al asignado vía Firebase para que reciba la notificación en su dispositivo
+                                if (!elegidoUid.isNullOrBlank()) {
+                                    Log.d(TAG, "Enviando notificación Firebase (sugerida): tipo=asignacion, destinatario=$elegidoUid, tareaId=${res.getOrNull()}")
+                                    val repoNot = RepositorioNotificaciones()
+                                    val notifResult = repoNot.enviarNotificacion(
+                                        Notificacion(
+                                            id = "",
+                                            tipo = "asignacion",
+                                            contenido = mapOf(
+                                                "tareaId" to (res.getOrNull()?.id ?: ""),
+                                                "titulo" to tarea.titulo,
+                                                "desde" to (creador ?: "")
+                                            ),
+                                            destinatario = elegidoUid,
+                                            visto = false,
+                                            fecha = Timestamp.now()
+                                        )
+                                    )
+                                    if (notifResult.isSuccess) {
+                                        Log.d(TAG, "Notificación de sugerida enviada OK, id=${notifResult.getOrNull()}")
+                                    } else {
+                                        Log.e(TAG, "Error enviando notificación de sugerida: ${notifResult.exceptionOrNull()?.message}")
+                                    }
+                                }
                                 // opcional: si quieres volver atrás para ver la lista real, descomenta:
                                 // findNavController().popBackStack()
                             } else {
@@ -680,7 +775,7 @@ class FragmentTareas : Fragment() {
         if (esPersonalizada) {
             tilPuntos.visibility = View.GONE
             tvPuntosFijos.visibility = View.VISIBLE
-            etPuntos.setText(PUNTOS_FIJOS_PERSONALIZADA.toString())
+            etPuntos.setText(Constants.PUNTOS_FIJOS_PERSONALIZADA.toString())
         } else {
             tilPuntos.visibility = View.VISIBLE
             tvPuntosFijos.visibility = View.GONE
@@ -691,17 +786,17 @@ class FragmentTareas : Fragment() {
         spDificultad.adapter = adapt
         spDificultad.setSelection(if (tarea.dificultad==1) 0 else if (tarea.dificultad==2) 1 else 2)
 
-        androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Editar tarea").setView(v)
-            .setPositiveButton("Guardar") { _, _ ->
+        androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle(getString(R.string.editar_tarea)).setView(v)
+            .setPositiveButton(getString(R.string.guardar)) { _, _ ->
                 val nuevoTitulo = etTitulo.text.toString().trim()
-                val nuevosPts = if (esPersonalizada) PUNTOS_FIJOS_PERSONALIZADA else (etPuntos.text.toString().toIntOrNull() ?: tarea.puntos)
+                val nuevosPts = if (esPersonalizada) Constants.PUNTOS_FIJOS_PERSONALIZADA else (etPuntos.text.toString().toIntOrNull() ?: tarea.puntos)
                 val nuevaDif = when(spDificultad.selectedItemPosition) {0->1;1->2;else->3}
                 lifecycleScope.launch {
                     val nueva = tarea.copy(titulo = nuevoTitulo, puntos = nuevosPts, dificultad = nuevaDif)
                     LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
-                    Toast.makeText(requireContext(), "Tarea editada", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), getString(R.string.tarea_editada), Toast.LENGTH_SHORT).show()
                 }
-            }.setNegativeButton("Cancelar", null).show()
+            }.setNegativeButton(getString(R.string.cancelar), null).show()
     }
 
     private fun mostrarDialogoTareaDetalles(tarea: Tarea) {
@@ -713,11 +808,11 @@ class FragmentTareas : Fragment() {
         if (!tarea.descripcion.isNullOrBlank()) sb.append("\n${tarea.descripcion}\n")
 
         // cerrar = positive
-        builder.setTitle("Detalle tarea").setMessage(sb.toString())
-            .setPositiveButton("Cerrar", null)
+        builder.setTitle(getString(R.string.detalle_tarea)).setMessage(sb.toString())
+            .setPositiveButton(getString(R.string.cerrar), null)
 
         // Añadir botón "Crear otra" para crear una nueva instancia (duplicado) y asignarla
-        builder.setNegativeButton("Crear otra") { _, _ ->
+        builder.setNegativeButton(getString(R.string.crear_otra)) { _, _ ->
             lifecycleScope.launch {
                 // elegir miembro del grupo
                 val grupo = parejaVM.grupo.value
@@ -750,7 +845,7 @@ class FragmentTareas : Fragment() {
                             val elegidoUid = opciones[idx].second.ifBlank { null }
                             val creador = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                             if (!creador.isNullOrBlank() && !elegidoUid.isNullOrBlank() && elegidoUid == creador) {
-                                Toast.makeText(requireContext(), "No podés autoasignarte tareas", Toast.LENGTH_LONG).show()
+                                Toast.makeText(requireContext(), getString(R.string.no_autoasignar), Toast.LENGTH_LONG).show()
                                 return@launch
                             }
                             val nueva = Tarea(
@@ -766,8 +861,33 @@ class FragmentTareas : Fragment() {
                             Log.d(TAG, "Creando duplicado de tarea: ${nueva.titulo} asignadoA=${nueva.asignadoA}")
                             val res = LocalizadorServicios.repositorioTarea.crearTarea(nueva)
                             if (res.isSuccess) {
-                                Toast.makeText(requireContext(), "Tarea creada y asignada", Toast.LENGTH_SHORT).show()
-                                NotificationScheduler.showImmediateNotification(requireContext(), ("tarea_${res.getOrNull()?.id}").hashCode(), "Nueva tarea", "Se ha creado: ${nueva.titulo}", res.getOrNull()?.id ?: "")
+                                Toast.makeText(requireContext(), getString(R.string.tarea_creada_asignada), Toast.LENGTH_SHORT).show()
+                                // Notificar al asignado vía Firebase para que reciba la notificación en su dispositivo
+                                if (!elegidoUid.isNullOrBlank()) {
+                                    Log.d(TAG, "Enviando notificación Firebase: tipo=asignacion, destinatario=$elegidoUid, tareaId=${res.getOrNull()}")
+                                    val repoNot = RepositorioNotificaciones()
+                                    val notifResult = repoNot.enviarNotificacion(
+                                        Notificacion(
+                                            id = "",
+                                            tipo = "asignacion",
+                                            contenido = mapOf(
+                                                "tareaId" to (res.getOrNull()?.id ?: ""),
+                                                "titulo" to nueva.titulo,
+                                                "desde" to (creador ?: "")
+                                            ),
+                                            destinatario = elegidoUid,
+                                            visto = false,
+                                            fecha = Timestamp.now()
+                                        )
+                                    )
+                                    if (notifResult.isSuccess) {
+                                        Log.d(TAG, "Notificación enviada OK, id=${notifResult.getOrNull()}")
+                                    } else {
+                                        Log.e(TAG, "Error enviando notificación: ${notifResult.exceptionOrNull()?.message}")
+                                    }
+                                } else {
+                                    Log.w(TAG, "elegidoUid es null/blank, no se envía notificación")
+                                }
                             } else {
                                 Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error al crear tarea", Toast.LENGTH_LONG).show()
                             }
@@ -799,27 +919,48 @@ class FragmentTareas : Fragment() {
                             opciones.add(Pair(display, uid))
                         }
                     }
-                    if (opciones.isEmpty()) Toast.makeText(requireContext(), getString(R.string.no_hay_miembros), Toast.LENGTH_SHORT).show() else {
-                        val names = opciones.map { it.first }.toTypedArray()
-                        androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
-                            lifecycleScope.launch {
-                                val elegido = opciones[idx].second
-                                if (!usuarioActualId.isBlank() && elegido == usuarioActualId) {
-                                    Toast.makeText(requireContext(), "No podés autoasignarte tareas", Toast.LENGTH_LONG).show()
-                                    return@launch
-                                }
-                                val nueva = tarea.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
-                                val res = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
-                                if (res.isSuccess) {
-                                    Toast.makeText(requireContext(), "Tarea asignada", Toast.LENGTH_SHORT).show()
-                                    NotificationScheduler.showImmediateNotification(requireContext(), ("tarea_${nueva.id}").hashCode(), "Nueva asignación", "Te han asignado: ${nueva.titulo}", nueva.id)
+                                    if (opciones.isEmpty()) Toast.makeText(requireContext(), getString(R.string.no_hay_miembros), Toast.LENGTH_SHORT).show() else {
+                                        val names = opciones.map { it.first }.toTypedArray()
+                                        androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle(getString(R.string.selecciona_miembro)).setItems(names) { _, idx ->
+                                            lifecycleScope.launch {
+                                                val elegido = opciones[idx].second
+                                                if (!usuarioActualId.isBlank() && elegido == usuarioActualId) {
+                                                    Toast.makeText(requireContext(), getString(R.string.no_autoasignar), Toast.LENGTH_LONG).show()
+                                                    return@launch
+                                                }
+                                                val nueva = tarea.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
+                                                val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
+                                                if (res2.isSuccess) {
+                                                    Toast.makeText(requireContext(), getString(R.string.tarea_asignada), Toast.LENGTH_SHORT).show()
+                                    // Notificar al asignado vía Firebase para que reciba la notificación en su dispositivo
+                                    Log.d(TAG, "Enviando notificación Firebase (reasignación): tipo=asignacion, destinatario=$elegido, tareaId=${nueva.id}")
+                                    val repoNot = RepositorioNotificaciones()
+                                    val notifResult = repoNot.enviarNotificacion(
+                                        Notificacion(
+                                            id = "",
+                                            tipo = "asignacion",
+                                            contenido = mapOf(
+                                                "tareaId" to nueva.id,
+                                                "titulo" to nueva.titulo,
+                                                "desde" to usuarioActualId
+                                            ),
+                                            destinatario = elegido,
+                                            visto = false,
+                                            fecha = Timestamp.now()
+                                        )
+                                    )
+                                    if (notifResult.isSuccess) {
+                                        Log.d(TAG, "Notificación de reasignación enviada OK, id=${notifResult.getOrNull()}")
+                                    } else {
+                                        Log.e(TAG, "Error enviando notificación de reasignación: ${notifResult.exceptionOrNull()?.message}")
+                                    }
                                 } else {
-                                    val msg = res.exceptionOrNull()?.message ?: "Error"
+                                    val msg = res2.exceptionOrNull()?.message ?: "Error"
                                     Log.e(TAG, "Error asignar tarea desde detalle: $msg")
-                                    Toast.makeText(requireContext(), "Error asignar: $msg", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(requireContext(), getString(R.string.error_asignar, msg), Toast.LENGTH_LONG).show()
                                 }
                             }
-                        }.setNegativeButton("Cancelar", null).show()
+                        }.setNegativeButton(getString(R.string.cancelar), null).show()
                     }
                 }
             }

@@ -12,33 +12,28 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Tareas"
-        android:textSize="22sp"
-        android:textStyle="bold"
+        android:textAppearance="@style/TextAppearance.TFG.Headline"
         android:textColor="@color/texto_principal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="20dp"
-        android:paddingBottom="12dp" />
+        android:paddingStart="@dimen/spacing_lg"
+        android:paddingEnd="@dimen/spacing_lg"
+        android:paddingTop="@dimen/spacing_xl"
+        android:paddingBottom="@dimen/spacing_md" />
 
     <!-- Tabs de sección -->
     <com.google.android.material.card.MaterialCardView
+        style="@style/Widget.TFG.Tarjeta"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="2dp"
-        app:cardBackgroundColor="@color/white"
-        app:strokeColor="@color/divisor"
-        app:strokeWidth="1dp">
+        android:layout_marginStart="@dimen/spacing_lg"
+        android:layout_marginEnd="@dimen/spacing_lg"
+        android:layout_marginBottom="@dimen/spacing_sm">
 
         <LinearLayout
             android:id="@+id/layoutBotonesTabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="5dp">
+            android:padding="@dimen/spacing_xs">
 
             <TextView
                 android:id="@+id/btnPendientes"
@@ -47,7 +42,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="Pendientes"
-                android:textSize="12sp"
+                android:textAppearance="@style/TextAppearance.TFG.Label"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
                 android:background="@drawable/tab_activo"
@@ -60,7 +55,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="Asignadas"
-                android:textSize="12sp"
+                android:textAppearance="@style/TextAppearance.TFG.Label"
                 android:textAllCaps="false"
                 android:textColor="@color/texto_principal"
                 android:background="@drawable/tab_inactivo"
@@ -74,7 +69,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="Historial"
-                android:textSize="12sp"
+                android:textAppearance="@style/TextAppearance.TFG.Label"
                 android:textAllCaps="false"
                 android:textColor="@color/texto_principal"
                 android:background="@drawable/tab_inactivo"
@@ -90,44 +85,102 @@
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
+        android:background="@color/neutral_50"
         android:visibility="gone"
-        android:padding="32dp">
+        android:padding="@dimen/spacing_3xl">
 
         <ImageView
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:src="@android:drawable/ic_menu_info_details"
-            android:contentDescription=""
+            android:contentDescription="@string/no_hay_grupo_activo"
             android:alpha="0.4"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="@dimen/spacing_lg" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="No perteneces a ningún grupo"
-            android:textSize="16sp"
-            android:textStyle="bold"
+            android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
             android:textColor="@color/texto_principal"
             android:gravity="center" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/spacing_sm"
             android:text="Crea o únete a un grupo desde Perfil de pareja."
-            android:textSize="13sp"
+            android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
             android:textColor="@color/texto_secundario"
             android:gravity="center" />
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvTareasPendientes"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="72dp"
-        android:clipToPadding="false" />
+        android:layout_weight="1">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvTareasPendientes"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingStart="@dimen/spacing_md"
+                android:paddingEnd="@dimen/spacing_md"
+                android:paddingBottom="72dp"
+                android:clipToPadding="false" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone"
+                android:padding="@dimen/spacing_3xl">
+
+                <ImageView
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:src="@drawable/ic_empty_tasks"
+                    android:contentDescription="@string/empty_tasks_title"
+                    android:alpha="0.5"
+                    android:layout_marginBottom="@dimen/spacing_lg" />
+
+                <TextView
+                    android:id="@+id/tvEmptyTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/empty_pending_tasks"
+                    android:textAppearance="@style/TextAppearance.TFG.Titulo"
+                    android:textColor="@color/texto_principal"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/tvEmptySubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:text="@string/empty_tasks_subtitle"
+                    android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
+                    android:textColor="@color/texto_secundario"
+                    android:gravity="center" />
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </LinearLayout>

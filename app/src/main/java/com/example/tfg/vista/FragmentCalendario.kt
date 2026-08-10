@@ -124,6 +124,15 @@ class FragmentCalendario : Fragment() {
         val tareasDelDia = obtenerTareasDelDia()
         adapter.setItems(tareasDelDia)
         actualizarResumen(b, tareasDelDia)
+
+        // Empty state
+        if (tareasDelDia.isEmpty()) {
+            b.rvTareasDia.visibility = View.GONE
+            b.emptyState.visibility = View.VISIBLE
+        } else {
+            b.rvTareasDia.visibility = View.VISIBLE
+            b.emptyState.visibility = View.GONE
+        }
     }
 
     private fun obtenerTareasDelDia(): List<Tarea> {

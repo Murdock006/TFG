@@ -1,99 +1,188 @@
 <resources>
 
+    <!-- ========== TEMA PRINCIPAL ========== -->
     <style name="Tema.TFG.Moderno" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Core colors -->
+        <!-- Brand colors -->
         <item name="colorPrimary">@color/primario</item>
+        <item name="colorPrimaryVariant">@color/primario_variant</item>
         <item name="colorOnPrimary">@color/on_acento</item>
+        <item name="colorSecondary">@color/primario</item>
+        <item name="colorSecondaryVariant">@color/primario_variant</item>
+        <item name="colorOnSecondary">@color/on_acento</item>
+        <item name="colorAccent">@color/primario</item>
+
+        <!-- Backgrounds -->
         <item name="android:colorBackground">@color/fondo</item>
         <item name="colorSurface">@color/superficie</item>
+        <item name="colorOnBackground">@color/texto_principal</item>
         <item name="colorOnSurface">@color/texto_principal</item>
-        <item name="android:statusBarColor">@color/white</item>
+
+        <!-- System bars -->
+        <item name="android:statusBarColor">@color/fondo</item>
+        <item name="android:navigationBarColor">@color/fondo</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+
+        <!-- Material components defaults -->
         <item name="materialCardViewStyle">@style/Widget.TFG.Tarjeta</item>
-        <!-- Forzar colores de texto por defecto -->
-        <item name="android:textColor">@color/texto_principal</item>
-        <item name="android:textColorSecondary">@color/texto_secundario</item>
-        <item name="android:editTextStyle">@style/Widget.TFG.EditText</item>
-        <item name="textAppearanceBody1">@style/TextAppearance.TFG.Cuerpo</item>
-        <item name="textAppearanceHeadline6">@style/TextAppearance.TFG.Titulo</item>
-        <!-- BottomNavigationView compacta -->
         <item name="bottomNavigationStyle">@style/Widget.TFG.BottomNav</item>
+
+        <!-- Text colors default -->
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:textColorPrimary">@color/texto_principal</item>
+        <item name="android:textColorSecondary">@color/texto_secundario</item>
+
+        <!-- EditText default -->
+        <item name="android:editTextStyle">@style/Widget.TFG.EditText</item>
+
+        <!-- Tipografía -->
+        <item name="textAppearanceBody1">@style/TextAppearance.TFG.Cuerpo</item>
+        <item name="textAppearanceBody2">@style/TextAppearance.TFG.Cuerpo</item>
+        <item name="textAppearanceHeadline6">@style/TextAppearance.TFG.Headline</item>
+        <item name="textAppearanceHeadline5">@style/TextAppearance.TFG.Headline</item>
+        <item name="textAppearanceSubtitle1">@style/TextAppearance.TFG.Titulo</item>
+        <item name="textAppearanceSubtitle2">@style/TextAppearance.TFG.Label</item>
+        <item name="textAppearanceCaption">@style/TextAppearance.TFG.Label</item>
     </style>
 
-    <!-- BottomNavigationView compacta: sin padding extra del sistema -->
+    <!-- ========== BOTTOM NAVIGATION ========== -->
     <style name="Widget.TFG.BottomNav" parent="Widget.MaterialComponents.BottomNavigationView">
         <item name="android:minHeight">0dp</item>
-        <item name="android:paddingTop">4dp</item>
-        <item name="android:paddingBottom">4dp</item>
-        <item name="itemPaddingTop">4dp</item>
-        <item name="itemPaddingBottom">4dp</item>
+        <item name="android:paddingTop">@dimen/spacing_xs</item>
+        <item name="android:paddingBottom">@dimen/spacing_xs</item>
+        <item name="itemPaddingTop">@dimen/spacing_xs</item>
+        <item name="itemPaddingBottom">@dimen/spacing_xs</item>
         <item name="itemTextAppearanceActive">@style/TextAppearance.TFG.NavLabel</item>
         <item name="itemTextAppearanceInactive">@style/TextAppearance.TFG.NavLabel</item>
+        <item name="itemIconTint">@color/primario</item>
+        <item name="itemTextColor">@color/texto_principal</item>
     </style>
 
     <style name="TextAppearance.TFG.NavLabel" parent="TextAppearance.MaterialComponents.Caption">
-        <item name="android:textSize">10sp</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:letterSpacing">0.02</item>
     </style>
 
-    <!-- EditText con fondo visible gris claro + borde negro -->
+    <!-- ========== INPUTS ========== -->
     <style name="Widget.TFG.EditText" parent="@style/Widget.MaterialComponents.TextInputEditText.OutlinedBox">
         <item name="android:textColor">@color/texto_principal</item>
-        <item name="android:textColorHint">@color/gris</item>
+        <item name="android:textColorHint">@color/texto_deshabilitado</item>
         <item name="android:background">@drawable/bg_input_campo</item>
-        <item name="android:padding">12dp</item>
+        <item name="android:padding">@dimen/spacing_lg</item>
+        <item name="android:textSize">15sp</item>
     </style>
 
-    <!-- TextInputLayout outlined con colores correctos -->
     <style name="Widget.TFG.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">@dimen/corner_radius_md</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/corner_radius_md</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/corner_radius_md</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/corner_radius_md</item>
         <item name="boxBackgroundColor">@color/superficie_variant</item>
-        <item name="boxStrokeColor">@color/negro</item>
-        <item name="hintTextColor">@color/gris</item>
-        <item name="android:textColorHint">@color/gris</item>
+        <item name="boxStrokeColor">@color/primario</item>
+        <item name="boxStrokeWidth">@dimen/stroke_thin</item>
+        <item name="boxStrokeWidthFocused">@dimen/stroke_normal</item>
+        <item name="hintTextColor">@color/primario</item>
+        <item name="android:textColorHint">@color/texto_deshabilitado</item>
     </style>
 
-    <!-- Botón relleno negro -->
-    <style name="Widget.TFG.Boton.Relleno" parent="Widget.MaterialComponents.Button">
+    <style name="Widget.TFG.TextInputLayout.Dropdown" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="boxCornerRadiusTopStart">@dimen/corner_radius_md</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/corner_radius_md</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/corner_radius_md</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/corner_radius_md</item>
+        <item name="boxBackgroundColor">@color/superficie_variant</item>
+        <item name="boxStrokeColor">@color/primario</item>
+        <item name="boxStrokeWidth">@dimen/stroke_thin</item>
+        <item name="boxStrokeWidthFocused">@dimen/stroke_normal</item>
+        <item name="hintTextColor">@color/primario</item>
+        <item name="android:textColorHint">@color/texto_deshabilitado</item>
+    </style>
+
+    <!-- ========== BOTONES ========== -->
+    <style name="Widget.TFG.Boton.Base" parent="Widget.MaterialComponents.Button">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:minHeight">@dimen/button_min_height</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+
+    <style name="Widget.TFG.Boton.Relleno" parent="Widget.TFG.Boton.Base">
         <item name="android:background">@drawable/btn_filled_black</item>
         <item name="android:textColor">@color/on_acento</item>
-        <item name="android:minHeight">48dp</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="android:textSize">14sp</item>
+        <item name="cornerRadius">@dimen/corner_radius_md</item>
     </style>
 
-    <!-- Botón contorno negro sobre fondo blanco -->
-    <style name="Widget.TFG.Boton.Contorno" parent="Widget.MaterialComponents.Button.OutlinedButton">
-        <item name="cornerRadius">10dp</item>
-        <item name="strokeColor">@color/negro</item>
-        <item name="strokeWidth">2dp</item>
-        <item name="backgroundTint">@color/white</item>
+    <style name="Widget.TFG.Boton.Contorno" parent="Widget.TFG.Boton.Base">
+        <item name="android:background">@drawable/btn_outline_black</item>
         <item name="android:textColor">@color/texto_principal</item>
-        <item name="android:paddingLeft">16dp</item>
-        <item name="android:paddingRight">16dp</item>
-        <item name="android:minHeight">40dp</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="android:textSize">13sp</item>
+        <item name="cornerRadius">@dimen/corner_radius_md</item>
     </style>
 
-    <!-- Tarjeta Material con elevación y sombra -->
+    <style name="Widget.TFG.Boton.Texto" parent="Widget.TFG.Boton.Base">
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:textColor">@color/primario</item>
+        <item name="android:minHeight">@dimen/button_min_height_sm</item>
+    </style>
+
+    <style name="Widget.TFG.Boton.Tonal" parent="Widget.TFG.Boton.Base">
+        <item name="android:background">@drawable/btn_tonal</item>
+        <item name="android:textColor">@color/primario_variant</item>
+        <item name="cornerRadius">@dimen/corner_radius_md</item>
+    </style>
+
+    <style name="Widget.TFG.Boton.Relleno.Seleccionar" parent="Widget.TFG.Boton.Relleno" />
+
+    <style name="Widget.TFG.Boton.Google" parent="Widget.TFG.Boton.Base">
+        <item name="android:paddingStart">@dimen/spacing_lg</item>
+        <item name="android:paddingEnd">@dimen/spacing_lg</item>
+        <item name="android:paddingTop">@dimen/spacing_sm</item>
+        <item name="android:paddingBottom">@dimen/spacing_sm</item>
+        <item name="android:background">@drawable/ripple_google</item>
+        <item name="android:textColor">@color/texto_principal</item>
+    </style>
+
+    <!-- ========== TARJETAS ========== -->
     <style name="Widget.TFG.Tarjeta" parent="Widget.MaterialComponents.CardView">
-        <item name="cardCornerRadius">12dp</item>
+        <item name="cardCornerRadius">@dimen/corner_radius_xl</item>
         <item name="cardUseCompatPadding">true</item>
-        <item name="cardElevation">4dp</item>
-        <item name="cardBackgroundColor">@color/white</item>
+        <item name="cardElevation">@dimen/elevation_default</item>
+        <item name="cardBackgroundColor">@color/superficie</item>
         <item name="strokeColor">@color/divisor</item>
-        <item name="strokeWidth">1dp</item>
+        <item name="strokeWidth">@dimen/stroke_thin</item>
+        <item name="contentPadding">@dimen/spacing_lg</item>
     </style>
 
-    <!-- Tarjeta destacada (con borde negro marcado) -->
     <style name="Widget.TFG.Tarjeta.Destacada" parent="Widget.TFG.Tarjeta">
-        <item name="cardElevation">6dp</item>
-        <item name="strokeColor">@color/negro</item>
-        <item name="strokeWidth">2dp</item>
+        <item name="cardElevation">@dimen/elevation_pressed</item>
+        <item name="strokeColor">@color/primario</item>
+        <item name="strokeWidth">@dimen/stroke_normal</item>
+    </style>
+
+    <style name="Widget.TFG.Tarjeta.Superficie" parent="Widget.TFG.Tarjeta">
+        <item name="cardElevation">@dimen/elevation_none</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+
+    <!-- ========== TIPOGRAFÍA ========== -->
+    <style name="TextAppearance.TFG.Display" parent="TextAppearance.MaterialComponents.Headline4">
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="TextAppearance.TFG.Headline" parent="TextAppearance.MaterialComponents.Headline5">
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:letterSpacing">-0.01</item>
     </style>
 
     <style name="TextAppearance.TFG.Titulo" parent="TextAppearance.MaterialComponents.Headline6">
         <item name="android:textColor">@color/texto_principal</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">20sp</item>
+        <item name="android:letterSpacing">0</item>
     </style>
 
     <style name="TextAppearance.TFG.SubTitulo" parent="TextAppearance.MaterialComponents.Subtitle1">
@@ -105,27 +194,25 @@
     <style name="TextAppearance.TFG.Cuerpo" parent="TextAppearance.MaterialComponents.Body1">
         <item name="android:textColor">@color/texto_secundario</item>
         <item name="android:textSize">14sp</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+    </style>
+
+    <style name="TextAppearance.TFG.Label" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">@color/texto_deshabilitado</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:letterSpacing">0.03</item>
     </style>
 
     <style name="TextAppearance.TFG.Meta" parent="TextAppearance.MaterialComponents.Caption">
-        <item name="android:textColor">@color/gris</item>
+        <item name="android:textColor">@color/texto_deshabilitado</item>
         <item name="android:textSize">12sp</item>
     </style>
 
-    <!-- Estilo para botón Google -->
-    <style name="Widget.TFG.Boton.Google" parent="Widget.MaterialComponents.Button">
-        <item name="android:paddingStart">12dp</item>
-        <item name="android:paddingEnd">12dp</item>
-        <item name="android:paddingTop">10dp</item>
-        <item name="android:paddingBottom">10dp</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="android:background">@drawable/ripple_google</item>
-        <item name="android:textColor">@color/texto_principal</item>
-        <item name="android:textSize">14sp</item>
+    <style name="TextAppearance.TFG.Badge" parent="TextAppearance.MaterialComponents.Overline">
+        <item name="android:textColor">@color/primario_variant</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.05</item>
     </style>
-
-    <style name="Widget.TFG.Boton.Relleno.Seleccionar" parent="Widget.TFG.Boton.Relleno" />
-
-    <!-- (reservado para futuros estilos de navegación) -->
 
 </resources>

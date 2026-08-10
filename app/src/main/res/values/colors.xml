@@ -1,51 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Paleta moderna blanco/negro -->
-    <color name="primario">#000000</color>
-    <color name="primario_variant">#222222</color>
+    <!-- BRAND - Índigo (acento principal) -->
+    <color name="primario">#5B5BD6</color>
+    <color name="primario_variant">#3D3D99</color>
+    <color name="acento">#5B5BD6</color>
+    <color name="on_acento">#FFFFFF</color>
+    <color name="brand_500">#5B5BD6</color>
+    <color name="brand_600">#3D3D99</color>
+    <color name="brand_400">#7C7CE0</color>
+    <color name="brand_100">#E8E8FA</color>
+    <color name="brand_50">#F4F4FD</color>
+
+    <!-- NEUTRALES (jerarquía) -->
     <color name="negro">#000000</color>
-    <color name="gris_oscuro">#222222</color>
-    <color name="gris">#888888</color>
-    <color name="gris_claro">#BDBDBD</color>
+    <color name="gris_oscuro">#1F2937</color>
+    <color name="gris">#6B7280</color>
+    <color name="gris_claro">#D1D5DB</color>
     <color name="white">#FFFFFF</color>
 
-    <!-- Fondo / superficies -->
+    <color name="neutral_900">#111827</color>
+    <color name="neutral_800">#1F2937</color>
+    <color name="neutral_700">#374151</color>
+    <color name="neutral_500">#6B7280</color>
+    <color name="neutral_300">#D1D5DB</color>
+    <color name="neutral_100">#F3F4F6</color>
+    <color name="neutral_50">#F9FAFB</color>
+
+    <!-- FONDOS / SUPERFICIES -->
     <color name="fondo">#FFFFFF</color>
     <color name="superficie">#FFFFFF</color>
-    <color name="superficie_variant">#F5F5F5</color>
-    <color name="tarjetaPrincipal">#6F969696</color>
+    <color name="superficie_variant">#F9FAFB</color>
+    <color name="tarjetaPrincipal">#FFFFFF</color>
 
-    <!-- Texto -->
-    <color name="texto_principal">#000000</color>
-    <color name="texto_secundario">#2D2D2D</color>
-    <color name="texto_deshabilitado">#9E9E9E</color>
+    <!-- TEXTO -->
+    <color name="texto_principal">#111827</color>
+    <color name="texto_secundario">#374151</color>
+    <color name="texto_deshabilitado">#6B7280</color>
 
-    <!-- Acento / CTA (usar negro sobre blanco o invertir) -->
-    <color name="acento">#000000</color>
-    <color name="on_acento">#FFFFFF</color>
+    <!-- SEMÁNTICOS (dificultad, estado) -->
+    <color name="exito">#10B981</color>
+    <color name="verde">#A7F3D0</color>
+    <color name="advertencia">#F59E0B</color>
+    <color name="naranja">#FCD34D</color>
+    <color name="error">#EF4444</color>
+    <color name="rojo">#FCA5A5</color>
+    <color name="azul">#3B82F6</color>
+    <color name="info">#3B82F6</color>
 
-
-    <!-- Semantic colors preserved -->
-    <color name="exito">#4CAF50</color>
-    <color name="verde">#4CAF50</color>
-    <color name="azul">#2196F3</color>
-    <color name="naranja">#FF9800</color>
-    <color name="advertencia">#F9A825</color>
-    <color name="error">#C62828</color>
-    <!-- Compatibilidad: alias de colores antiguos usados en layouts -->
-    <color name="rojo">#C62828</color>
-    <color name="azul_principal">#000000</color>
-
-    <!-- Divisores y overlays -->
-    <color name="divisor">#E0E0E0</color>
-    <color name="divider">#E0E0E0</color>
+    <!-- Sombras -->
+    <color name="sombra_sutil">#1A000000</color>
     <color name="black_overlay">#66000000</color>
-    <!-- Alias retrocompatibilidad para recursos antiguos -->
-    <color name="light_blue_600">#000000</color>
-    <color name="light_blue_900">#000000</color>
-    <color name="light_blue_A200">#E0E0E0</color>
-    <color name="light_blue_A400">#9E9E9E</color>
+
+    <!-- Divisores -->
+    <color name="divisor">#E5E7EB</color>
+    <color name="divider">#E5E7EB</color>
+
+    <!-- Compatibilidad retroactiva -->
+    <color name="azul_principal">#5B5BD6</color>
+    <color name="light_blue_600">#5B5BD6</color>
+    <color name="light_blue_900">#3D3D99</color>
+    <color name="light_blue_A200">#E8E8FA</color>
+    <color name="light_blue_A400">#7C7CE0</color>
     <color name="google_text">#5F6368</color>
-    <color name="google_ripple">#E8EAED</color>
-    <color name="google_stroke">#DADCE0</color>
+    <color name="google_ripple">#F3F4F6</color>
+    <color name="google_stroke">#D1D5DB</color>
 </resources>

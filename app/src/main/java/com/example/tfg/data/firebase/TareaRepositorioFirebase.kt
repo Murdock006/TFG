@@ -2,6 +2,7 @@ package com.example.tfg.data.firebase
 
 import com.example.tfg.modelo.Tarea
 import com.example.tfg.repositorio.TareaRepositorio
+import com.example.tfg.util.Constants
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -375,7 +376,9 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                         com.example.tfg.service.LocalizadorServicios.repositorioAuth.sumarPuntosConBonificacion(nueva.asignadoA!!, nueva.puntos)
                         com.example.tfg.service.LocalizadorServicios.repositorioAuth.liberarPuntos(nueva.creadoPor!!, nueva.puntos)
                     }
-                } catch (e: Exception) { /* ignore */ }
+                } catch (e: Exception) {
+                    android.util.Log.e("TareaRepositorioFirebase", "Error en transferencia de puntos al resolver reclamo (tareaId=$tareaId)", e)
+                }
             }
 
             Result.success(nueva)
@@ -410,7 +413,7 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 val ejecSnap = t.get(ejecRef)
 
                 // 10% de los puntos va a puntosRecompensa
-                val incrementoRecompensa = (tareaTx.puntos * 0.10).toInt().coerceAtLeast(1)
+                val incrementoRecompensa = (tareaTx.puntos * Constants.REWARD_PERCENTAGE).toInt().coerceAtLeast(1)
                 val puntosRecompensaActuales = (ejecSnap.getLong("puntosRecompensa") ?: 0L).toInt()
 
                 // ahora aplicar escrituras
@@ -462,12 +465,12 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
 
                 // --- Calcular puntos finales con multiplicador y racha ---
                 val rachaActual = (ejecSnap.getLong("rachaDias") ?: 0L).toInt()
-                val bonificacionRacha = if (rachaActual > 0 && rachaActual % 7 == 0) 0.10 else 0.0
+                val bonificacionRacha = if (rachaActual > 0 && rachaActual % Constants.STREAK_BONUS_THRESHOLD == 0) Constants.REWARD_PERCENTAGE else 0.0
                 val multiplicador = tareaTx.multiplicadorPuntos.coerceAtLeast(1.0)
                 val puntosBase = (tareaTx.puntos * multiplicador).toInt()
                 val puntosFinales = (puntosBase * (1.0 + bonificacionRacha)).toInt()
                 // 10% de los puntos ganados va a puntosRecompensa (redondeado, mínimo 1)
-                val incrementoRecompensa = (puntosFinales * 0.10).toInt().coerceAtLeast(1)
+                val incrementoRecompensa = (puntosFinales * Constants.REWARD_PERCENTAGE).toInt().coerceAtLeast(1)
 
                 // --- Actualizar ejecutor ---
                 val puntosActualesEjec = (ejecSnap.getLong("puntos") ?: 0L).toInt()
@@ -515,14 +518,16 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                         esEmergencia = false
                     )
                     crearTarea(nuevaTarea)
-                } catch (_: Exception) { /* no bloquear si falla la recurrencia */ }
+                } catch (e: Exception) {
+                    android.util.Log.w("TareaRepositorioFirebase", "Error creando tarea recurrente (tareaId=$tareaId): ${e.message}")
+                }
             }
 
             // --- Programar recordatorio si tiene fecha y minutos ---
             try {
                 val contexto = com.example.tfg.TFGApplication.appContext
                 if (contexto != null && tarea.fechaProgramada != null) {
-                    val triggerMs = tarea.fechaProgramada.toDate().time - (tarea.minutosAntes * 60 * 1000L)
+                    val triggerMs = tarea.fechaProgramada.toDate().time - (tarea.minutosAntes * Constants.SECONDS_PER_MINUTE * Constants.MILLIS_PER_SECOND)
                     if (triggerMs > System.currentTimeMillis()) {
                         com.example.tfg.service.NotificationScheduler.scheduleReminder(
                             contexto, tarea.id,
@@ -532,7 +537,9 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                         )
                     }
                 }
-            } catch (_: Exception) { }
+            } catch (e: Exception) {
+                android.util.Log.w("TareaRepositorioFirebase", "Error programando recordatorio (tareaId=${tarea.id}): ${e.message}")
+            }
 
             Result.success(Unit)
         } catch (e: Exception) {

@@ -10,15 +10,15 @@
         android:id="@+id/llCabeceraRecompensas"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="8dp"
-        app:cardCornerRadius="14dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="@color/white"
+        android:layout_marginStart="@dimen/spacing_lg"
+        android:layout_marginEnd="@dimen/spacing_lg"
+        android:layout_marginTop="@dimen/spacing_xl"
+        android:layout_marginBottom="@dimen/spacing_sm"
+        app:cardCornerRadius="@dimen/corner_radius_xl"
+        app:cardElevation="@dimen/elevation_pressed"
+        app:cardBackgroundColor="@color/superficie"
         app:strokeColor="@color/divisor"
-        app:strokeWidth="1dp"
+        app:strokeWidth="@dimen/stroke_thin"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -27,23 +27,24 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:background="#F8F8F8">
+            android:padding="@dimen/spacing_lg"
+            android:background="@color/superficie">
 
             <TextView
                 android:id="@+id/tvTituloRecompensas"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Recompensas"
+                android:text="@string/recompensas_title"
                 android:textSize="22sp"
                 android:textStyle="bold"
-                android:textColor="@color/texto_principal" />
+                android:textColor="@color/texto_principal"
+                android:textAppearance="@style/TextAppearance.TFG.Headline" />
 
             <TextView
                 android:id="@+id/tvMisPuntos"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/spacing_sm"
                 android:text="— pts"
                 android:textSize="13sp"
                 android:textStyle="bold"
@@ -52,7 +53,8 @@
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
                 android:paddingTop="5dp"
-                android:paddingBottom="5dp" />
+                android:paddingBottom="5dp"
+                android:textAppearance="@style/TextAppearance.TFG.Label" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -61,14 +63,14 @@
         android:id="@+id/llTabs"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="@dimen/spacing_lg"
+        android:layout_marginEnd="@dimen/spacing_lg"
         android:layout_marginBottom="4dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="3dp"
-        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="@dimen/corner_radius_lg"
+        app:cardElevation="@dimen/elevation_pressed"
+        app:cardBackgroundColor="@color/superficie"
         app:strokeColor="@color/divisor"
-        app:strokeWidth="1dp"
+        app:strokeWidth="@dimen/stroke_thin"
         app:layout_constraintTop_toBottomOf="@id/llCabeceraRecompensas"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -90,7 +92,8 @@
                 android:textAllCaps="false"
                 android:textColor="@color/white"
                 android:background="@drawable/tab_activo"
-                android:layout_marginEnd="3dp" />
+                android:layout_marginEnd="3dp"
+                android:textAppearance="@style/TextAppearance.TFG.Label" />
 
             <TextView
                 android:id="@+id/btnTabPendientes"
@@ -104,7 +107,8 @@
                 android:textColor="@color/texto_principal"
                 android:background="@drawable/tab_inactivo"
                 android:layout_marginStart="3dp"
-                android:layout_marginEnd="3dp" />
+                android:layout_marginEnd="3dp"
+                android:textAppearance="@style/TextAppearance.TFG.Label" />
 
             <TextView
                 android:id="@+id/btnTabHistorial"
@@ -117,7 +121,8 @@
                 android:textAllCaps="false"
                 android:textColor="@color/texto_principal"
                 android:background="@drawable/tab_inactivo"
-                android:layout_marginStart="3dp" />
+                android:layout_marginStart="3dp"
+                android:textAppearance="@style/TextAppearance.TFG.Label" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -126,8 +131,8 @@
         android:id="@+id/tvInfoRecompensas"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="@dimen/spacing_lg"
+        android:layout_marginEnd="@dimen/spacing_lg"
         android:layout_marginTop="6dp"
         android:padding="12dp"
         android:textSize="12sp"
@@ -136,31 +141,93 @@
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/llTabs"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:textAppearance="@style/TextAppearance.TFG.Label" />
 
     <!-- Lista principal -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvRecompensas"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="68dp"
-        android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/tvInfoRecompensas"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvRecompensas"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingStart="@dimen/spacing_lg"
+                android:paddingEnd="@dimen/spacing_lg"
+                android:paddingTop="@dimen/spacing_sm"
+                android:paddingBottom="68dp"
+                android:clipToPadding="false" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone"
+                android:padding="32dp">
+
+                <ImageView
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:src="@drawable/ic_empty_rewards"
+                    android:contentDescription="@string/empty_rewards_title"
+                    android:alpha="0.5"
+                    android:layout_marginBottom="@dimen/spacing_lg" />
+
+                <TextView
+                    android:id="@+id/tvEmptyTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/empty_rewards_title"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/texto_principal"
+                    android:gravity="center"
+                    android:textAppearance="@style/TextAppearance.TFG.Titulo" />
+
+                <TextView
+                    android:id="@+id/tvEmptySubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:text="@string/empty_rewards_subtitle"
+                    android:textSize="14sp"
+                    android:textColor="@color/texto_secundario"
+                    android:gravity="center"
+                    android:textAppearance="@style/TextAppearance.TFG.Cuerpo" />
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <!-- FAB crear recompensa personalizada -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabCrearRecompensa"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="@dimen/spacing_lg"
         android:layout_marginBottom="52dp"
-        android:contentDescription="Crear recompensa personalizada"
+        android:contentDescription="@string/cd_crear_recompensa"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@android:drawable/ic_input_add" />

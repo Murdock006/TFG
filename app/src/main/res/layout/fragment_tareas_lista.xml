@@ -4,27 +4,27 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingTop="20dp"
+    android:paddingTop="@dimen/spacing_xl"
     android:background="@color/fondo">
 
     <!-- Cabecera -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="@dimen/spacing_lg"
+        android:layout_marginEnd="@dimen/spacing_lg"
         android:layout_marginBottom="12dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="3dp"
-        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="@dimen/corner_radius_lg"
+        app:cardElevation="@dimen/elevation_pressed"
+        app:cardBackgroundColor="@color/superficie"
         app:strokeColor="@color/divisor"
-        app:strokeWidth="1dp">
+        app:strokeWidth="@dimen/stroke_thin">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="16dp"
+            android:padding="@dimen/spacing_lg"
             android:gravity="center_vertical">
 
             <TextView
@@ -35,19 +35,74 @@
                 android:text="Tareas"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@color/texto_principal" />
+                android:textColor="@color/texto_principal"
+                android:textAppearance="@style/TextAppearance.TFG.Titulo" />
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvTareas"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="72dp"
-        android:clipToPadding="false"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvTareas"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="72dp"
+            android:clipToPadding="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/emptyState"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone"
+            android:padding="32dp">
+
+            <ImageView
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:src="@drawable/ic_empty_tasks"
+                android:contentDescription="@string/empty_tasks_title"
+                android:alpha="0.5"
+                android:layout_marginBottom="@dimen/spacing_lg" />
+
+            <TextView
+                android:id="@+id/tvEmptyTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/empty_tasks_title"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/texto_principal"
+                android:gravity="center"
+                android:textAppearance="@style/TextAppearance.TFG.Titulo" />
+
+            <TextView
+                android:id="@+id/tvEmptySubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="@string/empty_tasks_subtitle"
+                android:textSize="14sp"
+                android:textColor="@color/texto_secundario"
+                android:gravity="center"
+                android:textAppearance="@style/TextAppearance.TFG.Cuerpo" />
+        </LinearLayout>
+
+    </FrameLayout>
 
 </LinearLayout>

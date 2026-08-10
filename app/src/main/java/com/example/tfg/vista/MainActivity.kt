@@ -25,9 +25,11 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import androidx.navigation.Navigation
 import com.bumptech.glide.Glide
+import com.example.tfg.R
 import com.example.tfg.databinding.ActivityMainBinding
 import com.example.tfg.service.NotificationScheduler
 import com.example.tfg.service.LocalizadorServicios
+import com.example.tfg.util.Constants
 import com.example.tfg.viewmodel.ParejaViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -56,13 +58,14 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            Toast.makeText(this, "Notificaciones activadas ✓", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.notificaciones_activadas), Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(this, "No recibirás notificaciones de tareas. Puedes activarlas desde ajustes.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.notificaciones_desactivadas), Toast.LENGTH_LONG).show()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.Theme_TFG)
         super.onCreate(savedInstanceState)
         android.util.Log.d("MainActivity", "onCreate iniciado")
 
@@ -159,16 +162,29 @@ class MainActivity : AppCompatActivity() {
                     // considerar fragment_PgPrincipal como la pantalla principal
                     if (destId == com.example.tfg.R.id.fragment_PgPrincipal) {
                         val ahora = System.currentTimeMillis()
-                        if (ahora - ultimoRetrocesoMs <= 2000L) {
+                        if (ahora - ultimoRetrocesoMs <= Constants.DOUBLE_BACK_TIMEOUT_MS) {
                             // salir de la app
                             finish()
                         } else {
                             ultimoRetrocesoMs = ahora
-                            Toast.makeText(this@MainActivity, "Pulsa de nuevo retroceder para salir", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@MainActivity, getString(R.string.doble_back), Toast.LENGTH_SHORT).show()
                         }
                     } else {
-                        // dejar que NavController intente popBackStack, si no, terminar
-                        if (!navController.popBackStack()) finish()
+                        // Si estamos en un fragment secundario, volver a Inicio
+                        val destinosSecundarios = setOf(
+                            com.example.tfg.R.id.fragment_Calendario,
+                            com.example.tfg.R.id.fragment_Recompensas,
+                            com.example.tfg.R.id.fragment_Pareja,
+                            com.example.tfg.R.id.fragment_Tareas,
+                            com.example.tfg.R.id.fragment_TareasPendientes,
+                            com.example.tfg.R.id.fragment_Perfil,
+                            com.example.tfg.R.id.fragment_Registro
+                        )
+                        if (destId in destinosSecundarios) {
+                            navController.navigate(com.example.tfg.R.id.fragment_PgPrincipal)
+                        } else {
+                            if (!navController.popBackStack()) finish()
+                        }
                     }
                 } catch (e: Exception) {
                     // fallback default
@@ -176,6 +192,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+
+    /** Abre el drawer lateral desde fragments */
+    fun openDrawer() {
+        binding.drawerLayout.openDrawer(Gravity.START)
     }
 
     override fun onNewIntent(intent: android.content.Intent) {
@@ -202,7 +223,7 @@ class MainActivity : AppCompatActivity() {
             val bundle = android.os.Bundle().apply { putString("taskId", taskId) }
             navController.navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
         } catch (e: Exception) {
-            // ignore navigation errors
+            android.util.Log.e("MainActivity", "Error navegando a tarea $taskId", e)
         }
     }
 
@@ -220,7 +241,7 @@ class MainActivity : AppCompatActivity() {
                         // Si NO está verificado, forzar logout y mostrar mensaje
                         android.util.Log.d("MainActivity", "Email no verificado, logout forzado")
                         com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
-                        Toast.makeText(this@MainActivity, "Debes verificar tu correo electrónico antes de continuar. Revisa tu bandeja de entrada.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@MainActivity, getString(R.string.verificar_email), Toast.LENGTH_LONG).show()
                         return@launch
                     }
                     
@@ -284,16 +305,18 @@ class MainActivity : AppCompatActivity() {
             try {
                 android.util.Log.d("MainActivity", "Iniciando observación de notificaciones para uid=$uid")
                 repoNot.observarNotificaciones(uid).collect { lista ->
+                    android.util.Log.d("MainActivity", "Notificaciones recibidas: ${lista.size} total, ${lista.filter { !it.visto }.size} sin ver")
                     if (!lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) return@collect
                     lista.filter { !it.visto }.forEach { not ->
                         try {
+                            android.util.Log.d("MainActivity", "Procesando notificación: id=${not.id}, tipo=${not.tipo}, contenido=${not.contenido}")
                             val title = when (not.tipo) { "asignacion" -> "Tarea asignada"; else -> "Notificación" }
                             val message = (not.contenido["titulo"] as? String) ?: (not.contenido["texto"] as? String) ?: "Tienes una notificación"
                             val tareaId = (not.contenido["tareaId"] as? String)
+                            android.util.Log.d("MainActivity", "Mostrando notificación sistema: title=$title, message=$message, tareaId=$tareaId")
                             NotificationScheduler.showImmediateNotification(this@MainActivity, not.id.hashCode(), title, message, tareaId)
-                            lifecycleScope.launch {
-                                repoNot.marcarNotificacionVista(not.id)
-                            }
+                            repoNot.marcarNotificacionVista(not.id)
+                            android.util.Log.d("MainActivity", "Notificación marcada como vista: ${not.id}")
                         } catch (e: Exception) {
                             android.util.Log.e("MainActivity", "Error procesando notificación ${not.id}", e)
                         }
@@ -304,7 +327,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    
+
+    /** Cambia el título de la toolbar desde fragments */
+    fun setToolbarTitle(title: String) {
+        binding.topAppBar.title = title
+    }
+
     private fun solicitarPermisoNotificaciones() {
         // Solo necesario en Android 13+ (API 33+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -320,7 +348,7 @@ class MainActivity : AppCompatActivity() {
                     // El usuario rechazó antes, mostrar explicación
                     Toast.makeText(
                         this,
-                        "Las notificaciones te ayudan a recordar tus tareas. Actívalas desde ajustes si quieres recibirlas.",
+                        getString(R.string.contrasena_requerida),
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -376,6 +404,11 @@ class MainActivity : AppCompatActivity() {
                 com.example.tfg.R.id.menuSuscripcion -> {
                     binding.drawerLayout.closeDrawer(Gravity.START)
                     Toast.makeText(this, getString(com.example.tfg.R.string.proximamente), Toast.LENGTH_SHORT).show()
+                    true
+                }
+                com.example.tfg.R.id.menuPoliticaPrivacidad -> {
+                    binding.drawerLayout.closeDrawer(Gravity.START)
+                    abrirPoliticaPrivacidad()
                     true
                 }
                 else -> false
@@ -514,6 +547,16 @@ private fun observarUsuarioDrawerHeader() {
         }
     }
 
+    private fun abrirPoliticaPrivacidad() {
+        val url = "https://teamtask.app/privacy"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        try {
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(this, "No se pudo abrir la política de privacidad", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun mostrarDialogoCerrarSesion() {
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle(getString(com.example.tfg.R.string.logout_confirm_titulo))
@@ -546,7 +589,9 @@ private fun observarUsuarioDrawerHeader() {
                     .setPopUpTo(com.example.tfg.R.id.fragment_Presentacion, true)
                     .build()
                 navController.navigate(com.example.tfg.R.id.fragment_Login, null, opciones)
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Error navegando a login tras logout", e)
+            }
         }
     }
 }

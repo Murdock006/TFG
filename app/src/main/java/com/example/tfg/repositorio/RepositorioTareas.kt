@@ -1,6 +1,37 @@
 package com.example.tfg.repositorio
 
+/**
+ * RepositorioTareas - Implementación simplificada de operaciones de tareas con Firebase.
+ *
+ * PROPÓSITO: Este repositorio proporciona un subconjunto de operaciones CRUD para tareas,
+ * enfocado en las acciones más comunes (crear, asignar, marcar completada, confirmar).
+ *
+ * RELACIÓN con TareaRepositorioFirebase:
+ * - TareaRepositorioFirebase (data/firebase/) es la implementación PRINCIPAL y COMPLETA
+ *   del repositorio de tareas. Implementa la interfaz TareaRepositorio e incluye:
+ *   · Validación de autoasignación
+ *   · Normalización de puntos para tareas personalizadas
+ *   · Observación en tiempo real con Flow (observarTareas)
+ *   · Gestión de puntos reservados en transacciones
+ *   · Resolución de reclamos
+ *   · Tareas recurrentes con cálculo de siguiente fecha
+ *   · Notificaciones automáticas
+ *
+ * - Este RepositorioTareas es una versión SIMPLIFICADA que se usa directamente desde
+ *   la capa de presentación (FragmentTareas) para operaciones básicas.
+ *   NO implementa la interfaz TareaRepositorio y carece de:
+ *   · Observación en tiempo real
+ *   · Validación de autoasignación
+ *   · Gestión de notificaciones
+ *   · Soporte para reclamos
+ *
+ * NOTA: Ambas implementaciones comparten lógica duplicada para marcarCompletada y
+ * confirmarTarea (cálculo de puntos de recompensa al 10%). Idealmente deberían
+ * unificarse bajo una única implementación.
+ */
+
 import com.example.tfg.modelo.Tarea
+import com.example.tfg.util.Constants
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -64,7 +95,7 @@ class RepositorioTareas(private val firestore: FirebaseFirestore = FirebaseFires
                     t.update(tareaRef, "estado", "confirmada")
 
                     // Calcular puntos de recompensa (10% de los puntos generales)
-                    val puntosRecompensa = (tareaTx.puntos * 0.10).toInt()
+                    val puntosRecompensa = (tareaTx.puntos * Constants.REWARD_PERCENTAGE).toInt()
 
                     if (!userSnap.exists()) {
                         val datos = mapOf(
@@ -131,7 +162,7 @@ class RepositorioTareas(private val firestore: FirebaseFirestore = FirebaseFires
                  t.update(tareaRef, "estado", "confirmada")
 
                  // Calcular puntos de recompensa (10% de los puntos generales)
-                 val puntosRecompensa = (tareaTx.puntos * 0.10).toInt()
+                 val puntosRecompensa = (tareaTx.puntos * Constants.REWARD_PERCENTAGE).toInt()
 
                  if (!ejecSnap.exists()) {
                      val datos = mapOf(

@@ -69,6 +69,7 @@ class FragmentPareja : Fragment() {
     private lateinit var tvTareasCompletadas: TextView
     private lateinit var tvTareasPendientesMias: TextView
     private lateinit var tvTareasPendientesOtros: TextView
+    private lateinit var emptyStateMiembros: android.widget.LinearLayout
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -103,6 +104,7 @@ class FragmentPareja : Fragment() {
         tvTareasCompletadas = rootView.findViewById(com.example.tfg.R.id.tvTareasCompletadas)
         tvTareasPendientesMias = rootView.findViewById(com.example.tfg.R.id.tvTareasPendientesMias)
         tvTareasPendientesOtros = rootView.findViewById(com.example.tfg.R.id.tvTareasPendientesOtros)
+        emptyStateMiembros = rootView.findViewById(com.example.tfg.R.id.emptyStateMiembros)
 
         return rootView
     }
@@ -471,6 +473,7 @@ class FragmentPareja : Fragment() {
             btnSalirGrupoTop.visibility = View.VISIBLE
             tvMiembrosTitulo.visibility = View.VISIBLE
             rvMiembros.visibility = View.VISIBLE
+            emptyStateMiembros.visibility = View.GONE
         } else {
             cardInfoGrupo.visibility = View.GONE
             tvGroupName.visibility = View.GONE
@@ -480,6 +483,7 @@ class FragmentPareja : Fragment() {
             btnSalirGrupoTop.visibility = View.GONE
             tvMiembrosTitulo.visibility = View.GONE
             rvMiembros.visibility = View.GONE
+            emptyStateMiembros.visibility = View.GONE
         }
     }
 
@@ -529,6 +533,15 @@ class FragmentPareja : Fragment() {
                 tvPuntosCompanero.text = (otro?.puntos ?: 0).toString()
                 tvNombreGrupoSmall.text = g.nombre
                 mostrarUIGrupo(true)
+
+                // Empty state for members
+                if (items.isEmpty()) {
+                    rvMiembros.visibility = View.GONE
+                    emptyStateMiembros.visibility = View.VISIBLE
+                } else {
+                    rvMiembros.visibility = View.VISIBLE
+                    emptyStateMiembros.visibility = View.GONE
+                }
             }
         }
     }

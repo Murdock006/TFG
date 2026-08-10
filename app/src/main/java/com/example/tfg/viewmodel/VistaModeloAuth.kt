@@ -47,7 +47,7 @@ class VistaModeloAuth(
         viewModelScope.launch {
             try {
                 // intentar cerrar sesión previa para evitar problemas de estado
-                try { repositorio.logout() } catch (_: Exception) { }
+                try { repositorio.logout() } catch (e: Exception) { Log.w(TAG, "Error en logout previo (registro): ${e.message}") }
                 val res = repositorio.registrar(usuarioObj, password)
                 if (res.isSuccess) {
                     _usuario.value = res.getOrNull()
@@ -73,7 +73,7 @@ class VistaModeloAuth(
         viewModelScope.launch {
             try {
                 // cerrar sesión previa para evitar conflictos al cambiar de cuenta
-                try { repositorio.logout() } catch (_: Exception) { }
+                try { repositorio.logout() } catch (e: Exception) { Log.w(TAG, "Error en logout previo (login): ${e.message}") }
                 val res = repositorio.login(email, password)
                 if (res.isSuccess) {
                     _usuario.value = res.getOrNull()
@@ -96,7 +96,7 @@ class VistaModeloAuth(
     }
 
     fun logout() {
-        viewModelScope.launch { try { repositorio.logout() } catch (_: Exception) { } ; _usuario.value = null }
+        viewModelScope.launch { try { repositorio.logout() } catch (e: Exception) { Log.w(TAG, "Error en logout: ${e.message}") } ; _usuario.value = null }
     }
 
     fun eliminarCuentaActual(password: String? = null) {

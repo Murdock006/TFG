@@ -24,6 +24,7 @@
             app:titleTextColor="@color/texto_principal"
             app:navigationIcon="@android:drawable/ic_menu_sort_by_size"
             app:navigationIconTint="@color/texto_principal"
+            android:contentDescription="@string/abrir"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -60,7 +61,7 @@
             app:menu="@menu/menu"
             app:itemIconTint="@color/nav_item_color"
             app:itemTextColor="@color/nav_item_color"
-            app:itemIconSize="20dp"
+            app:itemIconSize="@dimen/icon_size_sm"
             app:labelVisibilityMode="labeled"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"

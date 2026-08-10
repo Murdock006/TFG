@@ -1,0 +1,24 @@
+context: |
+  TeamTask is a single-module Android/Kotlin app using XML layouts, Fragments, ViewBinding,
+  Firebase Auth/Firestore/Storage/Realtime Database, and a mixed MVVM/repository architecture.
+  StateFlow and coroutines are used in parts of the app; LiveData and a service locator remain.
+  The real package id is com.example.tfg. No Hilt, Room, or Retrofit is present.
+strict_tdd: false
+testing:
+  runner: "./gradlew test"
+  framework: "JUnit 4; AndroidX Test/Espresso for instrumentation"
+  unit: true
+  integration: false
+  e2e: false
+  coverage: false
+  linter: false
+  formatter: false
+  type_checker: false
+phase_rules:
+  proposal: "Describe scope and risks from the real source tree."
+  spec: "Use testable requirements; strict TDD is unavailable."
+  design: "Preserve XML/ViewBinding/Fragments and the existing mixed architecture unless explicitly changed."
+  tasks: "Include manual verification and focused tests where feasible."
+  apply: "Do not assume Hilt, Room, Retrofit, or Compose."
+  verify: "Run permitted focused checks; do not require Gradle commands unless explicitly authorized."
+  archive: "Archive only after implementation and verification evidence are available."

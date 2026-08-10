@@ -22,6 +22,7 @@ import com.example.tfg.repositorio.RepositorioNotificaciones
 import com.example.tfg.repositorio.RepositorioRecompensas
 import com.example.tfg.service.LocalizadorServicios
 import com.example.tfg.viewmodel.ParejaViewModel
+import com.example.tfg.util.Constants
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -47,6 +48,11 @@ class FragmentRecompensas : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         b.rvRecompensas.layoutManager = LinearLayoutManager(requireContext())
 
+        // Pull-to-refresh
+        b.swipeRefresh.setOnRefreshListener {
+            cargarDatos()
+        }
+
         // Tabs
         b.btnTabDisponibles.setOnClickListener { cambiarTab(Tab.DISPONIBLES) }
         b.btnTabPendientes.setOnClickListener  { cambiarTab(Tab.PENDIENTES) }
@@ -54,9 +60,9 @@ class FragmentRecompensas : Fragment() {
 
         // FAB crear personalizada — requiere ≥1000 pts de recompensa
         b.fabCrearRecompensa.setOnClickListener {
-            if (puntosRecompensa < 1000) {
+            if (puntosRecompensa < Constants.INITIAL_POINTS) {
                 Toast.makeText(requireContext(),
-                    "Necesitas 1000 pts 🎁 para crear una recompensa personalizada\n(tienes $puntosRecompensa pts)",
+                    getString(R.string.necesitas_puntos, puntosRecompensa),
                     Toast.LENGTH_LONG).show()
             } else {
                 mostrarDialogoCrearPersonalizada()
@@ -106,10 +112,11 @@ class FragmentRecompensas : Fragment() {
     private fun actualizarCabecera() {
         b.tvMisPuntos.text = "🎁 $puntosRecompensa pts recompensa  |  ⭐ $puntosActuales pts actividad"
         // Indicar visualmente si ya puede crear recompensas personalizadas
-        b.fabCrearRecompensa.alpha = if (puntosRecompensa >= 1000) 1f else 0.4f
+        b.fabCrearRecompensa.alpha = if (puntosRecompensa >= Constants.INITIAL_POINTS) 1f else 0.4f
     }
 
     private fun cargarDatos() {
+        b.progressBar.visibility = View.VISIBLE
         lifecycleScope.launch {
             val uid = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
             val usuarios = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList() }
@@ -122,6 +129,8 @@ class FragmentRecompensas : Fragment() {
                 Tab.PENDIENTES  -> cargarPendientes()
                 Tab.HISTORIAL   -> cargarHistorial()
             }
+            b.progressBar.visibility = View.GONE
+            b.swipeRefresh.isRefreshing = false
         }
     }
 
@@ -133,6 +142,15 @@ class FragmentRecompensas : Fragment() {
         // Mostrar nota informativa del 10% una sola vez (encima de la lista)
         b.tvInfoRecompensas.visibility = View.VISIBLE
         b.tvInfoRecompensas.text = "ℹ️ Ganas pts de recompensa completando tareas: el 10% del valor de cada tarea se acumula automáticamente como 🎁 pts."
+
+        // Empty state
+        if (lista.isEmpty()) {
+            b.rvRecompensas.visibility = View.GONE
+            b.emptyState.visibility = View.VISIBLE
+        } else {
+            b.rvRecompensas.visibility = View.VISIBLE
+            b.emptyState.visibility = View.GONE
+        }
     }
 
     private inner class AdapterDisponibles(
@@ -229,7 +247,7 @@ class FragmentRecompensas : Fragment() {
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             }
             val btnCanjear = Button(holder.card.context).apply {
-                text      = "Canjear"
+                text      = getString(R.string.canjear)
                 isEnabled = puedeCanjear
                 textSize  = 13f
             }
@@ -250,14 +268,14 @@ class FragmentRecompensas : Fragment() {
             if (r.esPersonalizada) {
                 holder.card.setOnLongClickListener {
                     androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                        .setTitle("Eliminar recompensa")
+                        .setTitle(getString(R.string.eliminar_recompensa))
                         .setMessage("¿Eliminar \"${r.titulo}\"?")
-                        .setPositiveButton("Eliminar") { _, _ ->
+                        .setPositiveButton(getString(R.string.eliminar)) { _, _ ->
                             lifecycleScope.launch {
                                 repo.eliminarRecompensa(r.id)
                                 cargarDatos()
                             }
-                        }.setNegativeButton("Cancelar", null).show()
+                        }.setNegativeButton(getString(R.string.cancelar), null).show()
                     true
                 }
             }
@@ -274,6 +292,14 @@ class FragmentRecompensas : Fragment() {
         val lista   = if (grupoId.isBlank()) emptyList()
                       else repo.obtenerCanjesPendientesParaMiembro(grupoId, uid).getOrNull() ?: emptyList()
         b.rvRecompensas.adapter = AdapterCanjes(lista, mostrarAcciones = true)
+
+        if (lista.isEmpty()) {
+            b.rvRecompensas.visibility = View.GONE
+            b.emptyState.visibility = View.VISIBLE
+        } else {
+            b.rvRecompensas.visibility = View.VISIBLE
+            b.emptyState.visibility = View.GONE
+        }
     }
 
     // ── TAB 3: Historial ────────────────────────────────────────────────────
@@ -283,6 +309,14 @@ class FragmentRecompensas : Fragment() {
         val grupoId = parejaVM.grupo.value?.id
         val lista   = repo.obtenerHistorialCanjes(uid, grupoId).getOrNull() ?: emptyList()
         b.rvRecompensas.adapter = AdapterCanjes(lista, mostrarAcciones = false)
+
+        if (lista.isEmpty()) {
+            b.rvRecompensas.visibility = View.GONE
+            b.emptyState.visibility = View.VISIBLE
+        } else {
+            b.rvRecompensas.visibility = View.VISIBLE
+            b.emptyState.visibility = View.GONE
+        }
     }
 
     // ── Adapter canjes (Pendientes + Historial) ─────────────────────────────
@@ -376,12 +410,12 @@ class FragmentRecompensas : Fragment() {
                   "Se descontarán de tus puntos de recompensa (los que ganas completando tareas).\n\n" +
                   "El otro miembro del grupo recibirá una notificación y deberá aceptar."
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Confirmar canje")
+            .setTitle(getString(R.string.confirmar_canje))
             .setMessage(msg)
-            .setPositiveButton("Canjear") { _, _ ->
+            .setPositiveButton(getString(R.string.canjear)) { _, _ ->
                 lifecycleScope.launch { ejecutarCanje(r) }
             }
-            .setNegativeButton("Cancelar", null).show()
+            .setNegativeButton(getString(R.string.cancelar), null).show()
     }
 
     private suspend fun ejecutarCanje(r: Recompensa) {
@@ -426,9 +460,9 @@ class FragmentRecompensas : Fragment() {
         val msg = if (aceptado) "Aceptar el canje de \"${c.tituloRecompensa}\" de ${c.nombreUsuario}?"
                   else          "Rechazar el canje de \"${c.tituloRecompensa}\"? Se le devolverán los puntos."
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle(if (aceptado) "Aceptar canje" else "Rechazar canje")
+            .setTitle(if (aceptado) getString(R.string.aceptar_canje) else getString(R.string.rechazar_canje))
             .setMessage(msg)
-            .setPositiveButton(if (aceptado) "Aceptar" else "Rechazar") { _, _ ->
+            .setPositiveButton(if (aceptado) getString(R.string.aceptar) else getString(R.string.rechazar)) { _, _ ->
                 lifecycleScope.launch {
                     val res = repo.responderCanje(c.id, aceptado)
                     val texto = if (res.isSuccess) {
@@ -438,7 +472,7 @@ class FragmentRecompensas : Fragment() {
                     cargarDatos()
                 }
             }
-            .setNegativeButton("Cancelar", null).show()
+            .setNegativeButton(getString(R.string.cancelar), null).show()
     }
 
     // ── Diálogo crear recompensa personalizada ──────────────────────────────
@@ -493,9 +527,9 @@ class FragmentRecompensas : Fragment() {
         ll.addView(tvNivelLabel); ll.addView(spNivel); ll.addView(tvCosteFijo)
 
         androidx.appcompat.app.AlertDialog.Builder(ctx)
-            .setTitle("Nueva recompensa personalizada")
+            .setTitle(getString(R.string.nueva_recompensa))
             .setView(ll)
-            .setPositiveButton("Crear") { _, _ ->
+            .setPositiveButton(getString(R.string.crear)) { _, _ ->
                 val titulo = etTitulo.text.toString().trim()
                 val desc   = etDesc.text.toString().trim().ifBlank { null }
                 val coste  = costesNivel[spNivel.selectedItemPosition]
@@ -515,6 +549,6 @@ class FragmentRecompensas : Fragment() {
                     }
                 }
             }
-            .setNegativeButton("Cancelar", null).show()
+            .setNegativeButton(getString(R.string.cancelar), null).show()
     }
 }

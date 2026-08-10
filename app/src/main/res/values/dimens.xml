@@ -1,5 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="elevation_default">2dp</dimen>
-    <dimen name="elevation_pressed">8dp</dimen>
+    <!-- Spacing tokens -->
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">12dp</dimen>
+    <dimen name="spacing_lg">16dp</dimen>
+    <dimen name="spacing_xl">20dp</dimen>
+    <dimen name="spacing_2xl">24dp</dimen>
+    <dimen name="spacing_3xl">32dp</dimen>
+
+    <!-- Corner radius -->
+    <dimen name="corner_radius_xs">8dp</dimen>
+    <dimen name="corner_radius_sm">12dp</dimen>
+    <dimen name="corner_radius_md">14dp</dimen>
+    <dimen name="corner_radius_lg">16dp</dimen>
+    <dimen name="corner_radius_xl">20dp</dimen>
+    <dimen name="corner_radius_2xl">28dp</dimen>
+    <dimen name="corner_radius_pill">100dp</dimen>
+
+    <!-- Elevation -->
+    <dimen name="elevation_default">1dp</dimen>
+    <dimen name="elevation_pressed">2dp</dimen>
+    <dimen name="elevation_none">0dp</dimen>
+    <dimen name="elevation_appbar">0dp</dimen>
+
+    <!-- Icon sizes -->
+    <dimen name="icon_size_sm">20dp</dimen>
+    <dimen name="icon_size_md">24dp</dimen>
+    <dimen name="icon_size_lg">32dp</dimen>
+    <dimen name="icon_size_xl">48dp</dimen>
+
+    <!-- Stroke -->
+    <dimen name="stroke_thin">1dp</dimen>
+    <dimen name="stroke_normal">1.5dp</dimen>
+    <dimen name="stroke_thick">2dp</dimen>
+
+    <!-- Componentes específicos -->
+    <dimen name="button_min_height">48dp</dimen>
+    <dimen name="button_min_height_sm">40dp</dimen>
+    <dimen name="input_min_height">56dp</dimen>
+    <dimen name="avatar_sm">32dp</dimen>
+    <dimen name="avatar_md">48dp</dimen>
+    <dimen name="avatar_lg">72dp</dimen>
+    <dimen name="avatar_xl">96dp</dimen>
 </resources>

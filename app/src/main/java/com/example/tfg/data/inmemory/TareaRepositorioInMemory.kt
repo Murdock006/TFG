@@ -147,7 +147,7 @@ class TareaRepositorioInMemory : TareaRepositorio {
             tareas[idx] = nueva
             tareasFlow.value = tareas.toList()
             if (!creador.isNullOrBlank()) {
-                try { LocalizadorServicios.repositorioAuth.liberarPuntos(creador, tarea.puntos) } catch (e: Exception) { }
+                try { LocalizadorServicios.repositorioAuth.liberarPuntos(creador, tarea.puntos) } catch (e: Exception) { android.util.Log.w("TareaRepositorioInMemory", "Error liberando puntos tras reclamo rechazado: ${e.message}") }
             }
             return@withContext Result.success(nueva)
         }

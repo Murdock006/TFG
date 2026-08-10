@@ -19,37 +19,30 @@
             android:id="@+id/tvTituloPareja"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Perfil de pareja"
-            android:textSize="22sp"
-            android:textStyle="bold"
+            android:text="@string/perfil_pareja_title"
+            android:textAppearance="@style/TextAppearance.TFG.Headline"
             android:textColor="@color/texto_principal"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="@dimen/spacing_lg" />
 
         <!-- Tarjeta gráfico circular de tareas -->
         <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.TFG.Tarjeta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white"
-            app:strokeColor="@color/divisor"
-            app:strokeWidth="1dp">
+            android:layout_marginBottom="@dimen/spacing_md">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Progreso de tareas"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
+                    android:text="@string/progreso_tareas"
+                    android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
                     android:textColor="@color/texto_principal"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="@dimen/spacing_md" />
 
                 <com.github.mikephil.charting.charts.PieChart
                     android:id="@+id/pieChartTareas"
@@ -60,7 +53,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/spacing_md"
                     android:gravity="center">
 
                     <LinearLayout
@@ -84,17 +77,16 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Completadas"
-                                android:textSize="10sp"
-                                android:textColor="@color/gris" />
+                                android:text="@string/completadas"
+                                android:textAppearance="@style/TextAppearance.TFG.Label"
+                                android:textColor="@color/texto_secundario" />
 
                             <TextView
                                 android:id="@+id/tvTareasCompletadas"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="0"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
+                                android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
                                 android:textColor="@color/verde" />
                         </LinearLayout>
                     </LinearLayout>
@@ -120,17 +112,16 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Mis pendientes"
-                                android:textSize="10sp"
-                                android:textColor="@color/gris" />
+                                android:text="@string/mis_pendientes"
+                                android:textAppearance="@style/TextAppearance.TFG.Label"
+                                android:textColor="@color/texto_secundario" />
 
                             <TextView
                                 android:id="@+id/tvTareasPendientesMias"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="0"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
+                                android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
                                 android:textColor="@color/azul" />
                         </LinearLayout>
                     </LinearLayout>
@@ -156,17 +147,16 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="De otros"
-                                android:textSize="10sp"
-                                android:textColor="@color/gris" />
+                                android:text="@string/de_otros"
+                                android:textAppearance="@style/TextAppearance.TFG.Label"
+                                android:textColor="@color/texto_secundario" />
 
                             <TextView
                                 android:id="@+id/tvTareasPendientesOtros"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="0"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
+                                android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
                                 android:textColor="@color/naranja" />
                         </LinearLayout>
                     </LinearLayout>
@@ -176,156 +166,136 @@
 
         <!-- Tarjeta puntos -->
         <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.TFG.Tarjeta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white"
-            app:strokeColor="@color/divisor"
-            app:strokeWidth="1dp">
+            android:layout_marginBottom="@dimen/spacing_md">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp"
                 android:background="#F8F8F8">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Tus puntos"
-                    android:textSize="12sp"
-                    android:textColor="@color/gris" />
+                    android:textAppearance="@style/TextAppearance.TFG.Label"
+                    android:textColor="@color/texto_secundario" />
 
                 <TextView
                     android:id="@+id/tvTusPuntos"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
+                    android:textAppearance="@style/TextAppearance.TFG.Titulo"
                     android:textColor="@color/negro"
-                    android:layout_marginBottom="2dp" />
+                    android:layout_marginBottom="@dimen/spacing_xs" />
 
                 <TextView
                     android:id="@+id/tvPuntosReservados"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Reservados: 0"
-                    android:textSize="12sp"
-                    android:textColor="@color/gris"
-                    android:layout_marginBottom="10dp" />
+                    android:textAppearance="@style/TextAppearance.TFG.Label"
+                    android:textColor="@color/texto_secundario"
+                    android:layout_marginBottom="@dimen/spacing_sm" />
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="@color/divisor"
-                    android:layout_marginBottom="10dp" />
+                    android:layout_marginBottom="@dimen/spacing_sm" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Puntos compañero/a"
-                    android:textSize="12sp"
-                    android:textColor="@color/gris" />
+                    android:textAppearance="@style/TextAppearance.TFG.Label"
+                    android:textColor="@color/texto_secundario" />
 
                 <TextView
                     android:id="@+id/tvPuntosCompanero"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
+                    android:textAppearance="@style/TextAppearance.TFG.Titulo"
                     android:textColor="@color/negro"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="@dimen/spacing_xs" />
 
                 <TextView
                     android:id="@+id/tvNombreGrupoSmall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="-"
-                    android:textSize="13sp"
+                    android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
                     android:textColor="@color/texto_secundario" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <!-- Tarjeta crear / unirse al grupo -->
         <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.TFG.Tarjeta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white"
-            app:strokeColor="@color/divisor"
-            app:strokeWidth="1dp">
+            android:layout_marginBottom="@dimen/spacing_md">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Gestión del grupo"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
+                    android:text="@string/gestion_grupo"
+                    android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
                     android:textColor="@color/texto_principal"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="@dimen/spacing_md" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCrearGrupo"
+                    style="@style/Widget.TFG.Boton.Relleno"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    style="@style/Widget.MaterialComponents.Button"
-                    app:cornerRadius="10dp"
-                    android:backgroundTint="@color/negro"
-                    android:text="Crear grupo"
-                    android:textColor="@color/white"
+                    android:text="@string/crear_grupo"
                     android:textAllCaps="false"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="@dimen/spacing_sm" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnGenerarInvitacion"
+                    style="@style/Widget.TFG.Boton.Contorno"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    app:cornerRadius="10dp"
-                    app:strokeColor="@color/negro"
-                    app:strokeWidth="1dp"
-                    android:text="Generar invitación"
-                    android:textColor="@color/texto_principal"
+                    android:text="@string/generar_invitacion"
                     android:textAllCaps="false"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="@dimen/spacing_sm" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    app:cardCornerRadius="8dp"
-                    app:cardElevation="0dp"
+                    android:layout_marginBottom="@dimen/spacing_sm"
+                    app:cardCornerRadius="@dimen/corner_radius_md"
+                    app:cardElevation="@dimen/elevation_none"
                     app:cardBackgroundColor="#F5F5F5"
                     app:strokeColor="@color/divisor"
-                    app:strokeWidth="1dp">
+                    app:strokeWidth="@dimen/stroke_thin">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="12dp">
+                        android:padding="@dimen/spacing_md">
 
                         <TextView
                             android:id="@+id/tvCodigo"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Código: -"
-                            android:textSize="14sp"
+                            android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
                             android:textColor="@color/texto_principal"
-                            android:layout_marginBottom="8dp" />
+                            android:layout_marginBottom="@dimen/spacing_sm" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -334,48 +304,35 @@
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btnCopiarCodigo"
+                                style="@style/Widget.TFG.Boton.Contorno"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                                app:cornerRadius="8dp"
-                                app:strokeColor="@color/negro"
-                                app:strokeWidth="1dp"
                                 app:icon="@android:drawable/ic_menu_save"
-                                android:text="Copiar"
-                                android:textColor="@color/texto_principal"
+                                android:text="@string/copiar"
                                 android:textAllCaps="false"
-                                android:textSize="12sp"
-                                android:layout_marginEnd="4dp" />
+                                android:layout_marginEnd="@dimen/spacing_xs" />
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btnCompartirCodigo"
+                                style="@style/Widget.TFG.Boton.Contorno"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                                app:cornerRadius="8dp"
-                                app:strokeColor="@color/negro"
-                                app:strokeWidth="1dp"
                                 app:icon="@android:drawable/ic_menu_share"
-                                android:text="Compartir"
-                                android:textColor="@color/texto_principal"
+                                android:text="@string/compartir"
                                 android:textAllCaps="false"
-                                android:textSize="12sp"
-                                android:layout_marginStart="4dp" />
+                                android:layout_marginStart="@dimen/spacing_xs" />
                         </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.TFG.TextInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Introduce código de invitación"
-                    android:layout_marginBottom="8dp"
-                    app:boxBackgroundColor="#F5F5F5"
-                    app:boxStrokeColor="@color/negro"
-                    app:hintTextColor="@color/gris">
+                    android:layout_marginBottom="@dimen/spacing_sm">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etCodigoAceptar"
@@ -389,26 +346,20 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAceptarInvitacion"
+                    style="@style/Widget.TFG.Boton.Relleno"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    style="@style/Widget.MaterialComponents.Button"
-                    app:cornerRadius="10dp"
-                    android:backgroundTint="@color/negro"
-                    android:text="Aceptar invitación"
-                    android:textColor="@color/white"
+                    android:text="@string/aceptar_invitacion"
                     android:textAllCaps="false"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="@dimen/spacing_sm" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSalirGrupoTop"
+                    style="@style/Widget.TFG.Boton.Contorno"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    app:cornerRadius="10dp"
-                    app:strokeColor="@color/rojo"
-                    app:strokeWidth="1dp"
-                    android:text="Salir del grupo"
-                    android:textColor="@color/rojo"
+                    android:text="@string/salir_grupo"
+                    android:textColor="@color/error"
                     android:textAllCaps="false"
                     android:visibility="gone" />
 
@@ -418,36 +369,31 @@
         <!-- Tarjeta info del grupo (visible cuando hay grupo) -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardInfoGrupo"
+            style="@style/Widget.TFG.Tarjeta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:visibility="gone"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white"
-            app:strokeColor="@color/negro"
-            app:strokeWidth="1dp">
+            android:layout_marginBottom="@dimen/spacing_md"
+            android:visibility="gone">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="4dp">
+                    android:layout_marginBottom="@dimen/spacing_xs">
 
                     <TextView
                         android:id="@+id/tvGroupEmoji"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="❤️"
-                        android:textSize="24sp"
-                        android:layout_marginEnd="8dp"
+                        android:textAppearance="@style/TextAppearance.TFG.Titulo"
+                        android:layout_marginEnd="@dimen/spacing_sm"
                         android:clickable="true"
                         android:focusable="true"
                         android:background="?attr/selectableItemBackgroundBorderless" />
@@ -457,9 +403,8 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Nombre del grupo"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
+                        android:text="@string/nombre_grupo"
+                        android:textAppearance="@style/TextAppearance.TFG.Titulo"
                         android:textColor="@color/texto_principal" />
                 </LinearLayout>
 
@@ -468,9 +413,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Miembros: 0"
-                    android:textSize="13sp"
+                    android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
                     android:textColor="@color/texto_secundario"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="@dimen/spacing_md" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -479,28 +424,21 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnAbrirGrupo"
+                        style="@style/Widget.TFG.Boton.Contorno"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        app:cornerRadius="8dp"
-                        app:strokeColor="@color/negro"
-                        app:strokeWidth="1dp"
                         android:text="Abrir"
-                        android:textColor="@color/texto_principal"
                         android:textAllCaps="false"
-                        android:layout_marginEnd="6dp" />
+                        android:layout_marginEnd="@dimen/spacing_xs" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnEditarNombre"
+                        style="@style/Widget.TFG.Boton.Relleno"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        style="@style/Widget.MaterialComponents.Button"
-                        app:cornerRadius="8dp"
-                        android:backgroundTint="@color/negro"
                         android:text="Guardar"
-                        android:textColor="@color/white"
                         android:textAllCaps="false" />
 
                 </LinearLayout>
@@ -512,12 +450,11 @@
             android:id="@+id/tvMiembrosTitulo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Miembros del grupo"
-            android:textSize="15sp"
-            android:textStyle="bold"
+            android:text="@string/miembros_grupo"
+            android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
             android:textColor="@color/texto_principal"
             android:visibility="gone"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="@dimen/spacing_sm" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvMiembros"
@@ -525,6 +462,42 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             android:nestedScrollingEnabled="false" />
+
+        <LinearLayout
+            android:id="@+id/emptyStateMiembros"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone"
+            android:padding="@dimen/spacing_3xl"
+            android:layout_marginTop="@dimen/spacing_lg">
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_empty_members"
+                android:contentDescription="@string/empty_members_title"
+                android:alpha="0.5"
+                android:layout_marginBottom="@dimen/spacing_md" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/empty_members_title"
+                android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
+                android:textColor="@color/texto_principal"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="@string/empty_members_subtitle"
+                android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
+                android:textColor="@color/texto_secundario"
+                android:gravity="center" />
+        </LinearLayout>
 
         <!-- Contenedores ocultos (retrocompatibilidad) -->
         <FrameLayout

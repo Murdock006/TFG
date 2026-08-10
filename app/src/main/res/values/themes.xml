@@ -1,17 +1,20 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.TFG" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Base que ahora redirige al tema moderno -->
-    </style>
-
+    <style name="Base.Theme.TFG" parent="Tema.TFG.Moderno" />
     <style name="Theme.TFG" parent="Tema.TFG.Moderno" />
+
+    <!-- Splash Screen theme -->
+    <style name="Theme.TFG.Splash" parent="Tema.TFG.Moderno">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:statusBarColor">@color/fondo</item>
+        <item name="android:navigationBarColor">@color/fondo</item>
+    </style>
 
     <style name="ThemeOverlay.TFG.FullscreenContainer" parent="">
         <item name="fullscreenBackgroundColor">@color/primario</item>
         <item name="fullscreenTextColor">@color/on_acento</item>
     </style>
 
-    <!-- Tema para DatePickerDialog: asegura texto oscuro sobre fondo claro -->
+    <!-- DatePickerDialog con texto oscuro sobre fondo claro -->
     <style name="Theme.TFG.DatePickerDialog" parent="ThemeOverlay.MaterialComponents.Dialog">
         <item name="colorOnSurface">@color/texto_principal</item>
         <item name="colorOnPrimary">@color/white</item>

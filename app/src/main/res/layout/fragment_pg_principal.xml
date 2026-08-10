@@ -1,20 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="@color/fondo">
+    android:layout_height="match_parent">
 
-    <LinearLayout
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingTop="20dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="80dp">
+        android:layout_height="match_parent">
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:background="@color/fondo">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="@dimen/spacing_xl"
+                android:paddingStart="@dimen/spacing_xl"
+                android:paddingEnd="@dimen/spacing_xl"
+                android:paddingBottom="80dp">
 
         <!-- Título con más espacio -->
         <ImageView
@@ -24,35 +34,33 @@
             android:layout_gravity="center"
             android:contentDescription="@string/app_name"
             android:src="@drawable/titulo"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="@dimen/spacing_sm" />
 
-        <!-- Tarjetas de puntos mejoradas -->
-        <LinearLayout
+        <!-- Tarjeta de puntos del usuario -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:weightSum="2">
+            android:layout_marginTop="@dimen/spacing_lg"
+            app:cardCornerRadius="@dimen/corner_radius_xl"
+            app:cardElevation="@dimen/elevation_pressed"
+            app:cardBackgroundColor="@color/superficie"
+            app:strokeColor="@color/divisor"
+            app:strokeWidth="0dp">
 
-            <!-- Tarjeta Usuario mejorada -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/white"
-                app:strokeColor="@color/divisor"
-                app:strokeWidth="0dp">
+                android:orientation="horizontal"
+                android:padding="@dimen/spacing_lg"
+                android:background="@color/superficie"
+                android:gravity="center_vertical">
 
+                <!-- Lado izquierdo: puntos -->
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="18dp"
-                    android:background="@android:color/white">
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
                     <TextView
                         android:text="@string/tus_puntos"
@@ -61,17 +69,18 @@
                         android:layout_width="wrap_content"
                         android:textColor="@color/gris"
                         android:textSize="11sp"
-                        android:letterSpacing="0.05" />
+                        android:letterSpacing="0.05"
+                        android:textAppearance="@style/TextAppearance.TFG.Label" />
 
                     <TextView
                         android:id="@+id/puntosUsuario"
                         android:text="@string/cargando"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
-                        android:textSize="32sp"
+                        android:textSize="36sp"
                         android:textStyle="bold"
                         android:textColor="@color/negro"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="@dimen/spacing_sm"
                         android:layout_marginBottom="4dp" />
 
                     <TextView
@@ -81,103 +90,139 @@
                         android:layout_height="wrap_content"
                         android:textSize="10sp"
                         android:textColor="@color/gris"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="4dp"
+                        android:textAppearance="@style/TextAppearance.TFG.Label" />
+                </LinearLayout>
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/divisor"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="12dp" />
+                <!-- Lado derecho: info compra puntos (clickable) -->
+                <LinearLayout
+                    android:id="@+id/btnComprarPuntos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal"
+                    android:paddingStart="@dimen/spacing_lg"
+                    android:padding="@dimen/spacing_sm"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@android:drawable/ic_menu_add"
+                        android:contentDescription="comprar puntos"
+                        app:tint="@color/gris" />
 
                     <TextView
+                        android:id="@+id/tvComprarPuntos"
                         android:text="@string/comprar_puntos_info"
                         android:textSize="10sp"
                         android:layout_height="wrap_content"
-                        android:layout_width="wrap_content"
-                        android:textColor="@color/texto_secundario"
+                        android:layout_width="100dp"
+                        android:textColor="@color/gris"
                         android:textStyle="bold"
-                        android:letterSpacing="0.05" />
+                        android:letterSpacing="0.05"
+                        android:gravity="center"
+                        android:layout_marginTop="6dp"
+                        android:textAppearance="@style/TextAppearance.TFG.Label" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-            <!-- Tarjeta Compañero mejorada -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="0dp"
+        <!-- Sección miembros del grupo -->
+        <TextView
+            android:id="@+id/tituloMiembros"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tu_companero"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@color/texto_principal"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginBottom="@dimen/spacing_sm"
+            android:textAppearance="@style/TextAppearance.TFG.SubTitulo" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvMiembrosHorizontal"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/white"
-                app:strokeColor="@color/divisor"
-                app:strokeWidth="0dp">
+                android:clipToPadding="false"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:overScrollMode="never" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="18dp"
-                    android:background="@android:color/white">
+            <!-- Indicador de scroll horizontal -->
+            <LinearLayout
+                android:id="@+id/indicadorScrollMiembros"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/spacing_sm"
+                android:background="@drawable/bg_drawer_avatar"
+                android:visibility="gone">
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@android:drawable/ic_menu_send"
+                    android:rotation="180"
+                    android:contentDescription="desplazar"
+                    app:tint="@color/gris" />
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="4dp"
+                    android:src="@android:drawable/ic_menu_send"
+                    android:contentDescription="desplazar"
+                    app:tint="@color/gris" />
+            </LinearLayout>
+        </FrameLayout>
 
-                    <TextView
-                        android:text="@string/tu_companero"
-                        android:textStyle="bold"
-                        android:layout_height="wrap_content"
-                        android:layout_width="wrap_content"
-                        android:textColor="@color/gris"
-                        android:textSize="11sp"
-                        android:letterSpacing="0.05" />
+        <!-- Texto sin grupo -->
+        <TextView
+            android:id="@+id/tvSinGrupo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/vincula_pareja"
+            android:textSize="13sp"
+            android:textColor="@color/gris"
+            android:gravity="center"
+            android:layout_marginTop="12dp"
+            android:visibility="gone"
+            android:textAppearance="@style/TextAppearance.TFG.Cuerpo" />
 
-                    <TextView
-                        android:id="@+id/nombreGrupo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/guion"
-                        android:textColor="@color/texto_secundario"
-                        android:textSize="12sp"
-                        android:layout_marginTop="6dp"
-                        android:maxLines="1"
-                        android:ellipsize="end" />
-
-                    <TextView
-                        android:id="@+id/puntosCompanero"
-                        android:text="@string/guion"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/negro"
-                        android:layout_height="wrap_content"
-                        android:layout_width="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:layout_marginBottom="6dp" />
-
-                    <TextView
-                        android:id="@+id/miembrosCount"
-                        android:text="@string/miembros_format"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="10sp"
-                        android:textColor="@color/gris"
-                        android:layout_marginTop="4dp" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/divisor"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="12dp" />
-
-                    <TextView
-                        android:text="@string/vincula_pareja"
-                        android:textSize="10sp"
-                        android:textColor="@color/texto_secundario"
-                        android:layout_height="wrap_content"
-                        android:layout_width="wrap_content"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.05" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
+        <!-- Nombre del grupo y contador -->
+        <LinearLayout
+            android:id="@+id/infoGrupo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:gravity="center"
+            android:visibility="gone">
+            <TextView
+                android:id="@+id/nombreGrupo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/guion"
+                android:textColor="@color/texto_secundario"
+                android:textSize="12sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+            <TextView
+                android:id="@+id/miembrosCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/miembros_format"
+                android:textSize="10sp"
+                android:textColor="@color/gris"
+                android:layout_marginStart="12dp"
+                android:textAppearance="@style/TextAppearance.TFG.Label" />
         </LinearLayout>
 
         <!-- Título Asignar Tareas con más espacio -->
@@ -189,9 +234,10 @@
             android:textStyle="bold"
             android:textSize="20sp"
             android:textColor="@color/texto_principal"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="@dimen/spacing_3xl"
             android:layout_marginBottom="4dp"
-            android:letterSpacing="0.02" />
+            android:letterSpacing="0.02"
+            android:textAppearance="@style/TextAppearance.TFG.Titulo" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -199,267 +245,184 @@
             android:text=""
             android:id="@+id/textViewResultados"
             android:textColor="@color/texto_principal"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="12dp"
+            android:textAppearance="@style/TextAppearance.TFG.Label" />
 
-        <!-- Categorías con diseño moderno -->
-        <LinearLayout
+        <!-- Categorías dentro de una sola CardView -->
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/bloqueCategorias"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_marginTop="@dimen/spacing_lg"
+            app:cardCornerRadius="@dimen/corner_radius_xl"
+            app:cardElevation="@dimen/elevation_default"
+            app:cardBackgroundColor="@color/superficie"
+            app:strokeColor="@color/divisor"
+            app:strokeWidth="0dp">
 
-            <!-- Cocina -->
-            <com.google.android.material.card.MaterialCardView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="1dp"
-                app:cardBackgroundColor="@color/white"
-                app:strokeColor="@color/divisor"
-                app:strokeWidth="0dp">
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_lg">
 
+                <!-- Cocina -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="14dp"
                     android:gravity="center_vertical">
 
                     <Button
                         android:id="@+id/categoriaCocina"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="52dp"
-                        style="@style/Widget.TFG.Boton.Relleno"
-                        android:text="@string/categoria_cocina"
-                        android:textColor="@color/on_acento"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:layout_height="44dp"
+                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:text="@string/categoria_cocina" />
 
                     <Button
                         android:id="@+id/btnAsignarCocina"
                         android:layout_width="wrap_content"
-                        android:layout_height="52dp"
-                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:layout_height="44dp"
+                        style="@style/Widget.TFG.Boton.Texto"
                         android:text="@string/asignar"
-                        android:textSize="13sp"
-                        android:layout_marginStart="10dp"
-                        android:minWidth="90dp" />
-
+                        android:layout_marginStart="@dimen/spacing_sm"
+                        android:minWidth="70dp" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Ropa -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="1dp"
-                app:cardBackgroundColor="@color/white"
-                app:strokeColor="@color/divisor"
-                app:strokeWidth="0dp">
-
+                <!-- Ropa -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="14dp"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="@dimen/spacing_sm">
 
                     <Button
                         android:id="@+id/categoriaRopa"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="52dp"
-                        style="@style/Widget.TFG.Boton.Relleno"
-                        android:text="@string/categoria_ropa"
-                        android:textColor="@color/on_acento"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:layout_height="44dp"
+                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:text="@string/categoria_ropa" />
 
                     <Button
                         android:id="@+id/btnAsignarRopa"
                         android:layout_width="wrap_content"
-                        android:layout_height="52dp"
-                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:layout_height="44dp"
+                        style="@style/Widget.TFG.Boton.Texto"
                         android:text="@string/asignar"
-                        android:textSize="13sp"
-                        android:layout_marginStart="10dp"
-                        android:minWidth="90dp" />
-
+                        android:layout_marginStart="@dimen/spacing_sm"
+                        android:minWidth="70dp" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Limpieza -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="1dp"
-                app:cardBackgroundColor="@color/white"
-                app:strokeColor="@color/divisor"
-                app:strokeWidth="0dp">
-
+                <!-- Limpieza -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="14dp"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="@dimen/spacing_sm">
 
                     <Button
                         android:id="@+id/categoriaLimpieza"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="52dp"
-                        style="@style/Widget.TFG.Boton.Relleno"
-                        android:text="@string/categoria_limpieza"
-                        android:textColor="@color/on_acento"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:layout_height="44dp"
+                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:text="@string/categoria_limpieza" />
 
                     <Button
                         android:id="@+id/btnAsignarLimpieza"
                         android:layout_width="wrap_content"
-                        android:layout_height="52dp"
-                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:layout_height="44dp"
+                        style="@style/Widget.TFG.Boton.Texto"
                         android:text="@string/asignar"
-                        android:textSize="13sp"
-                        android:layout_marginStart="10dp"
-                        android:minWidth="90dp" />
-
+                        android:layout_marginStart="@dimen/spacing_sm"
+                        android:minWidth="70dp" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Mascotas -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="1dp"
-                app:cardBackgroundColor="@color/white"
-                app:strokeColor="@color/divisor"
-                app:strokeWidth="0dp">
-
+                <!-- Mascotas -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="14dp"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="@dimen/spacing_sm">
 
                     <Button
                         android:id="@+id/categoriaMascotas"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="52dp"
-                        style="@style/Widget.TFG.Boton.Relleno"
-                        android:text="@string/categoria_mascotas"
-                        android:textColor="@color/on_acento"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:layout_height="44dp"
+                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:text="@string/categoria_mascotas" />
 
                     <Button
                         android:id="@+id/btnAsignarMascotas"
                         android:layout_width="wrap_content"
-                        android:layout_height="52dp"
-                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:layout_height="44dp"
+                        style="@style/Widget.TFG.Boton.Texto"
                         android:text="@string/asignar"
-                        android:textSize="13sp"
-                        android:layout_marginStart="10dp"
-                        android:minWidth="90dp" />
-
+                        android:layout_marginStart="@dimen/spacing_sm"
+                        android:minWidth="70dp" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Recados -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="1dp"
-                app:cardBackgroundColor="@color/white"
-                app:strokeColor="@color/divisor"
-                app:strokeWidth="0dp">
-
+                <!-- Recados -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="14dp"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="@dimen/spacing_sm">
 
                     <Button
                         android:id="@+id/categoriaRecados"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="52dp"
-                        style="@style/Widget.TFG.Boton.Relleno"
-                        android:text="@string/categoria_recados"
-                        android:textColor="@color/on_acento"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:layout_height="44dp"
+                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:text="@string/categoria_recados" />
 
                     <Button
                         android:id="@+id/btnAsignarRecados"
                         android:layout_width="wrap_content"
-                        android:layout_height="52dp"
-                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:layout_height="44dp"
+                        style="@style/Widget.TFG.Boton.Texto"
                         android:text="@string/asignar"
-                        android:textSize="13sp"
-                        android:layout_marginStart="10dp"
-                        android:minWidth="90dp" />
-
+                        android:layout_marginStart="@dimen/spacing_sm"
+                        android:minWidth="70dp" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Personalizado -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="1dp"
-                app:cardBackgroundColor="@color/white"
-                app:strokeColor="@color/divisor"
-                app:strokeWidth="0dp">
-
+                <!-- Personalizado -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="14dp"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="@dimen/spacing_sm">
 
                     <Button
                         android:id="@+id/categoriaPersonalizado"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="52dp"
-                        style="@style/Widget.TFG.Boton.Relleno"
-                        android:text="@string/categoria_personalizado"
-                        android:textColor="@color/on_acento"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:layout_height="44dp"
+                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:text="@string/categoria_personalizado" />
 
                     <Button
                         android:id="@+id/btnAsignarPersonalizado"
                         android:layout_width="wrap_content"
-                        android:layout_height="52dp"
-                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:layout_height="44dp"
+                        style="@style/Widget.TFG.Boton.Texto"
                         android:text="@string/asignar"
-                        android:textSize="13sp"
-                        android:layout_marginStart="10dp"
-                        android:minWidth="90dp" />
-
+                        android:layout_marginStart="@dimen/spacing_sm"
+                        android:minWidth="70dp" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-        </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Vista rápida de tareas recientes con mejor espaciado -->
         <TextView
@@ -467,21 +430,23 @@
             android:layout_height="wrap_content"
             android:text="@string/tareas_recientes"
             android:textStyle="bold"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="@dimen/spacing_3xl"
             android:layout_marginBottom="12dp"
             android:textSize="20sp"
             android:textColor="@color/texto_principal"
-            android:letterSpacing="0.02" />
+            android:letterSpacing="0.02"
+            android:textAppearance="@style/TextAppearance.TFG.Titulo" />
 
         <TextView
             android:id="@+id/tvSinTareasRecientes"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/spacing_sm"
             android:gravity="center"
             android:textSize="13sp"
             android:textColor="@color/texto_secundario"
-            android:visibility="gone" />
+            android:visibility="gone"
+            android:textAppearance="@style/TextAppearance.TFG.Cuerpo" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvTareasHome"
@@ -495,12 +460,62 @@
             style="@style/Widget.TFG.Boton.Contorno"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/spacing_2xl"
             android:text="@string/cuenta_y_seguridad"
             app:icon="@drawable/perfil"
             app:iconGravity="textStart"
-            app:iconPadding="8dp" />
+            app:iconPadding="@dimen/spacing_sm" />
 
-    </LinearLayout>
+            </LinearLayout>
 
-</ScrollView>
+        </androidx.core.widget.NestedScrollView>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/emptyState"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone"
+            android:padding="32dp">
+
+            <ImageView
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:src="@drawable/ic_empty_tasks"
+                android:contentDescription="@string/empty_tasks_title"
+                android:alpha="0.5"
+                android:layout_marginBottom="@dimen/spacing_lg" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/empty_tasks_title"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/texto_principal"
+                android:gravity="center"
+                android:textAppearance="@style/TextAppearance.TFG.Titulo" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="@string/empty_tasks_subtitle"
+                android:textSize="14sp"
+                android:textColor="@color/texto_secundario"
+                android:gravity="center"
+                android:textAppearance="@style/TextAppearance.TFG.Cuerpo" />
+        </LinearLayout>
+
+</FrameLayout>

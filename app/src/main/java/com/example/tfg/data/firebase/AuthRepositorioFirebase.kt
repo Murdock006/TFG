@@ -13,6 +13,7 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.Flow
+import com.example.tfg.util.Constants
 import kotlinx.coroutines.flow.callbackFlow
 
 // Implementación Firebase para AuthRepositorio
@@ -44,7 +45,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 "pais" to usuario.pais,
                 "ciudad" to usuario.ciudad,
                 "email" to usuario.email,
-                "puntos" to 1000,
+                "puntos" to Constants.INITIAL_POINTS,
                 "puntosReservados" to 0,
                 "puntosRecompensa" to 0
             )
@@ -105,7 +106,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                     "pais" to null,
                     "ciudad" to null,
                     "email" to (firebaseUser.email ?: email),
-                    "puntos" to 1000,
+                    "puntos" to Constants.INITIAL_POINTS,
                     "puntosReservados" to 0,
                     "puntosRecompensa" to 0
                 )
@@ -175,7 +176,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                     "pais" to null,
                     "ciudad" to null,
                     "email" to (firebaseUser.email ?: ""),
-                    "puntos" to 1000,
+                    "puntos" to Constants.INITIAL_POINTS,
                     "puntosReservados" to 0,
                     "puntosRecompensa" to 0
                 )
@@ -497,7 +498,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                 val actuales = (snap.getLong("puntos") ?: 0L).toInt()
                 val racha = (snap.getLong("rachaDias") ?: 0L).toInt()
                 val nuevaRacha = racha + 1
-                val bonus = if (nuevaRacha >= 7) (basePuntos * 0.10).toInt() else 0
+                val bonus = if (nuevaRacha >= Constants.STREAK_BONUS_THRESHOLD) (basePuntos * Constants.PORCENTAJE_BONIFICACION_RACHA).toInt() else 0
                 val totalAñadido = basePuntos + bonus
                 val nuevo = actuales + totalAñadido
                 t.update(userRef, mapOf("puntos" to nuevo, "rachaDias" to nuevaRacha))

@@ -43,6 +43,15 @@ class FragmentTareasPendientes : Fragment() {
         binding.rvTareasPendientes.layoutManager = LinearLayoutManager(requireContext())
         binding.rvTareasPendientes.adapter = adapter
 
+        // Pull-to-refresh
+        binding.swipeRefresh.setOnRefreshListener {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val list = LocalizadorServicios.repositorioTarea.obtenerTareas().getOrNull() ?: emptyList()
+                actualizarListado(list)
+                binding.swipeRefresh.isRefreshing = false
+            }
+        }
+
         // botones para cambiar vista
         binding.btnPendientes.setOnClickListener { mostrarPendientes() }
         binding.btnAsignadas.setOnClickListener { mostrarAsignadas() }
@@ -58,7 +67,9 @@ class FragmentTareasPendientes : Fragment() {
                     LocalizadorServicios.repositorioAuth.observarUsuarios().collect { lista ->
                         adapter.updateUsuarios(lista)
                     }
-                } catch (_: Exception) { }
+                } catch (e: Exception) {
+                    android.util.Log.w("FragmentTareasPendientes", "Error observando usuarios: ${e.message}")
+                }
             }
         }
 
@@ -79,11 +90,13 @@ class FragmentTareasPendientes : Fragment() {
                     binding.layoutBotonesTabs.visibility = View.GONE
                     binding.rvTareasPendientes.visibility = View.GONE
                     binding.layoutSinGrupo.visibility = View.VISIBLE
+                    binding.swipeRefresh.isEnabled = false
                 } else {
                     // Con grupo: mostrar tabs y lista
                     binding.layoutBotonesTabs.visibility = View.VISIBLE
                     binding.rvTareasPendientes.visibility = View.VISIBLE
                     binding.layoutSinGrupo.visibility = View.GONE
+                    binding.swipeRefresh.isEnabled = true
 
                     //                     suscribir tareas del grupo si no hay suscripción activa
                     if (tareasJob == null || tareasJob?.isActive == false) {
@@ -192,6 +205,20 @@ class FragmentTareasPendientes : Fragment() {
             }
         }
         adapter.updateItems(filtrado)
+
+        // Empty state
+        if (filtrado.isEmpty()) {
+            binding.rvTareasPendientes.visibility = View.GONE
+            binding.emptyState.visibility = View.VISIBLE
+            binding.tvEmptyTitle.text = when {
+                modoAsignadas -> getString(R.string.empty_assigned_tasks)
+                modoHistorial -> getString(R.string.empty_history)
+                else -> getString(R.string.empty_pending_tasks)
+            }
+        } else {
+            binding.rvTareasPendientes.visibility = View.VISIBLE
+            binding.emptyState.visibility = View.GONE
+        }
     }
 
     override fun onDestroyView() {

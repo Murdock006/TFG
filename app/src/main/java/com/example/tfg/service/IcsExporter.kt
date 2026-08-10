@@ -114,18 +114,18 @@ object IcsExporter {
             archivo
         )
 
-        val intent = Intent(Intent.ACTION_VIEW).apply {
+        // Intent 1: Abrir directamente con app de calendario (ACTION_VIEW)
+        val viewIntent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, MIME_TYPE)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
 
-        // Intentar abrir directamente con app de calendario
-        val resolved = context.packageManager.queryIntentActivities(intent, 0)
-        if (resolved.isNotEmpty()) {
-            context.startActivity(intent)
-        } else {
-            // Fallback: compartir como archivo
+        try {
+            // Intentar abrir directamente
+            context.startActivity(viewIntent)
+        } catch (e: android.content.ActivityNotFoundException) {
+            // Intent 2: Si no hay app de calendario, mostrar chooser
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = MIME_TYPE
                 putExtra(Intent.EXTRA_STREAM, uri)

@@ -3,71 +3,94 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/white"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingStart="16dp"
-    android:paddingTop="36dp"
-    android:paddingEnd="16dp"
-    android:paddingBottom="24dp">
+    android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/ivDrawerAvatar"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:background="@drawable/bg_drawer_avatar"
-        android:contentDescription="@string/avatar_usuario"
-        android:padding="10dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/perfil" />
-
-    <LinearLayout
-        android:layout_width="0dp"
+    <!-- Sección superior: imagen centrada -->
+    <FrameLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:paddingTop="32dp"
+        android:paddingBottom="@dimen/spacing_lg"
+        android:background="@color/superficie_variant">
+
+        <ImageView
+            android:id="@+id/ivDrawerAvatar"
+            android:layout_width="@dimen/avatar_xl"
+            android:layout_height="@dimen/avatar_xl"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_drawer_avatar"
+            android:contentDescription="@string/cd_avatar_usuario"
+            android:padding="10dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/perfil" />
+    </FrameLayout>
+
+    <!-- Sección inferior: todos los textos -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/spacing_xl"
+        android:paddingTop="@dimen/spacing_lg"
+        android:paddingEnd="@dimen/spacing_xl"
+        android:paddingBottom="@dimen/spacing_xl"
+        android:gravity="center_horizontal">
 
         <TextView
             android:id="@+id/tvDrawerNombre"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
             android:text="@string/no_hay_usuario"
             android:textColor="@color/texto_principal"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textAppearance="@style/TextAppearance.TFG.Titulo" />
 
         <TextView
             android:id="@+id/tvDrawerEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
             android:text=""
             android:textColor="@color/texto_secundario"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:textAppearance="@style/TextAppearance.TFG.Cuerpo" />
 
         <TextView
             android:id="@+id/tvDrawerGrupo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
             android:text="@string/drawer_pareja_sin_grupo"
             android:textColor="@color/texto_secundario"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:textAppearance="@style/TextAppearance.TFG.Label" />
 
         <TextView
             android:id="@+id/tvDrawerRacha"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
+            android:gravity="center"
             android:text=""
             android:textColor="@color/texto_secundario"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:textAppearance="@style/TextAppearance.TFG.Label" />
     </LinearLayout>
+
+    <!-- Franja separadora de color -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:background="@color/primario" />
 
 </LinearLayout>

@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil
@@ -16,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.tfg.R
 import com.example.tfg.modelo.Tarea
 import com.example.tfg.modelo.Usuario
+import com.example.tfg.modelo.Notificacion
+import com.example.tfg.repositorio.RepositorioNotificaciones
 import com.example.tfg.service.LocalizadorServicios
 import com.example.tfg.viewmodel.ParejaViewModel
 import com.example.tfg.viewmodel.TareasViewModel
@@ -44,7 +47,14 @@ class TareasHomeAdapter(
 
     class TareaDiffCallback : DiffUtil.ItemCallback<Tarea>() {
         override fun areItemsTheSame(oldItem: Tarea, newItem: Tarea): Boolean = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: Tarea, newItem: Tarea): Boolean = oldItem == newItem
+        override fun areContentsTheSame(oldItem: Tarea, newItem: Tarea): Boolean =
+            oldItem.id == newItem.id &&
+            oldItem.titulo == newItem.titulo &&
+            oldItem.estado == newItem.estado &&
+            oldItem.puntos == newItem.puntos &&
+            oldItem.dificultad == newItem.dificultad &&
+            oldItem.asignadoA == newItem.asignadoA &&
+            oldItem.creadoPor == newItem.creadoPor
     }
 
     inner class VH(val root: View) : RecyclerView.ViewHolder(root) {
@@ -94,10 +104,23 @@ class TareasHomeAdapter(
         holder.tvDificultad?.text = difTxt
         holder.tvMeta.text = "${t.puntos} pts · ${estadoLegible.replaceFirstChar { it.uppercase() }}"
 
-        when (t.dificultad) {
-            1 -> holder.vIndicator?.setBackgroundColor(Color.parseColor("#A5D6A7"))
-            2 -> holder.vIndicator?.setBackgroundColor(Color.parseColor("#FFF59D"))
-            else -> holder.vIndicator?.setBackgroundColor(Color.parseColor("#FFCDD2"))
+        // Indicador de dificultad con colores semánticos del tema + drawable redondeado
+        val colorRes = when (t.dificultad) {
+            1 -> com.example.tfg.R.color.verde       // Fácil
+            2 -> com.example.tfg.R.color.naranja     // Media
+            else -> com.example.tfg.R.color.rojo     // Difícil
+        }
+        holder.vIndicator?.background = ContextCompat.getDrawable(
+            holder.root.context,
+            com.example.tfg.R.drawable.v_indicador_dificultad
+        )?.apply {
+            setTint(holder.root.context.getColor(colorRes))
+        }
+
+        holder.vIndicator?.contentDescription = when (t.dificultad) {
+            1 -> "Dificultad fácil"
+            2 -> "Dificultad media"
+            else -> "Dificultad difícil"
         }
 
         val usuarioId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
@@ -139,7 +162,7 @@ class TareasHomeAdapter(
                 if (!usuarioId.isBlank() && usuarioId == t.asignadoA) {
                     holder.btnAccion.visibility = View.VISIBLE
                     holder.btnAccion.isEnabled = true
-                    holder.btnAccion.text = "Completar"
+                    holder.btnAccion.text = fragment.getString(R.string.completar_btn)
                     holder.btnAccion.setOnClickListener {
                         holder.btnAccion.isEnabled = false
                         tareasVM.marcarCompletada(t.id, usuarioId)
@@ -149,7 +172,7 @@ class TareasHomeAdapter(
                     // Si soy el creador Y la tarea AÚN NO tiene asignado → permitir asignar
                     holder.btnAccion.visibility = View.VISIBLE
                     holder.btnAccion.isEnabled = true
-                    holder.btnAccion.text = "Asignar"
+                    holder.btnAccion.text = fragment.getString(R.string.asignar)
                     holder.btnAccion.setOnClickListener {
                         // abrir selector de miembros
                         scope.launch {
@@ -171,22 +194,44 @@ class TareasHomeAdapter(
                             }
                             if (opciones.isEmpty()) android.widget.Toast.makeText(fragment.requireContext(), fragment.getString(R.string.no_hay_miembros), android.widget.Toast.LENGTH_SHORT).show() else {
                                 val names = opciones.map { it.first }.toTypedArray()
-                                androidx.appcompat.app.AlertDialog.Builder(fragment.requireContext()).setTitle("Selecciona miembro").setItems(names) { _, idx ->
+                                androidx.appcompat.app.AlertDialog.Builder(fragment.requireContext()).setTitle(fragment.getString(R.string.selecciona_miembro)).setItems(names) { _, idx ->
                                     scope.launch {
                                         val elegido = opciones[idx].second
                                         if (!usuarioId.isBlank() && elegido == usuarioId) {
-                                            android.widget.Toast.makeText(fragment.requireContext(), "No podés autoasignarte tareas", android.widget.Toast.LENGTH_LONG).show()
+                                            android.widget.Toast.makeText(fragment.requireContext(), fragment.getString(R.string.no_autoasignar), android.widget.Toast.LENGTH_LONG).show()
                                             return@launch
                                         }
                                         val nueva = t.copy(asignadoA = elegido, grupoId = parejaVM.grupo.value?.id)
                                         val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
                                         if (res2.isSuccess) {
-                                            android.widget.Toast.makeText(fragment.requireContext(), "Tarea asignada", android.widget.Toast.LENGTH_SHORT).show()
+                                            android.widget.Toast.makeText(fragment.requireContext(), fragment.getString(R.string.tarea_asignada), android.widget.Toast.LENGTH_SHORT).show()
+                                            // Notificar al asignado vía Firebase para que reciba la notificación en su dispositivo
+                                            android.util.Log.d("TareasHomeAdapter", "Enviando notificación Firebase (lista): tipo=asignacion, destinatario=$elegido, tareaId=${nueva.id}")
+                                            val repoNot = RepositorioNotificaciones()
+                                            val notifResult = repoNot.enviarNotificacion(
+                                                Notificacion(
+                                                    id = "",
+                                                    tipo = "asignacion",
+                                                    contenido = mapOf(
+                                                        "tareaId" to nueva.id,
+                                                        "titulo" to nueva.titulo,
+                                                        "desde" to usuarioId
+                                                    ),
+                                                    destinatario = elegido,
+                                                    visto = false,
+                                                    fecha = Timestamp.now()
+                                                )
+                                            )
+                                            if (notifResult.isSuccess) {
+                                                android.util.Log.d("TareasHomeAdapter", "Notificación enviada OK, id=${notifResult.getOrNull()}")
+                                            } else {
+                                                android.util.Log.e("TareasHomeAdapter", "Error enviando notificación: ${notifResult.exceptionOrNull()?.message}")
+                                            }
                                         } else {
                                             android.widget.Toast.makeText(fragment.requireContext(), res2.exceptionOrNull()?.message ?: "Error", android.widget.Toast.LENGTH_LONG).show()
                                         }
                                     }
-                                }.setNegativeButton("Cancelar", null).show()
+                                }.setNegativeButton(fragment.getString(R.string.cancelar), null).show()
                             }
                         }
                     }
@@ -200,11 +245,11 @@ class TareasHomeAdapter(
                 if (!usuarioId.isBlank() && usuarioId == t.creadoPor) {
                     holder.btnAccion.visibility = View.VISIBLE
                     holder.btnAccion.isEnabled = true
-                    holder.btnAccion.text = "Acciones"
+                    holder.btnAccion.text = fragment.getString(R.string.acciones)
                     holder.btnAccion.setOnClickListener {
-                        val opciones = arrayOf("Confirmar","Reclamar")
+                        val opciones = arrayOf(fragment.getString(R.string.confirmar), fragment.getString(R.string.reclamar))
                         androidx.appcompat.app.AlertDialog.Builder(fragment.requireContext())
-                            .setTitle("Elige acción")
+                            .setTitle(fragment.getString(R.string.elige_accion))
                             .setItems(opciones) { _, idx ->
                                 when (idx) {
                                     0 -> {
@@ -212,9 +257,9 @@ class TareasHomeAdapter(
                                         tareasVM.confirmarTarea(t.id, usuarioId)
                                         // El observer del Fragment maneja el resultado y muestra Toast
                                     }
-                                    1 -> android.widget.Toast.makeText(fragment.requireContext(), "Abre la tarea y usa 'Reclamar' para adjuntar evidencia", android.widget.Toast.LENGTH_LONG).show()
+                                    1 -> android.widget.Toast.makeText(fragment.requireContext(), fragment.getString(R.string.evidencia_reclamar), android.widget.Toast.LENGTH_LONG).show()
                                 }
-                            }.setNegativeButton("Cancelar", null).show()
+                            }.setNegativeButton(fragment.getString(R.string.cancelar), null).show()
                     }
                 }
             }
@@ -229,7 +274,9 @@ class TareasHomeAdapter(
             try {
                 val bundle = android.os.Bundle().apply { putString("taskId", t.id) }
                 fragment.findNavController().navigate(R.id.fragment_Tareas, bundle)
-            } catch (_: Exception) { }
+            } catch (e: Exception) {
+                Log.w(TAG, "Error navegando a tarea ${t.id}: ${e.message}")
+            }
         }
     }
 

@@ -13,7 +13,7 @@
         android:id="@+id/logo"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:contentDescription="@string/logo_desc"
+        android:contentDescription="@string/cd_logo"
         android:src="@drawable/teamtask"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
@@ -29,8 +29,8 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
+        android:paddingStart="@dimen/spacing_xl"
+        android:paddingEnd="@dimen/spacing_xl"
         app:layout_constraintTop_toBottomOf="@id/logo"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -41,18 +41,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="16dp"
-            android:paddingBottom="32dp">
+            android:paddingTop="@dimen/spacing_lg"
+            android:paddingBottom="@dimen/spacing_3xl">
 
             <!-- Campo email -->
             <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.TFG.TextInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/usuario_hint"
-                app:boxBackgroundColor="#F5F5F5"
-                app:boxStrokeColor="@color/negro"
-                app:hintTextColor="@color/gris">
+                android:hint="@string/usuario_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/usuario"
@@ -69,14 +66,11 @@
             <!-- Campo contraseña -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/contraseiaLayout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.TFG.TextInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/contrasena_hint"
-                android:layout_marginTop="12dp"
-                app:boxBackgroundColor="#F5F5F5"
-                app:boxStrokeColor="@color/negro"
-                app:hintTextColor="@color/gris"
+                android:layout_marginTop="@dimen/spacing_md"
                 app:endIconMode="password_toggle">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -97,46 +91,37 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="14dp">
+                android:layout_marginTop="@dimen/spacing_md">
 
                 <TextView
                     android:id="@+id/sinRegistro"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/aun_no_registrado"
-                    android:textColor="@color/texto_principal"
-                    android:textSize="14sp" />
+                    android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
+                    android:textColor="@color/texto_principal" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/botonTransparente"
+                    style="@style/Widget.TFG.Boton.Texto"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    app:cornerRadius="8dp"
-                    app:strokeColor="@color/rojo"
-                    app:strokeWidth="1dp"
                     android:text="@string/pincha_aqui"
-                    android:textColor="@color/rojo"
+                    android:textColor="@color/primario"
                     android:textAllCaps="false"
-                    android:layout_marginStart="8dp" />
+                    android:layout_marginStart="@dimen/spacing_sm" />
 
             </LinearLayout>
 
             <!-- Botón iniciar sesión -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/iniciarSesion"
+                style="@style/Widget.TFG.Boton.Relleno"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/Widget.MaterialComponents.Button"
-                app:cornerRadius="10dp"
-                android:backgroundTint="@color/negro"
                 android:text="@string/iniciar_sesion"
-                android:textColor="@color/white"
                 android:textAllCaps="false"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:paddingTop="14dp"
-                android:paddingBottom="14dp" />
+                android:layout_marginTop="@dimen/spacing_lg" />
 
             <!-- Divisor -->
             <LinearLayout
@@ -144,7 +129,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="16dp">
+                android:layout_marginTop="@dimen/spacing_lg">
 
                 <View
                     android:layout_width="0dp"
@@ -156,7 +141,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="  o  "
-                    android:textColor="@color/gris"
+                    android:textColor="@color/texto_secundario"
                     android:textSize="13sp" />
 
                 <View
@@ -172,7 +157,7 @@
                 style="@style/Widget.TFG.Boton.Google"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="@dimen/spacing_md"
                 android:contentDescription="Iniciar sesión con Google"
                 android:text="Continuar con Google"
                 android:textColor="@color/google_text"
@@ -184,9 +169,9 @@
                 android:id="@+id/tvUsuarioInfo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
                 android:textColor="@color/texto_principal"
-                android:textSize="14sp"
                 android:visibility="gone"
                 android:text="" />
 

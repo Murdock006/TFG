@@ -10,27 +10,27 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingTop="20dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:paddingTop="@dimen/spacing_xl"
+        android:paddingStart="@dimen/spacing_lg"
+        android:paddingEnd="@dimen/spacing_lg"
         android:paddingBottom="72dp">
 
         <!-- Tarjeta detalle principal -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="5dp"
+            android:layout_marginBottom="@dimen/spacing_md"
+            app:cardCornerRadius="@dimen/corner_radius_lg"
+            app:cardElevation="@dimen/elevation_pressed"
             app:cardBackgroundColor="@color/white"
             app:strokeColor="@color/divisor"
-            app:strokeWidth="1dp">
+            app:strokeWidth="@dimen/stroke_thin">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp" android:paddingBottom="76dp">
+                android:padding="@dimen/spacing_xl" android:paddingBottom="76dp">
 
                 <TextView
                     android:id="@+id/tvDetalleTitulo"
@@ -39,16 +39,16 @@
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="@color/texto_principal"
-                    android:text="Título" />
+                    android:text="@string/titulo_placeholder" />
 
                 <TextView
                     android:id="@+id/tvDetalleMeta"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/spacing_sm"
                     android:textColor="@color/texto_secundario"
                     android:textSize="14sp"
-                    android:text="50 pts · Fácil · Pendiente" />
+                    android:text="@string/meta_placeholder" />
 
                 <TextView
                     android:id="@+id/tvDetalleAsignado"
@@ -63,8 +63,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="@color/divisor"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:layout_marginBottom="@dimen/spacing_md" />
 
                 <TextView
                     android:id="@+id/tvDetalleDescripcion"
@@ -72,7 +72,7 @@
                     android:layout_height="wrap_content"
                     android:textColor="@color/texto_principal"
                     android:textSize="14sp"
-                    android:text="Descripción..." />
+                    android:text="@string/descripcion_placeholder" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -81,55 +81,44 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="3dp"
+            app:cardCornerRadius="@dimen/corner_radius_sm"
+            app:cardElevation="@dimen/elevation_default"
             app:cardBackgroundColor="@color/white"
             app:strokeColor="@color/divisor"
-            app:strokeWidth="1dp">
+            app:strokeWidth="@dimen/stroke_thin">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="12dp"
+                android:padding="@dimen/spacing_md"
                 android:gravity="end" android:paddingBottom="76dp">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDetalleAsignar"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    app:cornerRadius="8dp"
-                    app:strokeColor="@color/negro"
-                    app:strokeWidth="1dp"
-                    android:text="Asignar"
-                    android:textColor="@color/texto_principal"
+                    style="@style/Widget.TFG.Boton.Contorno"
+                    android:text="@string/asignar"
                     android:textAllCaps="false"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginEnd="@dimen/spacing_sm"
                     android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDetalleAccion"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    style="@style/Widget.MaterialComponents.Button"
-                    app:cornerRadius="8dp"
-                    android:backgroundTint="@color/negro"
-                    android:text="Acción"
-                    android:textColor="@color/white"
+                    style="@style/Widget.TFG.Boton.Relleno"
+                    android:text="@string/accion"
                     android:textAllCaps="false"
-                    android:layout_marginEnd="8dp" />
+                    android:layout_marginEnd="@dimen/spacing_sm" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDetalleMas"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    app:cornerRadius="8dp"
-                    app:strokeColor="@color/negro"
-                    app:strokeWidth="1dp"
-                    android:text="Más"
-                    android:textColor="@color/texto_principal"
+                    style="@style/Widget.TFG.Boton.Contorno"
+                    android:text="@string/mas"
                     android:textAllCaps="false" />
 
             </LinearLayout>
