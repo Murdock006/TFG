@@ -2,7 +2,7 @@ package com.example.tfg
 
 import android.app.Application
 import android.content.Context
-import com.google.firebase.FirebaseApp
+import com.example.tfg.service.firebase.FirebaseComposition
 
 class TFGApplication : Application() {
     companion object {
@@ -12,11 +12,6 @@ class TFGApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         appContext = applicationContext
-        // Inicializa Firebase explícitamente si no se inicializa automáticamente
-        try {
-            FirebaseApp.initializeApp(this)
-        } catch (e: Exception) {
-            // Ignorar: si ya está inicializado no pasa nada
-        }
+        FirebaseComposition.init(this, BuildConfig.FIREBASE_MODE, BuildConfig.FIREBASE_HOST)
     }
 }

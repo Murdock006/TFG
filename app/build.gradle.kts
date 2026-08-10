@@ -16,12 +16,29 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        buildConfigField("String", "FIREBASE_MODE", "\"RELEASE\"")
+        buildConfigField("String", "FIREBASE_HOST", "\"\"")
+        buildConfigField("String", "FIREBASE_PROJECT_ID", "\"teamtask-3a855\"")
+        buildConfigField("String", "FIREBASE_APPLICATION_ID", "\"1:680542959178:android:4e4a8b88dffdec5df918b3\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        create("emulator") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            buildConfigField("String", "FIREBASE_MODE", "\"EMULATOR\"")
+            buildConfigField("String", "FIREBASE_HOST", "\"10.0.2.2\"")
+            buildConfigField("String", "FIREBASE_PROJECT_ID", "\"teamtask-emulator\"")
+            buildConfigField("String", "FIREBASE_APPLICATION_ID", "\"1:000000000000:android:teamtask-emulator\"")
+        }
         release {
             isMinifyEnabled = true
+            buildConfigField("String", "FIREBASE_MODE", "\"RELEASE\"")
+            buildConfigField("String", "FIREBASE_HOST", "\"\"")
+            buildConfigField("String", "FIREBASE_PROJECT_ID", "\"teamtask-3a855\"")
+            buildConfigField("String", "FIREBASE_APPLICATION_ID", "\"1:680542959178:android:4e4a8b88dffdec5df918b3\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -30,6 +47,7 @@ android {
     }
 
     buildFeatures {
+        buildConfig = true
         viewBinding = true
     }
     compileOptions {
