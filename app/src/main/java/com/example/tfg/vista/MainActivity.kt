@@ -29,6 +29,7 @@ import com.example.tfg.R
 import com.example.tfg.databinding.ActivityMainBinding
 import com.example.tfg.service.NotificationScheduler
 import com.example.tfg.service.LocalizadorServicios
+import com.example.tfg.service.firebase.FirebaseComposition
 import com.example.tfg.util.Constants
 import com.example.tfg.viewmodel.ParejaViewModel
 import kotlinx.coroutines.Job
@@ -232,7 +233,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 android.util.Log.d("MainActivity", "verificarSesionActiva: iniciando...")
                 // Verificar Firebase Auth
-                val firebaseUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                val firebaseUser = FirebaseComposition.auth().currentUser
                 android.util.Log.d("MainActivity", "Firebase user: ${firebaseUser?.uid}")
                 
                 if (firebaseUser != null) {
@@ -240,7 +241,7 @@ class MainActivity : AppCompatActivity() {
                     if (!firebaseUser.isEmailVerified) {
                         // Si NO está verificado, forzar logout y mostrar mensaje
                         android.util.Log.d("MainActivity", "Email no verificado, logout forzado")
-                        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                        FirebaseComposition.auth().signOut()
                         Toast.makeText(this@MainActivity, getString(R.string.verificar_email), Toast.LENGTH_LONG).show()
                         return@launch
                     }
@@ -508,12 +509,13 @@ private fun observarUsuarioDrawerHeader() {
     }
 
     private fun enviarResetContrasena() {
-        val email = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.email
+        val auth = FirebaseComposition.auth()
+        val email = auth.currentUser?.email
         if (email.isNullOrBlank()) {
             Toast.makeText(this, getString(com.example.tfg.R.string.no_hay_usuario), Toast.LENGTH_LONG).show()
             return
         }
-        com.google.firebase.auth.FirebaseAuth.getInstance()
+        auth
             .sendPasswordResetEmail(email)
             .addOnSuccessListener {
                 Toast.makeText(this, getString(com.example.tfg.R.string.reset_password_enviado), Toast.LENGTH_LONG).show()

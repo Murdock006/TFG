@@ -23,8 +23,7 @@ import com.example.tfg.service.LocalizadorServicios
 import com.example.tfg.viewmodel.ParejaViewModel
 import com.example.tfg.viewmodel.TareasViewModel
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.example.tfg.service.firebase.FirebaseComposition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -71,7 +70,7 @@ class TareasHomeAdapter(
         val u = usuarios.find { it.id == uid }
         if (u != null) return if (u.nombre.isNotBlank()) u.nombre else (if (u.email.isNotBlank()) u.email else uid)
         return try {
-            val doc = Firebase.firestore.collection("usuarios").document(uid).get().await()
+            val doc = FirebaseComposition.firestore().collection("usuarios").document(uid).get().await()
             doc.getString("nombre") ?: doc.getString("email") ?: uid
         } catch (e: Exception) {
             Log.w(TAG, "obtenerNombreUsuario fallo: ${e.message}")

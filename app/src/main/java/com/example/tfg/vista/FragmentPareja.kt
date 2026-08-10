@@ -26,8 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.example.tfg.service.firebase.FirebaseComposition
 import kotlinx.coroutines.tasks.await
 import android.util.TypedValue
 import com.github.mikephil.charting.data.PieData
@@ -364,7 +363,7 @@ class FragmentPareja : Fragment() {
     private fun cargarYMostrarEstadisticasTareas(grupoId: String) {
         lifecycleScope.launch {
             try {
-                val db = Firebase.firestore
+                val db = FirebaseComposition.firestore()
                 val tareasSnapshot = db.collection("tareas")
                     .whereEqualTo("grupoId", grupoId)
                     .get()
@@ -547,7 +546,7 @@ class FragmentPareja : Fragment() {
     }
 
     private suspend fun resolverNombresMiembros(miembros: Map<String,String>, usuariosCache: List<Usuario>): List<Pair<String,String>> {
-        val db = Firebase.firestore
+        val db = FirebaseComposition.firestore()
         val result = mutableListOf<Pair<String,String>>()
         for ((uid, rol) in miembros) {
             val u = usuariosCache.find { it.id == uid }
