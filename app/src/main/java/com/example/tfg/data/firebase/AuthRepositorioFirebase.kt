@@ -5,22 +5,22 @@ import com.example.tfg.modelo.Usuario
 import com.example.tfg.repositorio.AuthRepositorio
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.Flow
 import com.example.tfg.util.Constants
+import com.example.tfg.service.firebase.FirebaseComposition
 import kotlinx.coroutines.flow.callbackFlow
 
 // Implementación Firebase para AuthRepositorio
-class AuthRepositorioFirebase : AuthRepositorio {
+class AuthRepositorioFirebase(
+    private val auth: FirebaseAuth = FirebaseComposition.auth(),
+    private val firestore: com.google.firebase.firestore.FirebaseFirestore = FirebaseComposition.firestore(),
+    private val storage: FirebaseStorage = FirebaseComposition.storage()
+) : AuthRepositorio {
 
-    private val auth: FirebaseAuth = Firebase.auth
-    private val firestore = Firebase.firestore
     private var usuariosListener: ListenerRegistration? = null
     private val TAG = "AuthRepoFirebase"
 
@@ -344,7 +344,7 @@ class AuthRepositorioFirebase : AuthRepositorio {
                     ?.mapNotNull { it as? String }
                     ?.forEach { url ->
                         try {
-                            FirebaseStorage.getInstance().getReferenceFromUrl(url).delete().await()
+                            storage.getReferenceFromUrl(url).delete().await()
                         } catch (e: Exception) {
                             Log.w(TAG, "No se pudo borrar evidencia de disputa: $url", e)
                         }

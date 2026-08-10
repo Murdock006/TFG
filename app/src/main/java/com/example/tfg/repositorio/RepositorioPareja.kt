@@ -10,9 +10,10 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import com.example.tfg.service.firebase.FirebaseComposition
 import java.util.*
 
-class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()) : GrupoRepositorio {
+class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseComposition.firestore()) : GrupoRepositorio {
 
     private val coleccionGrupos = "grupos"
     private val coleccionInvitaciones = "invitaciones"

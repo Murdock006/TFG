@@ -3,6 +3,7 @@ package com.example.tfg.data.firebase
 import com.example.tfg.modelo.Tarea
 import com.example.tfg.repositorio.TareaRepositorio
 import com.example.tfg.util.Constants
+import com.example.tfg.service.firebase.FirebaseComposition
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -11,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()) : TareaRepositorio {
+class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = FirebaseComposition.firestore()) : TareaRepositorio {
 
     private val coleccion = "tareas"
     private val puntosFijosPersonalizada = 200

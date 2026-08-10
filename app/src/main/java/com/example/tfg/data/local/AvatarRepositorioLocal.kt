@@ -3,7 +3,7 @@ package com.example.tfg.data.local
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import com.google.firebase.auth.FirebaseAuth
+import com.example.tfg.service.firebase.FirebaseComposition
 import java.io.File
 
 class AvatarRepositorioLocal(private val context: Context) {
@@ -13,7 +13,7 @@ class AvatarRepositorioLocal(private val context: Context) {
 
     fun subirAvatar(imageUri: Uri): Result<String> {
         return try {
-            val uid = FirebaseAuth.getInstance().currentUser?.uid
+            val uid = FirebaseComposition.auth().currentUser?.uid
                 ?: throw Exception("No hay usuario autenticado")
 
             val bytes = context.contentResolver.openInputStream(imageUri)?.use { it.readBytes() }
@@ -39,7 +39,7 @@ class AvatarRepositorioLocal(private val context: Context) {
     }
 
     fun obtenerAvatarPathActual(): String? {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return null
+        val uid = FirebaseComposition.auth().currentUser?.uid ?: return null
         return obtenerAvatarPath(uid)
     }
 
@@ -50,7 +50,7 @@ class AvatarRepositorioLocal(private val context: Context) {
 
     fun eliminarAvatarActual(): Result<Unit> {
         return try {
-            val uid = FirebaseAuth.getInstance().currentUser?.uid
+            val uid = FirebaseComposition.auth().currentUser?.uid
                 ?: throw Exception("No hay usuario autenticado")
 
             val path = prefs.getString(avatarKey(uid), null)

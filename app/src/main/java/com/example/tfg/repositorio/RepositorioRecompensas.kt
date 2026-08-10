@@ -6,8 +6,9 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
+import com.example.tfg.service.firebase.FirebaseComposition
 
-class RepositorioRecompensas(private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()) {
+class RepositorioRecompensas(private val firestore: FirebaseFirestore = FirebaseComposition.firestore()) {
 
     private val colRecompensas = "recompensas"
     private val colUsuarios   = "usuarios"

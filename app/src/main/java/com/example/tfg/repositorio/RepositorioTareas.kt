@@ -35,8 +35,9 @@ import com.example.tfg.util.Constants
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.example.tfg.service.firebase.FirebaseComposition
 
-class RepositorioTareas(private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()) {
+class RepositorioTareas(private val firestore: FirebaseFirestore = FirebaseComposition.firestore()) {
 
     private val coleccionTareas = "tareas"
     private val coleccionUsuarios = "usuarios"

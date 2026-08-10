@@ -7,8 +7,9 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import com.example.tfg.service.firebase.FirebaseComposition
 
-class RepositorioNotificaciones(private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()) {
+class RepositorioNotificaciones(private val firestore: FirebaseFirestore = FirebaseComposition.firestore()) {
 
     private val coleccionNotificaciones = "notificaciones"
 

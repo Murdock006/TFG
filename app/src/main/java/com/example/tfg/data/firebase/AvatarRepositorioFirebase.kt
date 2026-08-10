@@ -4,19 +4,19 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.webkit.MimeTypeMap
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.ktx.storage
+import com.example.tfg.service.firebase.FirebaseComposition
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.util.UUID
 
 class AvatarRepositorioFirebase(private val context: Context? = null) {
 
-    private val auth = Firebase.auth
-    private val firestore = Firebase.firestore
-    private val storage = Firebase.storage
+    private val auth: FirebaseAuth = FirebaseComposition.auth()
+    private val firestore: FirebaseFirestore = FirebaseComposition.firestore()
+    private val storage: FirebaseStorage = FirebaseComposition.storage()
     private val TAG = "AvatarRepoFirebase"
 
     /**

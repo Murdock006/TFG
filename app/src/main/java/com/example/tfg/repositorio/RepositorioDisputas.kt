@@ -5,11 +5,12 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import com.example.tfg.service.firebase.FirebaseComposition
 import java.util.*
 
 class RepositorioDisputas(
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
-    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+    private val firestore: FirebaseFirestore = FirebaseComposition.firestore(),
+    private val storage: FirebaseStorage = FirebaseComposition.storage()
 ) {
 
     private val coleccionDisputas = "disputas"
