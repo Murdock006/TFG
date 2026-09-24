@@ -2,29 +2,19 @@ package com.example.tfg.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.tfg.modelo.Tarea
-import com.example.tfg.repositorio.RepositorioTareas
+import com.example.tfg.repositorio.TareaRepositorio
+import com.example.tfg.service.LocalizadorServicios
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class TareasViewModel(private val repo: RepositorioTareas = RepositorioTareas()) : ViewModel() {
-
-    private val _tareaCreada = MutableStateFlow<Result<String>?>(null)
-    val tareaCreada: StateFlow<Result<String>?> = _tareaCreada
+class TareasViewModel(private val repo: TareaRepositorio = LocalizadorServicios.repositorioTarea) : ViewModel() {
 
     private val _marcarCompletadaState = MutableStateFlow<Result<Unit>?>(null)
     val marcarCompletadaState: StateFlow<Result<Unit>?> = _marcarCompletadaState
 
     private val _confirmarTareaState = MutableStateFlow<Result<Unit>?>(null)
     val confirmarTareaState: StateFlow<Result<Unit>?> = _confirmarTareaState
-
-    fun crearTarea(tarea: Tarea) {
-        viewModelScope.launch {
-            val res = repo.crearTarea(tarea)
-            _tareaCreada.value = res
-        }
-    }
 
     fun marcarCompletada(tareaId: String, ejecutorUid: String) {
         viewModelScope.launch {
@@ -47,9 +37,5 @@ class TareasViewModel(private val repo: RepositorioTareas = RepositorioTareas())
 
     fun resetConfirmarTareaState() {
         _confirmarTareaState.value = null
-    }
-
-    fun resetTareaCreada() {
-        _tareaCreada.value = null
     }
 }
