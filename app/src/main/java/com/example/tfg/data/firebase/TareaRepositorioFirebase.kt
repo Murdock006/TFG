@@ -17,6 +17,13 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
     private val coleccion = "tareas"
     private val puntosFijosPersonalizada = 200
 
+    // Origen de cada listener de `observarTareas`, usado para el estado por fuente del mapa combinado.
+    private companion object {
+        const val FUENTE_CREADO = 0
+        const val FUENTE_ASIGNADO = 1
+        const val FUENTE_GRUPO = 2
+    }
+
     private fun esCategoriaPersonalizada(categoria: String?): Boolean {
         return categoria.equals("personalizada", true) || categoria.equals("personalizado", true)
     }
@@ -182,27 +189,49 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
             } catch (_: Exception) { grupoId = null }
         }
 
-        // Map para combinar resultados de múltiples listeners
+        // Map para combinar resultados de múltiples listeners.
+        // Disciplina de escritor único: `combinado` solo se modifica dentro de `aplicar`, por lo que
+        // una tarea alcanzable por más de una consulta (creadoPor, asignadoA, grupoId) aparece una
+        // sola vez en la lista emitida.
         val combinado = mutableMapOf<String, Tarea>()
+        // Conjunto de ids por fuente: la poda se hace contra la UNIÓN de todas las fuentes grabadas,
+        // nunca contra un único snapshot. Un snapshot de una fuente no contiene tareas que llegan
+        // solo por otra fuente; podar contra una sola borraría filas vivas.
+        val idsPorFuente = mutableMapOf<Int, Set<String>>()
+
+        fun aplicar(fuente: Int, snap: com.google.firebase.firestore.QuerySnapshot?) {
+            val docs = snap?.documents?.mapNotNull { docToTarea(it) } ?: emptyList()
+            docs.forEach { combinado[it.id] = it }
+            idsPorFuente[fuente] = docs.map { it.id }.toSet()
+            val vigentes = idsPorFuente.values.flatten().toSet()
+            combinado.keys.removeAll { it !in vigentes }
+            trySend(combinado.values.toList())
+        }
+
+        // [UNVERIFIED] Se asume que los callbacks de addSnapshotListener están confinados al hilo
+        // principal: no se pasa un executor personalizado, por lo que el estado mutable compartido
+        // (`combinado`/`idsPorFuente`) no requiere sincronización adicional. Si esta suposición
+        // fuese incorrecta, habría que proteger ese estado.
+        //
+        // Limitación conocida: el grupo se resuelve una sola vez al iniciar el flow (arriba); un
+        // cambio de grupo mientras la misma instancia del flow sigue activa no se re-resuelve aquí.
+        // Los llamadores que necesitan reaccionar a cambios de grupo reinician el flow.
 
         val subCreado = firestore.collection(coleccion).whereEqualTo("creadoPor", uid).addSnapshotListener { snap, error ->
             if (error != null) { close(error); return@addSnapshotListener }
-            snap?.documents?.mapNotNull { docToTarea(it) }?.forEach { combinado[it.id] = it }
-            trySend(combinado.values.toList())
+            aplicar(FUENTE_CREADO, snap)
         }
 
         val subAsignado = firestore.collection(coleccion).whereEqualTo("asignadoA", uid).addSnapshotListener { snap, error ->
             if (error != null) { close(error); return@addSnapshotListener }
-            snap?.documents?.mapNotNull { docToTarea(it) }?.forEach { combinado[it.id] = it }
-            trySend(combinado.values.toList())
+            aplicar(FUENTE_ASIGNADO, snap)
         }
 
         var subGrupo: com.google.firebase.firestore.ListenerRegistration? = null
         if (!grupoId.isNullOrBlank()) {
             subGrupo = firestore.collection(coleccion).whereEqualTo("grupoId", grupoId).addSnapshotListener { snap, error ->
                 if (error != null) { close(error); return@addSnapshotListener }
-                snap?.documents?.mapNotNull { docToTarea(it) }?.forEach { combinado[it.id] = it }
-                trySend(combinado.values.toList())
+                aplicar(FUENTE_GRUPO, snap)
             }
         }
 
