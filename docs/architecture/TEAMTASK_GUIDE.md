@@ -145,9 +145,9 @@ the specs remain the detailed source of behavior and remediation constraints.
 | TD-1 | Two task repos with divergent rules | H | `RepositorioTareas.kt:1-31,97-113,164-179`; `TareaRepositorioFirebase.kt:466-494` | task-domain | Resolved (teamtask-task-repo-consolidation) |
 | TD-2 | Avatar authority split | H | `AvatarRepositorioLocal.kt:11,86`; `FragmentPgPrincipal.kt:376-380`; `MainActivity.kt:484-485` | architecture-map | Open |
 | TD-3 | Firebase avatar repo is dead code | H | `AvatarViewModel.kt:14-16`; `AvatarRepositorioFirebase.kt:1-174` | architecture-map | Open |
-| TD-4 | Auto-login listener may fire twice | M | `MainActivity.kt:255-275` | navigation-lifecycle | Open |
-| TD-5 | Task observer mutates shared map without sync | M | `TareaRepositorioFirebase.kt:184-212` | navigation-lifecycle | Open |
-| TD-6 | Adapter receives external CoroutineScope | M | `TareasHomeAdapter.kt:39,145-210` | navigation-lifecycle | Open |
+| TD-4 | Auto-login listener may fire twice | M | `MainActivity.kt:255-275` | navigation-lifecycle | Resolved (teamtask-navigation-lifecycle-convergence) |
+| TD-5 | Task observer mutates shared map without sync | M | `TareaRepositorioFirebase.kt:184-212` | navigation-lifecycle | Resolved (teamtask-navigation-lifecycle-convergence) |
+| TD-6 | Adapter receives external CoroutineScope | M | `TareasHomeAdapter.kt:39,145-210` | navigation-lifecycle | Resolved (teamtask-navigation-lifecycle-convergence) |
 | TD-7 | Reclamo state and points writes are split | H | `TareaRepositorioFirebase.kt:362-388` | task-domain | Open |
 | TD-8 | Task state is raw and incompletely declared | M | `Tarea.kt:15`; `TareaRepositorioFirebase.kt:397-400,448`; `FragmentTareas.kt:492` | task-domain | Open |
 | TD-9 | No rules/storage-rules/indexes artifacts | H | Local artifacts now exist: `firestore.rules`, `storage.rules`, `firestore.indexes.json`, `tools/firebase/*` (committed by `teamtask-testing-emulator-strategy` WU2); deployment, console parity, and App Check remain pending; `firebase-database-ktx` has no consumer | firestore-contracts | Partially resolved (teamtask-testing-emulator-strategy) |
@@ -156,7 +156,7 @@ the specs remain the detailed source of behavior and remediation constraints.
 | TD-12 | Dispute state machine has no resolver | M | `Disputa.kt:9`; `RepositorioDisputas.kt:17-34` | task-domain | Open |
 | TD-13 | Account cleanup is best effort | M | `AuthRepositorioFirebase.kt:259-357` | firestore-contracts | Open |
 | TD-14 | `USAR_FIREBASE` flag has no test | L | Selector removed by `teamtask-testing-emulator-strategy` WU1; `LocalizadorServicios` now requires the initialized `FirebaseComposition` | architecture-map | Resolved (teamtask-testing-emulator-strategy) |
-| TD-15 | Navigation uses manual bundles | L | `MainActivity.kt:223`; `FragmentTareas.kt:56-72,397-398` | navigation-lifecycle | Open |
+| TD-15 | Navigation uses manual bundles | L | `MainActivity.kt:223`; `FragmentTareas.kt:56-72,397-398` | navigation-lifecycle | Resolved (teamtask-navigation-lifecycle-convergence) |
 
 Severity: **H** blocks a future invariant, **M** is a path divergence, **L** is cleanup.
 
@@ -172,7 +172,7 @@ through separately proposed SDD changes.
 | 3 | Decide and unify avatar authority and preference namespaces | 1 | Avatar ViewModel, profile, dashboard, drawer | Pending |
 | 4 | Add and verify Firestore/Storage rules, indexes, and App Check | 1 | Firebase console/config; emulator-safe write checks | Partially done |
 | 5 | Establish focused repository/ViewModel tests and emulator strategy | 2 | Tests only; no current coverage is claimed | Pending |
-| 6 | Converge observers, navigation, logout, auto-login, and safe arguments | 5 | Lifecycle/navigation refactor | Pending |
+| 6 | Converge observers, navigation, logout, auto-login, and safe arguments | 5 | Lifecycle/navigation refactor | Done (teamtask-navigation-lifecycle-convergence) |
 | 7 | Harden account deletion and security cleanup | 4, 5 | Highest-blast-radius code/server work | Pending |
 
 Each remaining step requires its own clean or explicitly accepted baseline. Step 2 (task-repo
@@ -226,7 +226,7 @@ verification. Do not implement them while editing this guide.
 | `teamtask-task-repo-consolidation` | Remove divergent task-repository behavior behind one canonical path. | Done (this change) |
 | `teamtask-firestore-rules-indexes` | Confirm and commit rules, Storage rules, indexes, and App Check configuration. | Pending |
 | `teamtask-testing-emulator-strategy` | Add focused tests and a Firebase emulator verification strategy. | Done (teamtask-testing-emulator-strategy) |
-| `teamtask-navigation-lifecycle-convergence` | Reduce listener races and move navigation/lifecycle orchestration into safer boundaries. | Pending |
+| `teamtask-navigation-lifecycle-convergence` | Reduce listener races and move navigation/lifecycle orchestration into safer boundaries. | Done (teamtask-navigation-lifecycle-convergence) |
 | `teamtask-account-deletion-security` | Make account cleanup and security enforcement reliable and auditable. | Pending |
 
 ### Recovery pointer
