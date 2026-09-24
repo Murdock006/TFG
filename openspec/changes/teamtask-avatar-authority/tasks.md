@@ -105,7 +105,7 @@ manual matrix are the whole verification surface.
 Goal: land the pure, additive foundation with no callers, so it compiles and is unit-testable on
 its own. Ends with the compile gate + focused JVM test.
 
-- [ ] **1.1 Create the canonical contract `app/src/main/java/com/example/tfg/repositorio/AvatarRepositorio.kt`.**
+- [x] **1.1 Create the canonical contract `app/src/main/java/com/example/tfg/repositorio/AvatarRepositorio.kt`.**
   - `interface AvatarRepositorio` with exactly two operations, matching `design.md` §Interfaces:
     `suspend fun subirAvatar(imageUri: Uri): Result<Timestamp>` and
     `suspend fun obtenerAvatar(uid: String, avatarUpdatedAt: Timestamp?): Bitmap?`.
@@ -118,7 +118,7 @@ its own. Ends with the compile gate + focused JVM test.
   - **Rollback**: delete the file; no other file references it yet.
   - **Depends/Parallel**: none. Blocks 1.3 and 2.4. Parallel with 1.2.
 
-- [ ] **1.2 Create `app/src/main/java/com/example/tfg/util/AvatarImagen.kt`.**
+- [x] **1.2 Create `app/src/main/java/com/example/tfg/util/AvatarImagen.kt`.**
   - `object AvatarImagen` with constants `LADO_LARGO_PX = 256`, `CALIDAD_JPEG = 75`,
     `MAX_BASE64_CHARS = 700_000`, `CONTENT_TYPE_JPEG = "image/jpeg"`, and functions
     `comprimirJpeg(resolver: ContentResolver, uri: Uri, ladoLargo: Int = LADO_LARGO_PX, calidad: Int = CALIDAD_JPEG): ByteArray?`,
@@ -134,7 +134,7 @@ its own. Ends with the compile gate + focused JVM test.
   - **Rollback**: delete the file.
   - **Depends/Parallel**: none. Blocks 1.3 and 2.4. Parallel with 1.1.
 
-- [ ] **1.3 Create the focused JVM test `app/src/test/java/com/example/tfg/util/AvatarImagenTest.kt` (orchestrator adjustment; explicit deliverable).**
+- [x] **1.3 Create the focused JVM test `app/src/test/java/com/example/tfg/util/AvatarImagenTest.kt` (orchestrator adjustment; explicit deliverable).**
   - Create the new `app/src/test/java/com/example/tfg/util/` directory. Plain JUnit 4
     (`org.junit.Test` / `org.junit.Assert`), **no Robolectric** — `java.util.Base64` keeps the
     helpers pure-JVM. `strict_tdd: false`, so this is a plain focused test, not a RED-GREEN cycle.
@@ -155,7 +155,7 @@ its own. Ends with the compile gate + focused JVM test.
   - **Depends/Parallel**: requires 1.2. Parallel with 1.1. Confirm the Gradle task name here (Global
     Gate 2 note).
 
-- [ ] **1.4 Run the WU1 gate.**
+- [x] **1.4 Run the WU1 gate.**
   - Run Global Gate 1 (compile) and Global Gate 2 (focused JVM test).
   - **Verify**: `BUILD SUCCESSFUL`; `AvatarImagenTest` green.
   - **Rollback**: n/a (verification task); on failure, fix 1.1-1.3 before proceeding.
@@ -168,7 +168,7 @@ repository to a cache, wire the locator, and move the ViewModel/profile to `Bitm
 must all land before the end-of-phase gate; 2.8 (local demotion) is sequenced last so the compile
 stays green mid-phase.
 
-- [ ] **2.1 Add the avatar hint to `app/src/main/java/com/example/tfg/modelo/Usuario.kt` and mark `avatarUrl` legacy.**
+- [x] **2.1 Add the avatar hint to `app/src/main/java/com/example/tfg/modelo/Usuario.kt` and mark `avatarUrl` legacy.**
   - Immediately after `avatarUrl` (line 18) insert `val avatarUpdatedAt: Timestamp? = null` with the
     hint comment (existence flag + cache version key). Reword the `avatarUrl` comment to mark it
     legacy (no producer/reader after this change). Keep `avatarUrl` in place (design decision (b)).
@@ -179,7 +179,7 @@ stays green mid-phase.
   - **Depends/Parallel**: none. Must land together with 2.2 (reverting one half reintroduces the
     silent-drop gap). Parallel with 2.2-2.9.
 
-- [ ] **2.2 Surface the hint at the four `AuthRepositorioFirebase` mapper sites.**
+- [x] **2.2 Surface the hint at the four `AuthRepositorioFirebase` mapper sites.**
   - In `app/src/main/java/com/example/tfg/data/firebase/AuthRepositorioFirebase.kt`, populate
     `avatarUpdatedAt = doc.getTimestamp("avatarUpdatedAt")` at: `login` (`:125-136`),
     `loginConTokenProveedor` (`:194-205`), and `observarUsuarios` (`:404-412`).
@@ -194,7 +194,7 @@ stays green mid-phase.
   - **Rollback**: revert the four call sites.
   - **Depends/Parallel**: requires 2.1. Parallel with 2.3-2.9.
 
-- [ ] **2.3 Add the last-known cache API to `app/src/main/java/com/example/tfg/data/local/AvatarRepositorioLocal.kt` (additive step).**
+- [x] **2.3 Add the last-known cache API to `app/src/main/java/com/example/tfg/data/local/AvatarRepositorioLocal.kt` (additive step).**
   - Keep the class name/path, the `tfg_prefs` namespace, the key `avatar_path_$uid`, and the
     `filesDir/avatars/$uid.jpg` layout. **Add** `guardarUltimoConocido(uid: String, jpegBytes: ByteArray): Boolean`,
     `obtenerUltimoConocido(uid: String): ByteArray?`, and `limpiar(uid: String)`.
@@ -205,7 +205,7 @@ stays green mid-phase.
   - **Rollback**: remove the three added methods.
   - **Depends/Parallel**: none. Blocks 2.4. Parallel with 2.1-2.2, 2.9.
 
-- [ ] **2.4 Rewrite `app/src/main/java/com/example/tfg/data/firebase/AvatarRepositorioFirebase.kt` as the Firestore base64 implementation.**
+- [x] **2.4 Rewrite `app/src/main/java/com/example/tfg/data/firebase/AvatarRepositorioFirebase.kt` as the Firestore base64 implementation.**
   - Repurpose in place (design decision (g)); implement `AvatarRepositorio`. Remove **every**
     Storage reference (`storage.reference.child`, `StorageMetadata`, `putBytes`, `downloadUrl`,
     `StorageException`, the `usuarios.avatarUrl` writes) and the old `obtenerAvatarUrl*`/`eliminarAvatar`
@@ -235,7 +235,7 @@ stays green mid-phase.
   - **Rollback**: `git revert` this one file; the `avatares` collection may remain inert data.
   - **Depends/Parallel**: requires 1.1, 1.2, 2.3. Parallel with 2.1-2.2, 2.9.
 
-- [ ] **2.5 Add `repositorioAvatar` to `app/src/main/java/com/example/tfg/service/LocalizadorServicios.kt`.**
+- [x] **2.5 Add `repositorioAvatar` to `app/src/main/java/com/example/tfg/service/LocalizadorServicios.kt`.**
   - Add `val repositorioAvatar: AvatarRepositorio by lazy { FirebaseComposition.requireContext(); val contexto = requireNotNull(TFGApplication.appContext) { "TFGApplication.appContext no inicializado" }; AvatarRepositorioFirebase(firestore = FirebaseComposition.firestore(), auth = FirebaseComposition.auth(), context = contexto) }`.
   - The `Context` comes from `TFGApplication.appContext` (precedent: `TareaRepositorioFirebase.kt:538`),
     **not** a new `FirebaseComposition` accessor; `FirebaseComposition.kt` (read-only) stays
@@ -247,7 +247,7 @@ stays green mid-phase.
   - **Rollback**: remove the property + imports.
   - **Depends/Parallel**: requires 1.1, 2.4. Blocks 2.6, 3.1, 3.2.
 
-- [ ] **2.6 Rewire `app/src/main/java/com/example/tfg/viewmodel/AvatarViewModel.kt` to `AvatarRepositorio` through the locator.**
+- [x] **2.6 Rewire `app/src/main/java/com/example/tfg/viewmodel/AvatarViewModel.kt` to `AvatarRepositorio` through the locator.**
   - Signature per design: primary constructor
     `(application: Application, repositorioAvatar: AvatarRepositorio = LocalizadorServicios.repositorioAvatar, repositorioAuth: AuthRepositorio = LocalizadorServicios.repositorioAuth)`
     plus a secondary `constructor(application: Application) : this(application)` so `by viewModels()`
@@ -265,7 +265,7 @@ stays green mid-phase.
   - **Depends/Parallel**: requires 2.4, 2.5. Must land with 2.7 before 2.8 or the compile breaks
     (`FragmentPerfil` reads `avatarUrlActual`).
 
-- [ ] **2.7 Update `app/src/main/java/com/example/tfg/vista/FragmentPerfil.kt` for the `Bitmap?` avatar.**
+- [x] **2.7 Update `app/src/main/java/com/example/tfg/vista/FragmentPerfil.kt` for the `Bitmap?` avatar.**
   - Replace the `avatarVM.avatarUrlActual.collect { url -> … }` block (`:189-205`) with
     `avatarVM.avatarActual.collect { bmp -> if (bmp != null) Glide.with(this).load(bmp).circleCrop().placeholder(R.drawable.perfil).into(ivAvatarPerfil) else { Glide.with(this).clear(ivAvatarPerfil); ivAvatarPerfil.setImageResource(R.drawable.perfil) } }`.
   - The picker preview (`:49-62`) and the `avatarState` collect (`:171-187`) stay; the latter still
@@ -274,7 +274,7 @@ stays green mid-phase.
   - **Rollback**: revert the file.
   - **Depends/Parallel**: requires 2.6. Parallel with 2.8-2.9 only after 2.6 lands.
 
-- [ ] **2.8 Remove the `AvatarRepositorioLocal` authority methods (demote to cache).**
+- [x] **2.8 Remove the `AvatarRepositorioLocal` authority methods (demote to cache).**
   - In `app/src/main/java/com/example/tfg/data/local/AvatarRepositorioLocal.kt`, delete `subirAvatar`,
     `obtenerAvatarPathActual`, `obtenerAvatarPath`, `eliminarAvatarActual`, `determinarExtension`, and
     the now-unused imports (`android.net.Uri`, `com.example.tfg.service.firebase.FirebaseComposition`,
@@ -286,7 +286,7 @@ stays green mid-phase.
   - **Rollback**: restore the removed methods and imports.
   - **Depends/Parallel**: requires 2.6, 2.7. Parallel with 2.9.
 
-- [ ] **2.9 Add the `avatares/{uid}` block to `firestore.rules`.**
+- [x] **2.9 Add the `avatares/{uid}` block to `firestore.rules`.**
   - After the `usuarios` match (`:27-32`), add
     `match /avatares/{userId} { allow read: if signedIn(); allow write: if isSelf(userId); }`,
     reusing the existing `signedIn()`/`isSelf()` helpers (`:16-22`); add the `avatares` block to the
@@ -298,7 +298,7 @@ stays green mid-phase.
   - **Rollback**: remove the added block + comment line.
   - **Depends/Parallel**: none. Parallel with 2.1-2.8.
 
-- [ ] **2.10 Run the WU2 gate.**
+- [x] **2.10 Run the WU2 gate.**
   - Run Global Gate 1 (compile) and Global Gate 3 (all six audits).
   - **Verify**: `BUILD SUCCESSFUL` for both build types; every audit matches its expected result.
   - **Rollback**: n/a (verification task); on failure, fix the specific Phase 2 task.
@@ -310,7 +310,7 @@ Goal: route the two remaining display sites (drawer header and dashboard member 
 canonical repository with the recycling guard and placeholder fallback. Both depend on the locator
 and contract from Phase 2.
 
-- [ ] **3.1 Route the drawer header through the repository in `app/src/main/java/com/example/tfg/vista/MainActivity.kt`.**
+- [x] **3.1 Route the drawer header through the repository in `app/src/main/java/com/example/tfg/vista/MainActivity.kt`.**
   - In `refrescarHeaderDrawer()` (`:451-509`), replace the `tfg_prefs` read (`:484-497`) with a
     resolve through `LocalizadorServicios.repositorioAvatar.obtenerAvatar(usuario.id, usuario.avatarUpdatedAt)`.
     Add an `avatarDrawerJob: Job?` field (the `Job` import already exists, `:35`); cancel any prior
@@ -322,7 +322,7 @@ and contract from Phase 2.
   - **Rollback**: revert the file.
   - **Depends/Parallel**: requires 2.5. Parallel with 3.2.
 
-- [ ] **3.2 Route the member cards through the repository in `app/src/main/java/com/example/tfg/vista/FragmentPgPrincipal.kt`.**
+- [x] **3.2 Route the member cards through the repository in `app/src/main/java/com/example/tfg/vista/FragmentPgPrincipal.kt`.**
   - In `MiembrosHorizontalAdapter.onBindViewHolder` (`:370-389`), delete the `avatar_prefs` read and
     the `File`-on-Glide path (`:376-388`). Set `holder.ivAvatar.tag = u.id`, reset the holder to
     `R.drawable.perfil` on every bind, then
@@ -333,7 +333,7 @@ and contract from Phase 2.
   - **Rollback**: revert the file.
   - **Depends/Parallel**: requires 2.5. Parallel with 3.1.
 
-- [ ] **3.3 Run the WU3 gate.**
+- [x] **3.3 Run the WU3 gate.**
   - Run Global Gate 1 (compile) and Global Gate 3 "`avatar_prefs` retired".
   - **Verify**: `BUILD SUCCESSFUL`; zero `avatar_prefs` matches.
   - **Rollback**: n/a (verification task).
@@ -344,20 +344,20 @@ and contract from Phase 2.
 Goal: prove the whole change. This is the design's Verification Plan. There is no pre-existing
 automated avatar test net; state that explicitly in the apply report.
 
-- [ ] **4.1 Run the compile gate.**
+- [x] **4.1 Run the compile gate.**
   - Run Global Gate 1.
   - **Verify**: `BUILD SUCCESSFUL` for both build types.
   - **Rollback**: n/a.
   - **Depends/Parallel**: requires Phases 1-3. Parallel with 4.2-4.5.
 
-- [ ] **4.2 Run the focused JVM test gate.**
+- [x] **4.2 Run the focused JVM test gate.**
   - Run Global Gate 2 (`AvatarImagenTest`).
   - **Verify**: `BUILD SUCCESSFUL`; `AvatarImagenTest` passes. If the task name differs from
     `:app:testDebugUnitTest`, record the actual name.
   - **Rollback**: n/a.
   - **Depends/Parallel**: requires 1.2, 1.3. Parallel with 4.1/4.3-4.5.
 
-- [ ] **4.3 Run the grep audits.**
+- [x] **4.3 Run the grep audits.**
   - Run Global Gate 3 (all six audits).
   - **Verify**: every audit matches its expected result.
   - **Rollback**: n/a.
@@ -384,7 +384,7 @@ automated avatar test net; state that explicitly in the apply report.
   | 11 | ViewModel resolves the contract through the locator | Inspect `AvatarViewModel.kt` | Constructor takes `AvatarRepositorio` (default from the locator); zero concrete construction |
   | 12 | No delete affordance | Inspect the UI | No control calls `eliminarAvatar`; the method remains uncalled |
 
-- [ ] **4.5 Run the scope gate.**
+- [x] **4.5 Run the scope gate.**
   - Confirm only the thirteen authorized edit targets changed; no Gradle change; no canonical
     `openspec/specs/**` edit; no `storage.rules` edit; no Firebase Console/deployment action; no
     commit by this phase.
