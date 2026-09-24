@@ -12,9 +12,9 @@ future refactors and for any reviewer that needs to know where a given concern l
 |---|---|---|
 | `vista` | `MainActivity`, Fragments, RecyclerView adapters, dialogs, navigation, **part of business rules** | `app/src/main/java/com/example/tfg/vista/*.kt` |
 | `viewmodel` | State holders for auth, groups, tasks, avatar, dashboard; mix of `StateFlow` and `LiveData` | `app/src/main/java/com/example/tfg/viewmodel/*.kt` |
-| `repositorio` | Interfaces (`TareaRepositorio`, `AuthRepositorio`, `GrupoRepositorio`) + concrete classes (`RepositorioPareja`, `RepositorioRecompensas`, `RepositorioDisputas`, `RepositorioNotificaciones`, `RepositorioTareas`, `CategoriasRepositorio`) | `app/src/main/java/com/example/tfg/repositorio/*.kt` |
+| `repositorio` | Interfaces (`TareaRepositorio`, `AuthRepositorio`, `GrupoRepositorio`) + concrete classes (`RepositorioPareja`, `RepositorioRecompensas`, `RepositorioDisputas`, `RepositorioNotificaciones`, `CategoriasRepositorio`) | `app/src/main/java/com/example/tfg/repositorio/*.kt` |
 | `data/firebase` | Firebase impls of `Auth`, `Tarea`, `Avatar` | `app/src/main/java/com/example/tfg/data/firebase/*.kt` |
-| `data/inmemory` | In-memory substitutes for `Auth`, `Grupo`, `Tarea`; selected only when `USAR_FIREBASE=false` | `app/src/main/java/com/example/tfg/data/inmemory/*.kt`; `LocalizadorServicios.kt:17,32-42` |
+| `data/inmemory` | In-memory substitutes for `Auth` and `Grupo` | `app/src/main/java/com/example/tfg/data/inmemory/*.kt` |
 | `data/local` | Avatar copy/delete under `filesDir/avatars/` + `tfg_prefs` SharedPreferences | `app/src/main/java/com/example/tfg/data/local/AvatarRepositorioLocal.kt` |
 | `modelo` | Data classes for `Usuario`, `Tarea`, `Grupo`, `Disputa`, `Recompensa`, `Canje`, `Notificacion`, `Invitacion`; states are raw `String`, not sealed | `app/src/main/java/com/example/tfg/modelo/*.kt` |
 | `service` | `LocalizadorServicios` (service locator), `NotificationScheduler`/`NotificationWorker` (WorkManager), `IcsExporter` | `app/src/main/java/com/example/tfg/service/*.kt` |
@@ -83,7 +83,6 @@ or `LocalizadorServicios` except in `TFGApplication`.
 
 | Work item | Severity | Notes |
 |---|---|---|
-| Remove dual task repos (`TareaRepositorioFirebase` vs `RepositorioTareas`) | High | Same domain, divergent points math (`TareaRepositorioFirebase.kt:466-493` vs `RepositorioTareas.kt:97-113,164-179`) |
 | Unify avatar authority: `AvatarViewModel` uses `AvatarRepositorioLocal` only; `AvatarRepositorioFirebase` is dead code | High | Evidence: `AvatarViewModel.kt:14-16` vs `AvatarRepositorioFirebase.kt:1-174` (no ViewModel calls it) |
 | Push direct UI→Firebase paths (`MainActivity` auth, `FragmentPareja` stats, `TareasHomeAdapter` reads) into ViewModels | Med | Evidence: `MainActivity.kt:230-283,510-523`; `FragmentPareja.kt:364-371`; `TareasHomeAdapter.kt:74` |
 | Replace `LocalizadorServicios` with constructor injection | Med | Out of scope for this change (no Hilt assumed) |
@@ -106,7 +105,7 @@ or `LocalizadorServicios` except in `TFGApplication`.
 | Service-locator flag wiring | Edit `LocalizadorServicios.kt:17` to `false`, rebuild, run | No Firebase calls; in-memory only (manual; no tests) |
 | Direct Firebase imports outside `data/firebase/`, `TFGApplication.kt`, `LocalizadorServicios.kt` | `grep -r "FirebaseFirestore\|FirebaseAuth" app/src/main/java/com/example/tfg` | Matches only in documented evidence rows |
 | ViewModel constructor parameter `repo` | Read each file in `viewmodel/` | Constructor accepts an interface, not a concrete class |
-| Dual task-repo usage split | `grep -r "RepositorioTareas()\\|TareaRepositorioFirebase(" app/src/main/java` | Counts logged for roadmap; expected > 1 until consolidation |
+| Dual task-repo usage split | `grep -r "RepositorioTareas()\|TareaRepositorioInMemory" app/src/main/java` | Zero matches (consolidation complete) |
 
 [UNVERIFIED] Whether future Firestore rules or App Check will reshape any of these allowed
 exceptions. No Firebase console access was available during this exploration.

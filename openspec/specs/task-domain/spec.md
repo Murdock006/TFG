@@ -16,10 +16,10 @@ transitions are:
 
 | From | To | Trigger | Evidence |
 |---|---|---|---|
-| (none) | `pendiente` | `crearTarea` | `TareaRepositorioFirebase.kt:76-120`; `RepositorioTareas.kt:44-52` |
-| `pendiente` | `pendiente_confirmacion` | `marcarCompletada` with `requiereConfirmacion=true` | `TareaRepositorioFirebase.kt:390-401`; `RepositorioTareas.kt:73-76` |
-| `pendiente` | `confirmada` (no `pendiente_confirmacion`) | `marcarCompletada` with `requiereConfirmacion=false` in transaction | `TareaRepositorioFirebase.kt:404-435`; `RepositorioTareas.kt:79-129` |
-| `pendiente_confirmacion` or `completada` | `confirmada` | `confirmarTarea` in transaction | `TareaRepositorioFirebase.kt:441-497`; `RepositorioTareas.kt:141-200` |
+| (none) | `pendiente` | `crearTarea` | `TareaRepositorioFirebase.kt:76-120` |
+| `pendiente` | `pendiente_confirmacion` | `marcarCompletada` with `requiereConfirmacion=true` | `TareaRepositorioFirebase.kt:390-401` |
+| `pendiente` | `confirmada` (no `pendiente_confirmacion`) | `marcarCompletada` with `requiereConfirmacion=false` in transaction | `TareaRepositorioFirebase.kt:404-435` |
+| `pendiente_confirmacion` or `completada` | `confirmada` | `confirmarTarea` in transaction | `TareaRepositorioFirebase.kt:441-497` |
 | `reclamada` | `confirmada` or `pendiente` | `resolverReclamo(aceptado=true|false)` | `TareaRepositorioFirebase.kt:362-388` |
 | any | `eliminada` | `actualizarTarea(estado="eliminada")` from UI | `FragmentTareas.kt:492` |
 
@@ -38,7 +38,7 @@ Source: `modelo/Usuario.kt:13-16`; constants `util/Constants.kt:4-9`.
 | Assign (`asignadoA` becomes non-blank) | `puntosReservados += puntos`; `puntos` unchanged | — | `TareaRepositorioFirebase.kt:295-303` (in `actualizarTarea` tx) |
 | Unassign (`asignadoA` becomes blank) | `puntosReservados -= min(reservados, puntos)`; `puntos` unchanged | — | `TareaRepositorioFirebase.kt:306-316` |
 | Confirm (with `multiplicador>=1`, racha bonus) | `puntosReservados -= puntos` (coerced to ≥0) | `puntos += puntosBase*(1+bonus)`; `puntosRecompensa += max(1, floor(puntosFinales*0.10))`; `rachaDias += 1` | `TareaRepositorioFirebase.kt:466-494` |
-| `marcarCompletada` no-confirm | — | `puntos += puntos`; `puntosRecompensa += floor(puntos*0.10)` (no racha, no multiplicador) | `TareaRepositorioFirebase.kt:404-435`; `RepositorioTareas.kt:97-113` |
+| `marcarCompletada` no-confirm | `puntosReservados -= puntos` (coerced to ≥0) | `puntos += puntos`; `puntosRecompensa += max(1, floor(puntos*0.10))` (no racha, no multiplicador) | `TareaRepositorioFirebase.kt:404-435` |
 | `resolverReclamo(aceptado=true)` | `puntosReservados -= puntos` (via `liberarPuntos`) | `puntos += puntos` (via `sumarPuntosConBonificacion`) | `TareaRepositorioFirebase.kt:362-388` (transfers done OUTSIDE the `update` tx) |
 | Canjear recompensa | — | `puntosRecompensa -= coste`; `canjes` doc created with `estado="pendiente"` | `RepositorioRecompensas.kt:84-118` |
 | `responderCanje(aceptado=false)` | — | `puntosRecompensa += coste` | `RepositorioRecompensas.kt:121-146` |
@@ -50,8 +50,6 @@ Source: `modelo/Usuario.kt:13-16`; constants `util/Constants.kt:4-9`.
   the UI form (`FragmentTareas.kt:354-357`).
 - **Personalizada normalization**: `categoria ∈ {personalizada, personalizado}` ⇒
   `puntos = PUNTOS_FIJOS_PERSONALIZADA=200` (`TareaRepositorioFirebase.kt:16-29`; `Constants.kt:9`).
-- `RepositorioTareas.kt:44-52` does NOT normalize and does NOT auto-block assignment;
-  it does not reserve points either.
 
 ### Recurrence
 
@@ -128,12 +126,13 @@ The system MUST set `puntos=200` when the task's `categoria` matches
 - THEN the persisted `puntos` MUST be `200`
 - Evidence: `TareaRepositorioFirebase.kt:19-29`; `Constants.kt:9`
 
-### Requirement: Auto-assignment MUST be rejected for non-simplified flows
+### Requirement: Auto-assignment MUST be rejected
 
-`TareaRepositorioFirebase.crearTarea` and `actualizarTarea` MUST return
-`Result.failure` when `creadoPor == asignadoA` and both are non-blank.
-The simplified `RepositorioTareas` MUST NOT auto-block (this asymmetry is a known
-divergence and is tracked under Future Convergence Work).
+`TareaRepositorioFirebase.crearTarea` and `actualizarTarea` MUST return `Result.failure`
+when `creadoPor == asignadoA` and both are non-blank. The canonical completion paths
+(`marcarCompletada` and `confirmarTarea`) MUST also reject a task whose
+`creadoPor == asignadoA` with `Result.failure` before writing any task state or points.
+(Previously: the requirement was scoped "for non-simplified flows" and stated that the simplified `RepositorioTareas` MUST NOT auto-block, documenting a known divergence tracked under Future Convergence Work.)
 
 #### Scenario: Full impl rejects self-assignment
 
@@ -141,6 +140,14 @@ divergence and is tracked under Future Convergence Work).
 - WHEN `TareaRepositorioFirebase.crearTarea` runs
 - THEN it MUST return `Result.failure(Exception("No se permite autoasignarse tareas"))`
 - Evidence: `TareaRepositorioFirebase.kt:31-41,79-82,232-235`
+
+#### Scenario: Completion path rejects self-assignment
+
+- GIVEN a `pendiente` task with `creadoPor="uA"`, `asignadoA="uA"`
+- WHEN `TareaRepositorioFirebase.marcarCompletada` or `confirmarTarea` runs
+- THEN it MUST return `Result.failure(Exception("Tarea inválida: autoasignación no permitida"))`
+- AND no task state or points MUST be written
+- Evidence: `TareaRepositorioFirebase.kt:396,448,460`
 
 ### Requirement: `ResolverReclamo` MUST mutate state and transfer points
 
@@ -185,12 +192,65 @@ create a `canjes` doc inside a single `firestore.runTransaction`.
 - THEN the transaction MUST throw and return `Result.failure("Puntos de recompensa insuficientes...")`
 - Evidence: `RepositorioRecompensas.kt:97`
 
+### Requirement: Task completion without confirmation MUST consume the creator's reserved points
+
+When `marcarCompletada` runs on a `pendiente` task whose `requiereConfirmacion=false`, the
+system MUST, inside a single `firestore.runTransaction` with every read performed before
+any write:
+
+- set `tareas.estado` to `confirmada`;
+- credit the `ejecutorUid` argument with the task `puntos`;
+- add `max(1, floor(puntos * REWARD_PERCENTAGE))` to that user's `puntosRecompensa`;
+- decrement the creator's `puntosReservados` by the task `puntos`, coerced to ≥ 0.
+
+The credit MUST follow the `ejecutorUid` argument and MUST NOT be overridden by
+`tarea.asignadoA`. The creator's reservation MUST be consumed with the same semantics as
+the confirmation path. If the task has no creator, the system MUST credit the executor and
+MUST NOT create a creator document. Streak (`rachaDias`), `multiplicadorPuntos`, recurrence
+spawn, and reminder scheduling remain confirmation-path behaviors and MUST NOT be added to
+this path by this change.
+
+#### Scenario: No-confirmation completion consumes the reservation
+
+- GIVEN a `pendiente` task with `requiereConfirmacion=false`, `puntos=100`, `creadoPor="uC"`, `asignadoA="uE"`
+- AND creator `uC` has `puntosReservados=100`
+- AND executor `uE` has `puntos=0`, `puntosRecompensa=0`
+- WHEN `marcarCompletada(tareaId, "uE")` runs
+- THEN the task `estado` MUST be `confirmada`
+- AND `usuarios/uC.puntosReservados` MUST be `0`
+- AND `usuarios/uE.puntos` MUST be `100`
+- AND `usuarios/uE.puntosRecompensa` MUST be `max(1, floor(100*0.10)) = 10`
+- Evidence: `TareaRepositorioFirebase.kt:404-435` (updated by this change); confirm-path semantics `TareaRepositorioFirebase.kt:491-495`
+
+#### Scenario: Reservation decrement is coerced to zero
+
+- GIVEN a `pendiente` task with `requiereConfirmacion=false`, `puntos=100`, `creadoPor="uC"`
+- AND creator `uC` has `puntosReservados=30`
+- WHEN `marcarCompletada` runs
+- THEN `usuarios/uC.puntosReservados` MUST be `0` (coerced, never negative)
+- Evidence: coercion `TareaRepositorioFirebase.kt:494`
+
+#### Scenario: Executor credit follows the `ejecutorUid` argument
+
+- GIVEN a `pendiente` task with `asignadoA="uE"`
+- WHEN `marcarCompletada(tareaId, "uX")` runs
+- THEN `usuarios/uX.puntos` MUST increase by the task `puntos`
+- AND `usuarios/uE.puntos` MUST NOT change from this operation
+- Evidence: `TareaRepositorioFirebase.kt:411` uses the `ejecutorUid` parameter (resolves TD-11)
+
+#### Scenario: Task without a creator does not create a creator document
+
+- GIVEN a `pendiente` task with `requiereConfirmacion=false` and blank `creadoPor`
+- WHEN `marcarCompletada` runs
+- THEN the executor MUST be credited
+- AND no `usuarios` document MUST be created for a creator
+- Evidence: creator guard `TareaRepositorioFirebase.kt:492`
+
 ## Future Convergence Work
 
 | Work item | Severity | Notes |
 |---|---|---|
 | Add `pendiente_confirmacion` and `eliminada` to `Tarea.estado` enum or sealed type | Med | Today only documented in source; `Tarea.kt:15` lists four |
-| Unify `TareaRepositorioFirebase` and `RepositorioTareas`; pick the full impl as canonical | High | `RepositorioTareas.kt:28-31` already declares the duplication |
 | Re-evaluate `resolverReclamo` point transfer (currently OUTSIDE the doc `update` transaction) | High | Two-step write is not atomic; can leave inconsistent state |
 | Make `recompensa.canje` filtering and authorization server-side | Med | Today client filters own uid (`RepositorioRecompensas.kt:179-208`) |
 | Implement dispute resolution state machine (`en_progreso`, `cerrada`) | Med | Model declares it, repo does not (`Disputa.kt:9`; `RepositorioDisputas.kt:1-47`) |
@@ -198,14 +258,8 @@ create a `canjes` doc inside a single `firestore.runTransaction`.
 
 ## Known Risks
 
-- **Two task repos, two rules.** A flow that uses `RepositorioTareas` (`TareasViewModel`,
-  `FragmentTareas`) skips streak bonus, multiplier, normalization, and auto-assignment check.
-  Confirmed in source: `RepositorioTareas.kt:65-77,79-129,141-200`.
 - **Resolver-reclamo write split.** State update is `await`-ed, then points transfers are
   fired without rollback on failure (`TareaRepositorioFirebase.kt:362-388`).
-- **Auto-assignment in `RepositorioTareas`** is not blocked; UI form blocks it
-  (`FragmentTareas.kt:354-357`) but a direct caller could bypass.
-- **Custom task without 200 puntos cap** when path uses `RepositorioTareas`.
 
 [UNVERIFIED] Server-side enforcement of point invariants (Firestore rules, Cloud Functions,
 triggers). The repo contains no such artefacts.
@@ -219,3 +273,5 @@ triggers). The repo contains no such artefacts.
 | Personalizada normalization | Submit `categoria="Personalizada"` with `puntos=999` | Persisted `puntos=200` |
 | Canje atomicity | Patch `canjes` write to throw, retry | `puntosRecompensa` unchanged (tx rolled back) |
 | Auto-assign via full impl | Call `TareaRepositorioFirebase.crearTarea` with `creadoPor==asignadoA` | `Result.failure` |
+| No-confirmation reservation consumption | Create a `requiereConfirmacion=false` task with `puntos=100`, mark complete, inspect `usuarios/{creador}` | `puntosReservados` decreased by 100 (coerced ≥0) |
+| No-confirmation executor credit | Same task, inspect `usuarios/{ejecutorUid}` | `puntos` +100; `puntosRecompensa` +10 |
