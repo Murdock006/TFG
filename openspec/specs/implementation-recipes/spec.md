@@ -12,7 +12,7 @@ or Compose.
 | Decision | Status | Source |
 |---|---|---|
 | UI toolkit | XML + Fragments + ViewBinding | `app/build.gradle.kts:32-34` |
-| Navigation | AndroidX Navigation Component (manual bundles) | `res/navigation/nav_graph.xml`; `app/build.gradle.kts:69-70` |
+| Navigation | AndroidX Navigation Component with Safe Args (typed directions/arguments) | `res/navigation/nav_graph.xml`; `app/build.gradle.kts:1-5,87-88`; `gradle/libs.versions.toml:16,37-39` |
 | State holders | Mix of `StateFlow` and `LiveData` | `viewmodel/ParejaViewModel.kt:24-33`; `viewmodel/VistaModeloPrincipal.kt:16-23` |
 | Concurrency | `viewModelScope`, `lifecycleScope`, `viewLifecycleOwner.lifecycleScope`; collectors in `repeatOnLifecycle(STARTED)` | `FragmentTareasPendientes.kt:48-175`; `MainActivity.kt:430-447` |
 | DI | Service locator (`LocalizadorServicios`) | `service/LocalizadorServicios.kt:14-43` |
@@ -192,6 +192,39 @@ the same pattern rather than adding blobs to widely-streamed documents.
 - THEN they MUST use `tfg_prefs` as a cache only
 - AND the local value MUST NOT be treated as proof that a remote avatar exists or is current
 
+### Requirement: Navigation arguments MUST use AndroidX Safe Args
+
+New navigation MUST use the AndroidX Navigation Safe Args generated directions and typed
+argument accessors instead of manual `Bundle` reads/writes. The `androidx.navigation.safeargs.kotlin`
+Gradle plugin MUST be applied and version-matched to the Navigation Component (2.9.6). Every
+declared navigation argument used by this stack (`taskId`, `modo`, `categoria`) MUST be declared
+as a typed `<argument>` in `nav_graph.xml` and consumed through generated accessors. The
+`"openTaskId"` intent extra is not a navigation argument and MUST remain a raw intent extra.
+
+#### Scenario: New navigation site with arguments
+
+- GIVEN a developer adds or edits a navigation to a destination that takes arguments
+- WHEN they pass those arguments
+- THEN they MUST use the generated directions / argument accessors
+- AND they MUST NOT write a manual `Bundle` for a declared navigation argument
+
+#### Scenario: Safe Args plugin is present and version-matched
+
+- GIVEN the app module is built
+- WHEN its Gradle plugins and version catalog are inspected
+- THEN `androidx.navigation.safeargs.kotlin` MUST be applied
+- AND its version MUST match the Navigation Component
+- Evidence: current absence in `app/build.gradle.kts:1-5` and `gradle/libs.versions.toml:37-39`;
+  Navigation Component `2.9.6` at `gradle/libs.versions.toml:16`
+
+#### Scenario: `openTaskId` remains an intent extra
+
+- GIVEN a developer reviews the notification deep-link path
+- WHEN they check how `openTaskId` is read
+- THEN it MUST still be read as a raw intent extra and MUST NOT be declared as a navigation
+  argument
+- Evidence: `MainActivity.kt:133,206`; `NotificationScheduler.kt:74-80`
+
 ## Technical debt register
 
 Severity legend: **H**igh = blocks a future spec's invariants; **M**ed = divergence
@@ -202,9 +235,9 @@ between paths; **L**ow = cleanup.
 | TD-1 | Two task repos with divergent rules | H | `RepositorioTareas.kt:1-31,97-113,164-179` vs `TareaRepositorioFirebase.kt:466-494` | `task-domain` convergence | Resolved (`teamtask-task-repo-consolidation`) |
 | TD-2 | Avatar authority split (`tfg_prefs` + `avatar_prefs`) | H | `AvatarRepositorioLocal.kt:11,86`; `FragmentPgPrincipal.kt:376-380`; `MainActivity.kt:484-485` | `architecture-map` convergence | Resolved (`teamtask-avatar-authority`) |
 | TD-3 | `AvatarRepositorioFirebase` is dead code | H | `AvatarViewModel.kt:14-16` (no caller); class is `class`, not `object`/`companion` | `architecture-map` convergence | Resolved (`teamtask-avatar-authority`) |
-| TD-4 | Auto-login one-shot listener may fire twice on config change | M | `MainActivity.kt:255-275` | `navigation-lifecycle` | Open |
-| TD-5 | `TareaRepositorioFirebase.observarTareas` mutates shared map without sync | M | `TareaRepositorioFirebase.kt:184-212` | `navigation-lifecycle` | Open |
-| TD-6 | `TareasHomeAdapter` external `CoroutineScope` | M | `TareasHomeAdapter.kt:39,145-210` | `navigation-lifecycle` | Open |
+| TD-4 | Auto-login one-shot listener may fire twice on config change | M | `MainActivity.kt:255-277` | `navigation-lifecycle` | Resolved (`teamtask-navigation-lifecycle-convergence`) |
+| TD-5 | `TareaRepositorioFirebase.observarTareas` mutates shared map without sync | M | `TareaRepositorioFirebase.kt:163-214` (map `:186`, listeners `:188,194,202`) | `navigation-lifecycle` | Resolved (`teamtask-navigation-lifecycle-convergence`) |
+| TD-6 | `TareasHomeAdapter` external `CoroutineScope` | M | `TareasHomeAdapter.kt:34-39,144,177,197` | `navigation-lifecycle` | Resolved (`teamtask-navigation-lifecycle-convergence`) |
 | TD-7 | `resolverReclamo` does state update then points transfer outside tx | H | `TareaRepositorioFirebase.kt:362-388` | `task-domain` | Open |
 | TD-8 | `modelo.Tarea.estado` is raw `String`; not all states listed in comment | M | `Tarea.kt:15`; `TareaRepositorioFirebase.kt:397-400,448`; `FragmentTareas.kt:492` | `task-domain` | Open |
 | TD-9 | No `firestore.rules` / `storage.rules` / `indexes.json` in repo | H | Local artifacts now exist: `firestore.rules`, `storage.rules`, `firestore.indexes.json`, `tools/firebase/*` (committed by `teamtask-testing-emulator-strategy` WU2); deployment, console parity, and App Check remain pending; `firebase-database-ktx` declared but no consumer | `firestore-contracts` | Partially resolved (`teamtask-testing-emulator-strategy`) |
@@ -213,7 +246,7 @@ between paths; **L**ow = cleanup.
 | TD-12 | Disputa state machine has no resolver | M | `Disputa.kt:9`; `RepositorioDisputas.kt:17-34` | `task-domain` | Open |
 | TD-13 | Best-effort account cleanup | M | `AuthRepositorioFirebase.kt:259-357` | `firestore-contracts` | Open |
 | TD-14 | `USAR_FIREBASE` flag in `LocalizadorServicios` has no test | L | Selector removed by `teamtask-testing-emulator-strategy` WU1; `LocalizadorServicios` now requires the initialized `FirebaseComposition` | `architecture-map` | Resolved (`teamtask-testing-emulator-strategy`) |
-| TD-15 | Manual navigation bundles | L | `MainActivity.kt:223`; `FragmentTareas.kt:56-72,397-398` | `navigation-lifecycle` | Open |
+| TD-15 | Manual navigation bundles | L | `MainActivity.kt:225`; `TareasHomeAdapter.kt:274`; `FragmentPgPrincipal.kt:78-99,312-316`; `FragmentTareas.kt:56-57,78,155,205,226,397` | `navigation-lifecycle` | Resolved (`teamtask-navigation-lifecycle-convergence`) |
 
 ## Convergence roadmap
 
@@ -224,7 +257,7 @@ between paths; **L**ow = cleanup.
 | 3 | Audit and fix avatar authority (decide local vs Firebase; unify `tfg_prefs`/`avatar_prefs`; delete dead Firebase impl) | 1 | changes `AvatarViewModel`, `FragmentPerfil`, `FragmentPgPrincipal`, `MainActivity` | Done (`teamtask-avatar-authority`) |
 | 4 | Add `firestore.rules`, `storage.rules`, `firestore.indexes.json`; commit and deploy | 1 | Local artifacts committed by `teamtask-testing-emulator-strategy` WU2 and verified against emulators; deployment, console parity, and App Check pending | Partially done |
 | 5 | Add focused tests per spec: `ParejaViewModel`, `TareaRepositorioFirebase.crearTarea`/`confirmarTarea`, `RepositorioRecompensas.canjearRecompensa` | 2 | 3-5 unit tests using `firebase emulators:exec` | Pending |
-| 6 | Refactor `TareaRepositorioFirebase.observarTareas` to typed `combine` and reiniciar-on-group-change | 5 | safer observers | Pending |
+| 6 | Refactor `TareaRepositorioFirebase.observarTareas` to typed `combine` and reiniciar-on-group-change | 5 | safer observers | Done (`teamtask-navigation-lifecycle-convergence`) |
 | 7 | Encapsulate logout + auto-login flow into dedicated controllers | 1 | smaller `MainActivity` | Pending |
 
 ## Future Convergence Work
