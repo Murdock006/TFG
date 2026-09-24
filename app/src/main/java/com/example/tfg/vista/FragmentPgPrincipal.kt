@@ -47,6 +47,8 @@ class FragmentPgPrincipal : Fragment() {
     private var grupoIdActual: String? = null
     // adapter horizontal de miembros
     private lateinit var miembrosAdapterHorizontal: MiembrosHorizontalAdapter
+    // adapter de tareas recientes, construido por vista para poder destruirlo en onDestroyView
+    private var tareaAdapter: TareasHomeAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -75,28 +77,40 @@ class FragmentPgPrincipal : Fragment() {
 
         // Conectar botones de UI a acciones de navegación
         binding.categoriaCocina.setOnClickListener {
-            val bundle = Bundle().apply { putString("categoria", "cocina") }
-            findNavController().navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
+            findNavController().navigate(
+                com.example.tfg.R.id.fragment_Tareas,
+                FragmentTareasArgs(taskId = null, modo = null, categoria = "cocina").toBundle()
+            )
         }
         binding.categoriaLimpieza.setOnClickListener {
-            val bundle = Bundle().apply { putString("categoria", "limpieza") }
-            findNavController().navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
+            findNavController().navigate(
+                com.example.tfg.R.id.fragment_Tareas,
+                FragmentTareasArgs(taskId = null, modo = null, categoria = "limpieza").toBundle()
+            )
         }
         binding.categoriaRopa.setOnClickListener {
-            val bundle = Bundle().apply { putString("categoria", "ropa") }
-            findNavController().navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
+            findNavController().navigate(
+                com.example.tfg.R.id.fragment_Tareas,
+                FragmentTareasArgs(taskId = null, modo = null, categoria = "ropa").toBundle()
+            )
         }
         binding.categoriaMascotas.setOnClickListener {
-            val bundle = Bundle().apply { putString("categoria", "mascotas") }
-            findNavController().navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
+            findNavController().navigate(
+                com.example.tfg.R.id.fragment_Tareas,
+                FragmentTareasArgs(taskId = null, modo = null, categoria = "mascotas").toBundle()
+            )
         }
         binding.categoriaRecados.setOnClickListener {
-            val bundle = Bundle().apply { putString("categoria", "recados") }
-            findNavController().navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
+            findNavController().navigate(
+                com.example.tfg.R.id.fragment_Tareas,
+                FragmentTareasArgs(taskId = null, modo = null, categoria = "recados").toBundle()
+            )
         }
         binding.categoriaPersonalizado.setOnClickListener {
-            val bundle = Bundle().apply { putString("categoria", "personalizado") }
-            findNavController().navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
+            findNavController().navigate(
+                com.example.tfg.R.id.fragment_Tareas,
+                FragmentTareasArgs(taskId = null, modo = null, categoria = "personalizado").toBundle()
+            )
         }
 
         // Configurar RecyclerView horizontal de miembros
@@ -149,9 +163,7 @@ class FragmentPgPrincipal : Fragment() {
                     }
 
                     // actualizar adaptador de tareas
-                    if (binding.rvTareasHome.adapter is TareasHomeAdapter) {
-                        (binding.rvTareasHome.adapter as TareasHomeAdapter).updateUsuarios(listaUsuarios)
-                    }
+                    tareaAdapter?.updateUsuarios(listaUsuarios)
                 }
             }
         }
@@ -174,7 +186,12 @@ class FragmentPgPrincipal : Fragment() {
         binding.rvTareasHome.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         binding.rvTareasHome.isNestedScrollingEnabled = false
 
-        val tareaAdapter = TareasHomeAdapter(this, parejaVM, tareasVM, viewLifecycleOwner.lifecycleScope)
+        tareaAdapter = TareasHomeAdapter(this, parejaVM, tareasVM) { id ->
+            findNavController().navigate(
+                com.example.tfg.R.id.fragment_Tareas,
+                FragmentTareasArgs(taskId = id, modo = null, categoria = null).toBundle()
+            )
+        }
         binding.rvTareasHome.adapter = tareaAdapter
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -183,7 +200,7 @@ class FragmentPgPrincipal : Fragment() {
                     val nuevoGrupoId = grupo?.id
                     tareasHomeJob?.cancel()
                     tareasHomeJob = null
-                    tareaAdapter.updateItems(emptyList())
+                    tareaAdapter?.updateItems(emptyList())
                     grupoIdActual = nuevoGrupoId
 
                     if (grupo == null) {
@@ -201,7 +218,7 @@ class FragmentPgPrincipal : Fragment() {
                                     val recientes = list
                                         .sortedByDescending { it.fechaCreada?.seconds ?: 0L }
                                         .take(5)
-                                    tareaAdapter.updateItems(recientes)
+                                    tareaAdapter?.updateItems(recientes)
                                     if (recientes.isEmpty()) {
                                         binding.rvTareasHome.visibility = View.GONE
                                         binding.tvSinTareasRecientes.visibility = View.GONE
@@ -309,11 +326,15 @@ class FragmentPgPrincipal : Fragment() {
             }
             button.setOnClickListener {
                 if (categoriaId.equals("personalizado", ignoreCase = true)) {
-                    val bundle = Bundle().apply { putString("modo", "crear"); putString("categoria", "Personalizada") }
-                    findNavController().navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
+                    findNavController().navigate(
+                        com.example.tfg.R.id.fragment_Tareas,
+                        FragmentTareasArgs(taskId = null, modo = "crear", categoria = "Personalizada").toBundle()
+                    )
                 } else {
-                    val bundle = Bundle().apply { putString("categoria", categoriaId) }
-                    findNavController().navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
+                    findNavController().navigate(
+                        com.example.tfg.R.id.fragment_Tareas,
+                        FragmentTareasArgs(taskId = null, modo = null, categoria = categoriaId).toBundle()
+                    )
                 }
             }
         }
@@ -353,6 +374,15 @@ class FragmentPgPrincipal : Fragment() {
             android.util.Log.w("FragmentPgPrincipal", "Error configurando botón comprar puntos: ${e.message}")
         }
     }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Ningún job con alcance de vista debe sobrevivir a la vista.
+        tareasHomeJob?.cancel()
+        tareasHomeJob = null
+        tareaAdapter?.destroy()
+        tareaAdapter = null
+    }
+
     private inner class MiembrosHorizontalAdapter : RecyclerView.Adapter<MiembrosHorizontalAdapter.MV>() {
         private var items: List<Pair<Usuario, String>> = emptyList() // usuario, rol
         fun setItems(list: List<Pair<Usuario, String>>) { items = list; notifyDataSetChanged() }

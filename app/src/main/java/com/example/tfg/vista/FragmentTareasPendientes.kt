@@ -9,6 +9,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.tfg.databinding.FragmentTareasPendientesBinding
 import com.example.tfg.modelo.Tarea
@@ -26,7 +27,9 @@ class FragmentTareasPendientes : Fragment() {
     private val parejaVM: com.example.tfg.viewmodel.ParejaViewModel by activityViewModels()
     private val tareasVM: TareasViewModel by activityViewModels()
 
-    private val adapter by lazy { TareasHomeAdapter(this, parejaVM, tareasVM, viewLifecycleOwner.lifecycleScope) }
+    // Adaptador construido por vista: se crea en onViewCreated contra la vista actual y se destruye
+    // en onDestroyView, de modo que cada recreación parte de un scope vivo.
+    private var adapter: TareasHomeAdapter? = null
 
     // Job para la suscripción a tareas, se cancela y reinicia cuando cambia el grupo
     private var tareasJob: Job? = null
@@ -41,6 +44,12 @@ class FragmentTareasPendientes : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.rvTareasPendientes.layoutManager = LinearLayoutManager(requireContext())
+        adapter = TareasHomeAdapter(this, parejaVM, tareasVM) { id ->
+            findNavController().navigate(
+                R.id.fragment_Tareas,
+                FragmentTareasArgs(taskId = id, modo = null, categoria = null).toBundle()
+            )
+        }
         binding.rvTareasPendientes.adapter = adapter
 
         // Pull-to-refresh
@@ -65,7 +74,7 @@ class FragmentTareasPendientes : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 try {
                     LocalizadorServicios.repositorioAuth.observarUsuarios().collect { lista ->
-                        adapter.updateUsuarios(lista)
+                        adapter?.updateUsuarios(lista)
                     }
                 } catch (e: Exception) {
                     android.util.Log.w("FragmentTareasPendientes", "Error observando usuarios: ${e.message}")
@@ -82,7 +91,7 @@ class FragmentTareasPendientes : Fragment() {
                     grupoActualId = nuevoGrupoId
                     // reiniciar la suscripción a tareas con el nuevo grupo
                     tareasJob?.cancel()
-                    adapter.updateItems(emptyList())
+                    adapter?.updateItems(emptyList())
                 }
 
                 if (grupo == null) {
@@ -177,7 +186,7 @@ class FragmentTareasPendientes : Fragment() {
 
         // Si no hay grupo, no mostrar nada (la UI ya muestra el mensaje de sin grupo)
         if (grupoId.isNullOrBlank()) {
-            adapter.updateItems(emptyList())
+            adapter?.updateItems(emptyList())
             return
         }
 
@@ -204,7 +213,7 @@ class FragmentTareasPendientes : Fragment() {
                 }
             }
         }
-        adapter.updateItems(filtrado)
+        adapter?.updateItems(filtrado)
 
         // Empty state
         if (filtrado.isEmpty()) {
@@ -224,6 +233,8 @@ class FragmentTareasPendientes : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         tareasJob?.cancel()
+        adapter?.destroy()
+        adapter = null
         _binding = null
     }
 }

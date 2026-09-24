@@ -81,7 +81,23 @@
         android:id="@+id/fragment_Tareas"
         android:name="com.example.tfg.vista.FragmentTareas"
         android:label="fragment_tareas"
-        tools:layout="@layout/fragment_tareas_lista" />
+        tools:layout="@layout/fragment_tareas_lista" >
+        <argument
+            android:name="taskId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="modo"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="categoria"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
 
     <fragment
         android:id="@+id/fragment_Calendario"

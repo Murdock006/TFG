@@ -7,8 +7,6 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.navigation.fragment.findNavController
-import com.example.tfg.R
 import com.example.tfg.databinding.FragmentPresentacionBinding
 
 class FragmentPresentacion : Fragment() {
@@ -47,9 +45,10 @@ class FragmentPresentacion : Fragment() {
                     mensajeIndex++
                     handler.postDelayed(this, 2000)
                 } else {
-                    // Solo navegar si el fragment sigue agregado al activity
+                    // La transición Presentación → Login la posee el coordinator de MainActivity;
+                    // este Fragment solo señala que su secuencia de mensajes terminó.
                     if (isAdded) {
-                        findNavController().navigate(R.id.action_fragment_Presentacion_to_fragment_Login)
+                        (activity as? MainActivity)?.onPresentacionMensajesCompletados()
                     }
                 }
             }

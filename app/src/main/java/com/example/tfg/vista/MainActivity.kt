@@ -54,6 +54,10 @@ class MainActivity : AppCompatActivity() {
     private var notificacionesJob: Job? = null
     private var notificacionesUidObservado: String? = null
     private var avatarDrawerJob: Job? = null
+
+    // Listener one-shot de auto-login, guardado para poder quitarlo en onDestroy (y tras disparar)
+    // y para no registrar dos en una misma instancia de Activity.
+    private var autoLoginListener: androidx.navigation.NavController.OnDestinationChangedListener? = null
     
     // Launcher para pedir permiso de notificaciones
     private val requestNotificationPermissionLauncher = registerForActivityResult(
@@ -218,12 +222,29 @@ class MainActivity : AppCompatActivity() {
         notificacionesJob?.cancel()
         notificacionesJob = null
         notificacionesUidObservado = null
+        // Acotar la vida del listener one-shot de auto-login a esta Activity
+        autoLoginListener?.let {
+            if (::navController.isInitialized) navController.removeOnDestinationChangedListener(it)
+        }
+        autoLoginListener = null
+        // Cancelar la carga de avatar para que no corra contra una Activity destruida
+        avatarDrawerJob?.cancel()
+        avatarDrawerJob = null
     }
 
     private fun handleOpenTaskId(taskId: String) {
         try {
-            val bundle = android.os.Bundle().apply { putString("taskId", taskId) }
-            navController.navigate(com.example.tfg.R.id.fragment_Tareas, bundle)
+            val args = FragmentTareasArgs(taskId = taskId, modo = null, categoria = null).toBundle()
+            if (navController.currentDestination?.id == com.example.tfg.R.id.fragment_Tareas) {
+                // Ya estamos en Tareas: pop inclusive de la entrada actual y push de una nueva con el
+                // taskId entrante, evitando apilar un fragment_Tareas duplicado.
+                val opciones = androidx.navigation.NavOptions.Builder()
+                    .setPopUpTo(com.example.tfg.R.id.fragment_Tareas, true)
+                    .build()
+                navController.navigate(com.example.tfg.R.id.fragment_Tareas, args, opciones)
+            } else {
+                navController.navigate(com.example.tfg.R.id.fragment_Tareas, args)
+            }
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Error navegando a tarea $taskId", e)
         }
@@ -253,8 +274,11 @@ class MainActivity : AppCompatActivity() {
                     parejaVM.cargarGrupoPorUsuario(firebaseUser.uid)
                     android.util.Log.d("MainActivity", "Grupo cargado, procediendo con navegación")
                     
-                    // Ahora que el grupo está cargado, esperar a que el NavController esté listo y navegar a PgPrincipal
-                    navController.addOnDestinationChangedListener(object : androidx.navigation.NavController.OnDestinationChangedListener {
+                    // Ahora que el grupo está cargado, esperar a que el NavController esté listo y navegar a PgPrincipal.
+                    // Un único coordinator (navegarDePresentacionALogin) es dueño de la transición
+                    // Presentación → Login. Se quita el listener previo antes de añadir el nuevo para que
+                    // una misma instancia de Activity nunca registre dos.
+                    val listener = object : androidx.navigation.NavController.OnDestinationChangedListener {
                         override fun onDestinationChanged(
                             controller: androidx.navigation.NavController,
                             destination: androidx.navigation.NavDestination,
@@ -262,9 +286,10 @@ class MainActivity : AppCompatActivity() {
                         ) {
                             // Solo navegar cuando llegamos a Presentacion (inicio)
                             if (destination.id == com.example.tfg.R.id.fragment_Presentacion) {
-                                android.util.Log.d("MainActivity", "En Presentacion, navegando a Login")
-                                controller.navigate(com.example.tfg.R.id.action_fragment_Presentacion_to_fragment_Login)
-                                // Esperar un frame para que Login se monte
+                                navegarDePresentacionALogin()
+                                // Esperar un frame para que Login se monte. La continuación
+                                // Login → PgPrincipal queda ligada a la sesión verificada (esta ruta),
+                                // no a la señal de mensajes de Presentación.
                                 binding.root.post {
                                     if (controller.currentDestination?.id == com.example.tfg.R.id.fragment_Login) {
                                         android.util.Log.d("MainActivity", "En Login, navegando a PgPrincipal")
@@ -272,9 +297,13 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 }
                                 controller.removeOnDestinationChangedListener(this)
+                                autoLoginListener = null
                             }
                         }
-                    })
+                    }
+                    autoLoginListener?.let { navController.removeOnDestinationChangedListener(it) }
+                    autoLoginListener = listener
+                    navController.addOnDestinationChangedListener(listener)
                 } else {
                     // No hay sesión: flujo normal de presentación → login
                     android.util.Log.d("MainActivity", "No hay sesión activa")
@@ -283,6 +312,26 @@ class MainActivity : AppCompatActivity() {
                 android.util.Log.e("MainActivity", "Error verificando sesión activa", e)
             }
         }
+    }
+
+    /**
+     * Único punto que dispara la transición Presentación → Login. Es idempotente por el guard de
+     * destino vivo: tras la primera navegación `currentDestination` es Login (actualizado de forma
+     * síncrona), por lo que cualquier señal duplicada se vuelve un no-op.
+     */
+    private fun navegarDePresentacionALogin() {
+        if (navController.currentDestination?.id != com.example.tfg.R.id.fragment_Presentacion) return
+        android.util.Log.d("MainActivity", "En Presentacion, navegando a Login")
+        navController.navigate(com.example.tfg.R.id.action_fragment_Presentacion_to_fragment_Login)
+    }
+
+    /**
+     * Señal que FragmentPresentacion emite tras sus tres mensajes. Delega en el coordinator único; la
+     * continuación Login → PgPrincipal queda reservada a la ruta de sesión verificada (el listener de
+     * destino), de modo que un usuario sin sesión permanece en Login.
+     */
+    fun onPresentacionMensajesCompletados() {
+        navegarDePresentacionALogin()
     }
 
     private fun iniciarObservacionNotificacionesParaSesionActual() {

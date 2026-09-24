@@ -52,9 +52,13 @@ class FragmentTareas : Fragment() {
     private val TAG = "FragmentTareas"
     private var ultimoBotonConfirmar: Button? = null
 
+    // Lector tipado de los argumentos de navegación declarados en nav_graph.xml (Safe Args).
+    private val navArgs: FragmentTareasArgs?
+        get() = arguments?.let { FragmentTareasArgs.fromBundle(it) }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val modo = arguments?.getString("modo") ?: "lista"
-        val taskIdArg = arguments?.getString("taskId")
+        val modo = navArgs?.modo ?: "lista"
+        val taskIdArg = navArgs?.taskId
         return when {
             modo == "crear" -> {
                 crearBinding = FragmentTareasCrearBinding.inflate(inflater, container, false)
@@ -75,7 +79,7 @@ class FragmentTareas : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Cambiar título de la tarjeta según la categoría
-        val categoriaArg = arguments?.getString("categoria")
+        val categoriaArg = navArgs?.categoria
         if (!categoriaArg.isNullOrBlank()) {
             try {
                 view.findViewById<TextView>(R.id.tvTituloTareas)?.text = categoriaArg.uppercase()
@@ -152,7 +156,7 @@ class FragmentTareas : Fragment() {
         }
 
         listaBinding?.let { b ->
-            val categoriaArg = arguments?.getString("categoria")
+            val categoriaArg = navArgs?.categoria
             if (!categoriaArg.isNullOrBlank()) {
                 // Mostrar plantillas/sugerencias de la categoría y permitir crear nuevas instancias (reasignables)
                 b.rvTareas.layoutManager = LinearLayoutManager(requireContext())
@@ -202,7 +206,7 @@ class FragmentTareas : Fragment() {
                 }
 
                 // si viene taskId abrir detalles
-                val taskIdArg = arguments?.getString("taskId")
+                val taskIdArg = navArgs?.taskId
                 if (!taskIdArg.isNullOrBlank()) {
                     viewLifecycleOwner.lifecycleScope.launch {
                         viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -223,7 +227,7 @@ class FragmentTareas : Fragment() {
             adaptCat.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             b.spCategoria.adapter = adaptCat
 
-            val categoriaInicialArg = arguments?.getString("categoria")
+            val categoriaInicialArg = navArgs?.categoria
             val categoriaInicialPersonalizada = categoriaInicialArg.equals("personalizada", true) || categoriaInicialArg.equals("personalizado", true)
             if (categoriaInicialPersonalizada) {
                 val idxPersonalizada = categorias.indexOfFirst { it.equals("Personalizada", true) }
@@ -394,7 +398,7 @@ class FragmentTareas : Fragment() {
         }
 
         // Si venimos en modo detalle con taskId, cargar y mostrar
-        val taskIdArg = arguments?.getString("taskId")
+        val taskIdArg = navArgs?.taskId
         if (!taskIdArg.isNullOrBlank() && crearBinding == null && listaBinding == null) {
             // estamos en la vista detalle (layout inflado manualmente)
             val tvTitulo = view.findViewById<TextView>(R.id.tvDetalleTitulo)
@@ -529,6 +533,13 @@ class FragmentTareas : Fragment() {
                 }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Alcance acotado: solo se limpian los bindings que este Fragment infla directamente.
+        listaBinding = null
+        crearBinding = null
     }
 
     // Adapter simple

@@ -10,7 +10,6 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -25,6 +24,9 @@ import com.example.tfg.viewmodel.TareasViewModel
 import com.google.firebase.Timestamp
 import com.example.tfg.service.firebase.FirebaseComposition
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -35,11 +37,19 @@ class TareasHomeAdapter(
     private val fragment: Fragment,
     private val parejaVM: ParejaViewModel,
     private val tareasVM: TareasViewModel,
-    private val scope: CoroutineScope
+    private val onTareaClick: (String) -> Unit
 ) : ListAdapter<Tarea, TareasHomeAdapter.VH>(TareaDiffCallback()) {
 
     private val TAG = "TareasHomeAdapter"
     private var usuarios: List<Usuario> = emptyList()
+
+    // Scope propio del adaptador: un SupervisorJob ligado a la vida del adaptador y cancelado por
+    // el Fragment anfitrión desde onDestroyView mediante destroy(). Dispatchers.Main.immediate
+    // preserva el hilo previo (el anfitrión pasaba viewLifecycleOwner.lifecycleScope).
+    private val adapterJob = SupervisorJob()
+    private val scope = CoroutineScope(Dispatchers.Main.immediate + adapterJob)
+
+    fun destroy() { adapterJob.cancel() }
 
     fun updateItems(list: List<Tarea>) { submitList(null); submitList(list) }
     fun updateUsuarios(list: List<Usuario>) { usuarios = list; notifyDataSetChanged() }
@@ -63,6 +73,9 @@ class TareasHomeAdapter(
         val tvAsignado: TextView = root.findViewById(R.id.tvAsignado)
         val btnAccion: Button = root.findViewById(R.id.btnAccionTarea)
         val vIndicator: View? = root.findViewById(R.id.vIndicator)
+        // Job de la carga del nombre del asignado, cancelado antes de cada re-bind para evitar
+        // cargas solapadas al reciclar el holder.
+        var cargaAsignadoJob: Job? = null
     }
 
     private suspend fun obtenerNombreUsuario(uid: String?): String {
@@ -85,6 +98,7 @@ class TareasHomeAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val t = getItem(position)
+        holder.cargaAsignadoJob?.cancel()
         holder.btnAccion.visibility = View.GONE
         holder.btnAccion.isEnabled = false
         holder.tvAsignado.visibility = View.GONE
@@ -141,7 +155,7 @@ class TareasHomeAdapter(
                 // Solo ir a Firestore si no está en caché — guardar posición para evitar race condition
                 holder.tvAsignado.text = "Cargando..."
                 val posicionActual = holder.bindingAdapterPosition
-                scope.launch {
+                holder.cargaAsignadoJob = scope.launch {
                     val nombre = if (usuarioId == t.asignadoA) {
                         "Te la asignó: ${obtenerNombreUsuario(t.creadoPor)}"
                     } else {
@@ -271,8 +285,7 @@ class TareasHomeAdapter(
 
         holder.root.setOnClickListener {
             try {
-                val bundle = android.os.Bundle().apply { putString("taskId", t.id) }
-                fragment.findNavController().navigate(R.id.fragment_Tareas, bundle)
+                onTareaClick(t.id)
             } catch (e: Exception) {
                 Log.w(TAG, "Error navegando a tarea ${t.id}: ${e.message}")
             }
