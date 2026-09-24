@@ -33,7 +33,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
-import java.io.File
 
 class FragmentPgPrincipal : Fragment() {
 
@@ -373,18 +372,14 @@ class FragmentPgPrincipal : Fragment() {
             holder.tvPuntos.text = u.puntos.toString()
             holder.tvRol.text = rol
 
-            // Cargar avatar si existe
-            val prefs = requireContext().getSharedPreferences("avatar_prefs", android.content.Context.MODE_PRIVATE)
-            val avatarPath = prefs.getString("avatar_${u.id}", null)
-            if (avatarPath != null) {
-                val file = File(avatarPath)
-                if (file.exists()) {
-                    Glide.with(requireContext()).load(file).circleCrop().into(holder.ivAvatar)
-                } else {
-                    holder.ivAvatar.setImageResource(R.drawable.perfil)
+            // Resolver el avatar a través del repositorio canónico, con guarda de reciclado
+            holder.ivAvatar.tag = u.id
+            holder.ivAvatar.setImageResource(R.drawable.perfil)
+            viewLifecycleOwner.lifecycleScope.launch {
+                val bmp = LocalizadorServicios.repositorioAvatar.obtenerAvatar(u.id, u.avatarUpdatedAt)
+                if (holder.ivAvatar.tag == u.id && bmp != null) {
+                    Glide.with(holder.itemView.context).load(bmp).circleCrop().into(holder.ivAvatar)
                 }
-            } else {
-                holder.ivAvatar.setImageResource(R.drawable.perfil)
             }
         }
         override fun getItemCount(): Int = items.size

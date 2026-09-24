@@ -1,47 +1,70 @@
 package com.example.tfg.viewmodel
 
 import android.app.Application
+import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.tfg.data.local.AvatarRepositorioLocal
+import com.example.tfg.repositorio.AuthRepositorio
+import com.example.tfg.repositorio.AvatarRepositorio
+import com.example.tfg.service.LocalizadorServicios
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class AvatarViewModel(application: Application) : AndroidViewModel(application) {
+class AvatarViewModel(
+    application: Application,
+    private val repositorioAvatar: AvatarRepositorio = LocalizadorServicios.repositorioAvatar,
+    private val repositorioAuth: AuthRepositorio = LocalizadorServicios.repositorioAuth
+) : AndroidViewModel(application) {
 
-    private val avatarRepo = AvatarRepositorioLocal(application.applicationContext)
+    /**
+     * Keeps the androidx AndroidViewModelFactory's single-Application lookup working.
+     *
+     * The defaults are passed explicitly (mirroring `ParejaViewModel`) because a bare
+     * `this(application)` would resolve to this same secondary constructor and produce a
+     * delegation cycle.
+     */
+    constructor(application: Application) : this(
+        application,
+        LocalizadorServicios.repositorioAvatar,
+        LocalizadorServicios.repositorioAuth
+    )
+
     private val TAG = "AvatarViewModel"
 
-    // Estado de carga del avatar
-    private val _avatarState = MutableStateFlow<Result<String>?>(null)
-    val avatarState: StateFlow<Result<String>?> = _avatarState.asStateFlow()
+    // Resultado de la última operación de subida (éxito/error para la UI)
+    private val _avatarState = MutableStateFlow<Result<Unit>?>(null)
+    val avatarState: StateFlow<Result<Unit>?> = _avatarState.asStateFlow()
 
-    // URL del avatar actual (se carga al iniciar)
-    private val _avatarUrlActual = MutableStateFlow<String?>(null)
-    val avatarUrlActual: StateFlow<String?> = _avatarUrlActual.asStateFlow()
+    // Avatar actualmente mostrado; null => placeholder
+    private val _avatarActual = MutableStateFlow<Bitmap?>(null)
+    val avatarActual: StateFlow<Bitmap?> = _avatarActual.asStateFlow()
 
     // Estado de carga
     private val _cargando = MutableStateFlow(false)
     val cargando: StateFlow<Boolean> = _cargando.asStateFlow()
 
     /**
-     * Sube un avatar seleccionado por el usuario
+     * Sube un avatar seleccionado por el usuario y, en caso de éxito, vuelve a resolverlo para
+     * que [avatarActual] emita el nuevo bitmap.
      */
     fun subirAvatar(imageUri: Uri) {
         viewModelScope.launch {
             _cargando.value = true
             try {
-                val res = avatarRepo.subirAvatar(imageUri)
-                _avatarState.value = res
-                
+                val res = repositorioAvatar.subirAvatar(imageUri)
                 if (res.isSuccess) {
-                    _avatarUrlActual.value = res.getOrNull()
+                    _avatarState.value = Result.success(Unit)
+                    val uid = repositorioAuth.usuarioActual()?.id
+                    if (uid != null) {
+                        _avatarActual.value = repositorioAvatar.obtenerAvatar(uid, res.getOrNull())
+                    }
                     Log.d(TAG, "Avatar subido exitosamente")
                 } else {
+                    _avatarState.value = Result.failure(res.exceptionOrNull() ?: Exception("Error desconocido"))
                     Log.e(TAG, "Error subiendo avatar: ${res.exceptionOrNull()?.message}")
                 }
             } catch (e: Exception) {
@@ -54,14 +77,20 @@ class AvatarViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     /**
-     * Carga la URL actual del avatar del usuario
+     * Carga el avatar actual del usuario autenticado a través del repositorio canónico,
+     * pasando el hint [com.example.tfg.modelo.Usuario.avatarUpdatedAt].
      */
     fun cargarAvatarActual() {
         viewModelScope.launch {
             try {
-                val url = avatarRepo.obtenerAvatarPathActual()
-                _avatarUrlActual.value = url
-                Log.d(TAG, "Avatar actual cargado: ${url ?: "sin avatar"}")
+                val usuario = repositorioAuth.usuarioActual()
+                val uid = usuario?.id
+                if (uid == null) {
+                    _avatarActual.value = null
+                    return@launch
+                }
+                _avatarActual.value = repositorioAvatar.obtenerAvatar(uid, usuario.avatarUpdatedAt)
+                Log.d(TAG, "Avatar actual cargado")
             } catch (e: Exception) {
                 Log.e(TAG, "Error cargando avatar actual", e)
             }
@@ -69,28 +98,11 @@ class AvatarViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     /**
-     * Elimina el avatar del usuario
+     * Limpia el estado local del avatar. `eliminarAvatar` is intentionally NOT wired to any UI:
+     * this change adds no remote delete affordance.
      */
     fun eliminarAvatar() {
-        viewModelScope.launch {
-            _cargando.value = true
-            try {
-                val res = avatarRepo.eliminarAvatarActual()
-                if (res.isSuccess) {
-                    _avatarUrlActual.value = null
-                    _avatarState.value = Result.success("")
-                    Log.d(TAG, "Avatar eliminado")
-                } else {
-                    Log.e(TAG, "Error eliminando avatar: ${res.exceptionOrNull()?.message}")
-                    _avatarState.value = Result.failure(res.exceptionOrNull() ?: Exception("Error desconocido"))
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Exception en eliminarAvatar", e)
-                _avatarState.value = Result.failure(e)
-            } finally {
-                _cargando.value = false
-            }
-        }
+        _avatarActual.value = null
     }
 
     /**

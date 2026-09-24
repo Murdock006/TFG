@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity() {
     private var ultimoRetrocesoMs: Long = 0L
     private var notificacionesJob: Job? = null
     private var notificacionesUidObservado: String? = null
+    private var avatarDrawerJob: Job? = null
     
     // Launcher para pedir permiso de notificaciones
     private val requestNotificationPermissionLauncher = registerForActivityResult(
@@ -481,19 +482,21 @@ private fun observarUsuarioDrawerHeader() {
                     tvGrupo.text = getString(com.example.tfg.R.string.drawer_pareja_sin_grupo)
                 }
                 
-                // Cargar avatar local si existe
-                val avatarPath = getSharedPreferences("tfg_prefs", MODE_PRIVATE)
-                    .getString("avatar_path_${usuario.id}", null)
-                if (!avatarPath.isNullOrBlank()) {
-                    Glide.with(this)
-                        .load(java.io.File(avatarPath))
-                        .circleCrop()
-                        .placeholder(com.example.tfg.R.drawable.perfil)
-                        .into(ivAvatar)
-                    android.util.Log.d("MainActivity", "Avatar local cargado en drawer")
-                } else {
-                    Glide.with(this).clear(ivAvatar)
-                    ivAvatar.setImageResource(com.example.tfg.R.drawable.perfil)
+                // Resolver el avatar a través del repositorio canónico (cualquier usuario)
+                avatarDrawerJob?.cancel()
+                avatarDrawerJob = lifecycleScope.launch {
+                    val bitmap = LocalizadorServicios.repositorioAvatar
+                        .obtenerAvatar(usuario.id, usuario.avatarUpdatedAt)
+                    if (bitmap != null) {
+                        Glide.with(this@MainActivity)
+                            .load(bitmap)
+                            .circleCrop()
+                            .placeholder(com.example.tfg.R.drawable.perfil)
+                            .into(ivAvatar)
+                    } else {
+                        Glide.with(this@MainActivity).clear(ivAvatar)
+                        ivAvatar.setImageResource(com.example.tfg.R.drawable.perfil)
+                    }
                 }
             } else {
                 tvNombre.text = getString(com.example.tfg.R.string.no_hay_usuario)

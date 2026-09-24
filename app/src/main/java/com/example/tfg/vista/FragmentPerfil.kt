@@ -186,13 +186,13 @@ class FragmentPerfil : Fragment() {
             }
         }
 
-        // Observar URL del avatar actual para mostrar en pantalla
+        // Observar el avatar actual para mostrar en pantalla
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                avatarVM.avatarUrlActual.collect { url ->
-                    if (url != null) {
+                avatarVM.avatarActual.collect { bmp ->
+                    if (bmp != null) {
                         Glide.with(this@FragmentPerfil)
-                            .load(url)
+                            .load(bmp)
                             .circleCrop()
                             .placeholder(R.drawable.perfil)
                             .into(ivAvatarPerfil)
