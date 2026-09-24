@@ -1,174 +1,126 @@
 package com.example.tfg.data.firebase
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
-import android.webkit.MimeTypeMap
+import android.util.LruCache
+import com.example.tfg.data.local.AvatarRepositorioLocal
+import com.example.tfg.repositorio.AvatarRepositorio
 import com.example.tfg.service.firebase.FirebaseComposition
+import com.example.tfg.util.AvatarImagen
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.firestore.SetOptions
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
-import java.io.File
-import java.util.UUID
+import kotlinx.coroutines.withContext
 
-class AvatarRepositorioFirebase(private val context: Context? = null) {
+/**
+ * Firestore base64 implementation of [AvatarRepositorio].
+ *
+ * Avatar bytes live as a compressed base64 string in `avatares/{uid}` (fields `base64`,
+ * `contentType`, `updatedAt`). Uploads also write the `usuarios/{uid}.avatarUpdatedAt` hint in
+ * the same [com.google.firebase.firestore.WriteBatch], so a blob and its version marker change
+ * atomically (or not at all). No Firebase Storage is used.
+ */
+class AvatarRepositorioFirebase(
+    private val firestore: FirebaseFirestore = FirebaseComposition.firestore(),
+    private val auth: FirebaseAuth = FirebaseComposition.auth(),
+    private val context: Context,
+    private val cacheLocal: AvatarRepositorioLocal = AvatarRepositorioLocal(context)
+) : AvatarRepositorio {
 
-    private val auth: FirebaseAuth = FirebaseComposition.auth()
-    private val firestore: FirebaseFirestore = FirebaseComposition.firestore()
-    private val storage: FirebaseStorage = FirebaseComposition.storage()
+    private val coleccion = "avatares"
+    private val cacheMemoria = LruCache<String, Bitmap>(CACHE_ENTRADAS)
     private val TAG = "AvatarRepoFirebase"
 
-    /**
-     * Sube un avatar a Firebase Storage y actualiza la URL en el documento del usuario en Firestore.
-     *
-     * @param imageUri URI de la imagen seleccionada por el usuario
-     * @return Result<String> con la URL del avatar subido, o error
-     */
-    suspend fun subirAvatar(imageUri: Uri): Result<String> {
-        return try {
-            val uid = auth.currentUser?.uid ?: throw Exception("No hay usuario autenticado")
-            
-            if (context == null) {
-                throw Exception("Context no disponible para lectura de imagen")
+    override suspend fun subirAvatar(imageUri: Uri): Result<Timestamp> = withContext(Dispatchers.IO) {
+        try {
+            val uid = auth.currentUser?.uid
+                ?: return@withContext Result.failure(Exception("No hay usuario autenticado"))
+
+            val jpegBytes = AvatarImagen.comprimirJpeg(context.contentResolver, imageUri)
+                ?: return@withContext Result.failure(Exception("No se pudo procesar la imagen seleccionada"))
+
+            val base64 = AvatarImagen.codificarBase64(jpegBytes)
+            if (base64.length > AvatarImagen.MAX_BASE64_CHARS) {
+                return@withContext Result.failure(
+                    Exception(
+                        "La imagen es demasiado grande. Usa una imagen menor (límite: " +
+                            "${AvatarImagen.MAX_BASE64_CHARS} caracteres codificados)."
+                    )
+                )
             }
-            
-            // Paso 1: Leer contenido del Uri
-            Log.d(TAG, "Leyendo contenido del Uri: $imageUri")
-            val imageBytes = context.contentResolver.openInputStream(imageUri)?.use { 
-                it.readBytes() 
-            } ?: throw Exception("No se puede leer la imagen: stream nulo")
-            
-            Log.d(TAG, "Imagen leída: ${imageBytes.size} bytes")
-            
-            // Paso 2: Determinar formato de la imagen y extensión
-            val extension = determinarExtension(imageUri, context)
-            Log.d(TAG, "Extensión detectada: $extension")
-            
-            // Paso 3: Crear archivo temporal local con nombre único
-            val nombreArchivo = "avatares/$uid/${UUID.randomUUID()}.$extension"
-            Log.d(TAG, "Subiendo avatar a $nombreArchivo")
-            
-            // Paso 4: Subir a Firebase Storage usando putBytes
-            val ref = storage.reference.child(nombreArchivo)
-            
-            // Detectar MIME type para metadata
-            val mimeType = obtenerMimeType(extension)
-            val metadata = com.google.firebase.storage.StorageMetadata.Builder()
-                .setContentType(mimeType)
-                .build()
-            
-            ref.putBytes(imageBytes, metadata).await()
-            Log.d(TAG, "Avatar subido exitosamente (${imageBytes.size} bytes)")
-            
-            // Paso 5: Obtener URL de descarga
-            val downloadUrl = ref.downloadUrl.await().toString()
-            Log.d(TAG, "URL de descarga obtenida: $downloadUrl")
-            
-            // Paso 6: Actualizar documento del usuario en Firestore
-            firestore.collection("usuarios").document(uid).update(
-                mapOf("avatarUrl" to downloadUrl)
-            ).await()
-            Log.d(TAG, "Documento de usuario actualizado con avatarUrl")
-            
-            Result.success(downloadUrl)
+
+            val ahora = Timestamp.now()
+            val batch = firestore.batch()
+            batch.set(
+                firestore.collection(coleccion).document(uid),
+                mapOf(
+                    "base64" to base64,
+                    "contentType" to AvatarImagen.CONTENT_TYPE_JPEG,
+                    "updatedAt" to ahora
+                )
+            )
+            batch.set(
+                firestore.collection("usuarios").document(uid),
+                mapOf("avatarUpdatedAt" to ahora),
+                SetOptions.merge()
+            )
+            batch.commit().await()
+
+            val bitmap = AvatarImagen.decodificarJpeg(jpegBytes)
+            if (bitmap != null) {
+                cacheMemoria.put(claveCache(uid, ahora), bitmap)
+            }
+            cacheLocal.guardarUltimoConocido(uid, jpegBytes)
+            Result.success(ahora)
         } catch (e: Exception) {
             Log.e(TAG, "Error subiendo avatar", e)
-            e.printStackTrace()
-            val msg = when (e) {
-                is com.google.firebase.FirebaseNetworkException -> "Fallo de red: comprueba tu conexión"
-                is com.google.firebase.storage.StorageException -> "Error al subir la imagen: ${e.message}"
-                is SecurityException -> "Permiso denegado para leer la imagen"
-                else -> e.message ?: "Error desconocido"
+            Result.failure(Exception(e.message ?: "Error desconocido"))
+        }
+    }
+
+    override suspend fun obtenerAvatar(uid: String, avatarUpdatedAt: Timestamp?): Bitmap? =
+        withContext(Dispatchers.IO) {
+            // No hint => no remote avatar => no Firestore read; legacy last-known only.
+            if (avatarUpdatedAt == null) {
+                return@withContext decodificarUltimoConocido(uid)
             }
-            Result.failure(Exception(msg))
-        }
-    }
 
-    /**
-     * Determina la extensión del archivo basada en el Uri y MIME type
-     */
-    private fun determinarExtension(uri: Uri, context: Context): String {
-        return try {
-            val mimeType = context.contentResolver.getType(uri) ?: "image/jpeg"
-            when {
-                mimeType.contains("png") -> "png"
-                mimeType.contains("webp") -> "webp"
-                mimeType.contains("gif") -> "gif"
-                mimeType.contains("bmp") -> "bmp"
-                else -> "jpg" // default a JPEG
+            val clave = claveCache(uid, avatarUpdatedAt)
+            cacheMemoria.get(clave)?.let { return@withContext it }
+
+            try {
+                val doc = firestore.collection(coleccion).document(uid).get().await()
+                val base64 = doc.getString("base64")
+                if (base64.isNullOrBlank()) {
+                    return@withContext decodificarUltimoConocido(uid)
+                }
+                val bytes = AvatarImagen.decodificarBase64(base64)
+                    ?: return@withContext decodificarUltimoConocido(uid)
+                val bitmap = AvatarImagen.decodificarJpeg(bytes)
+                    ?: return@withContext decodificarUltimoConocido(uid)
+                cacheMemoria.put(clave, bitmap)
+                cacheLocal.guardarUltimoConocido(uid, bytes)
+                bitmap
+            } catch (e: Exception) {
+                Log.w(TAG, "Lectura remota de avatar fallida para uid=$uid", e)
+                decodificarUltimoConocido(uid)
             }
-        } catch (e: Exception) {
-            Log.w(TAG, "Error detectando MIME type, usando jpg por defecto: ${e.message}")
-            "jpg"
         }
+
+    private fun decodificarUltimoConocido(uid: String): Bitmap? {
+        val bytes = cacheLocal.obtenerUltimoConocido(uid) ?: return null
+        return AvatarImagen.decodificarJpeg(bytes)
     }
 
-    /**
-     * Obtiene el MIME type correcto para Firebase Storage metadata
-     */
-    private fun obtenerMimeType(extension: String): String {
-        return when (extension.lowercase()) {
-            "png" -> "image/png"
-            "webp" -> "image/webp"
-            "gif" -> "image/gif"
-            "bmp" -> "image/bmp"
-            else -> "image/jpeg"
-        }
-    }
+    private fun claveCache(uid: String, hint: Timestamp): String =
+        "$uid#${hint.seconds}:${hint.nanoseconds}"
 
-    /**
-     * Obtiene la URL del avatar del usuario actual desde Firestore.
-     *
-     * @return URL del avatar, o null si no tiene
-     */
-    suspend fun obtenerAvatarUrlActual(): String? {
-        return try {
-            val uid = auth.currentUser?.uid ?: return null
-            
-            val doc = firestore.collection("usuarios").document(uid).get().await()
-            doc.getString("avatarUrl")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error obteniendo avatarUrl", e)
-            null
-        }
-    }
-
-    /**
-     * Obtiene la URL del avatar de un usuario específico.
-     *
-     * @param uid ID del usuario
-     * @return URL del avatar, o null si no tiene
-     */
-    suspend fun obtenerAvatarUrl(uid: String): String? {
-        return try {
-            val doc = firestore.collection("usuarios").document(uid).get().await()
-            doc.getString("avatarUrl")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error obteniendo avatarUrl para uid=$uid", e)
-            null
-        }
-    }
-
-    /**
-     * Elimina el avatar del usuario actual.
-     *
-     * @return Result<Unit> indicando éxito o error
-     */
-    suspend fun eliminarAvatar(): Result<Unit> {
-        return try {
-            val uid = auth.currentUser?.uid ?: throw Exception("No hay usuario autenticado")
-            
-            // Eliminar la URL de Firestore
-            firestore.collection("usuarios").document(uid).update(
-                mapOf("avatarUrl" to null)
-            ).await()
-            Log.d(TAG, "Avatar eliminado del documento de usuario")
-            
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error eliminando avatar", e)
-            Result.failure(e)
-        }
+    companion object {
+        private const val CACHE_ENTRADAS = 32
     }
 }

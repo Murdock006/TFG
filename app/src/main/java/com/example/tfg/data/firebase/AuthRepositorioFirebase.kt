@@ -132,7 +132,8 @@ class AuthRepositorioFirebase(
                 email = firebaseUser.email ?: email,
                 puntos = puntos,
                 puntosReservados = puntosReservados,
-                puntosRecompensa = puntosRecompensa
+                puntosRecompensa = puntosRecompensa,
+                avatarUpdatedAt = reloaded.getTimestamp("avatarUpdatedAt")
             )
             Log.d(TAG, "usuario cargado desde Firestore uid=${firebaseUser.uid} puntos=$puntos")
             _usuarioCache = user
@@ -201,7 +202,8 @@ class AuthRepositorioFirebase(
                  email = firebaseUser.email ?: "",
                  puntos = puntos,
                  puntosReservados = puntosReservados,
-                 puntosRecompensa = puntosRecompensa
+                 puntosRecompensa = puntosRecompensa,
+                 avatarUpdatedAt = reloaded.getTimestamp("avatarUpdatedAt")
              )
             _usuarioCache = user
             Result.success(user)
@@ -409,7 +411,8 @@ class AuthRepositorioFirebase(
                     pais = pais,
                     ciudad = ciudad,
                     email = email,
-                    puntos = puntos, puntosReservados = puntosReservados, puntosRecompensa = puntosRecompensa)
+                    puntos = puntos, puntosReservados = puntosReservados, puntosRecompensa = puntosRecompensa,
+                    avatarUpdatedAt = doc.getTimestamp("avatarUpdatedAt"))
             } ?: emptyList()
             // Actualizar caché del usuario actual con los datos frescos de Firestore
             val uidActual = auth.currentUser?.uid

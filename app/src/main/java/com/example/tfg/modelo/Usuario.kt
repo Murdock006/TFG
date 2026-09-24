@@ -15,6 +15,7 @@ data class Usuario(
     val puntosRecompensa: Int = 0,          // puntos exclusivos para canjear recompensas (10% de cada tarea)
     val rachaDias: Int = 0,                 // racha de completados consecutivos
     val grupoId: String? = null,
-    val avatarUrl: String? = null,          // URL del avatar en Firebase Storage
+    val avatarUrl: String? = null,          // Legacy: no producer/reader after teamtask-avatar-authority
+    val avatarUpdatedAt: Timestamp? = null, // Avatar hint: existence flag + cache version key
     val fechaCreacion: Timestamp? = null
 )

@@ -4,7 +4,7 @@ rules_version = '2';
 //
 // Covers the collections and query patterns observed in
 // openspec/specs/firestore-contracts/spec.md: usuarios, grupos, invitaciones,
-// tareas, recompensas, canjes, disputas, and notificaciones.
+// tareas, recompensas, canjes, disputas, notificaciones, and avatares.
 //
 // This is a LOCAL executable contract. It does not imply deployed production
 // parity: production rules, indexes, App Check, providers, and Console state
@@ -29,6 +29,14 @@ service cloud.firestore {
       allow create: if isSelf(userId);
       allow update: if signedIn();
       allow delete: if isSelf(userId);
+    }
+
+    // avatares/{uid}: avatar bytes as base64 (fields base64, contentType, updatedAt).
+    // Readable by any signed-in user (group members render each other's avatars);
+    // writable only by the owner.
+    match /avatares/{userId} {
+      allow read: if signedIn();
+      allow write: if isSelf(userId);
     }
 
     // grupos/{gid}: members is a Map<uid, rol>.
