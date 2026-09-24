@@ -1,0 +1,38 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "canjes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "grupoId", "order": "ASCENDING" },
+        { "fieldPath": "fecha", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "canjes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "usuarioUid", "order": "ASCENDING" },
+        { "fieldPath": "fecha", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "canjes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "grupoId", "order": "ASCENDING" },
+        { "fieldPath": "estado", "order": "ASCENDING" },
+        { "fieldPath": "fecha", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "tareas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "grupoId", "order": "ASCENDING" },
+        { "fieldPath": "estado", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

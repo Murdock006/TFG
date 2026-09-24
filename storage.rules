@@ -1,0 +1,55 @@
+rules_version = '2';
+
+// TeamTask local Storage contract.
+//
+// Covers the Storage paths observed in
+// openspec/specs/firestore-contracts/spec.md:
+//   avatares/{uid}/{uuid}.{ext}
+//   disputas/{tareaId}/{uuid}.jpg
+//
+// This is a LOCAL executable contract. It does not imply deployed production
+// parity: production rules, buckets, App Check, and Console state remain
+// [UNVERIFIED].
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isJpeg() {
+      return request.resource.contentType == 'image/jpeg';
+    }
+
+    function underSizeLimit() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // avatares/{uid}/... : only the owner may write or delete their avatar.
+    match /avatares/{userId}/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn()
+        && request.auth.uid == userId
+        && isImage()
+        && underSizeLimit();
+      allow delete: if signedIn() && request.auth.uid == userId;
+    }
+
+    // disputas/{tareaId}/... : signed-in disputers upload JPEG evidence.
+    match /disputas/{taskId}/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn() && isJpeg() && underSizeLimit();
+      allow delete: if signedIn();
+    }
+
+    // Anything outside the documented paths is denied.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

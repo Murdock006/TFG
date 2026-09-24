@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "demo-teamtask-local",
+    "local": "demo-teamtask-local"
+  }
+}

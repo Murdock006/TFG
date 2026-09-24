@@ -1,0 +1,95 @@
+rules_version = '2';
+
+// TeamTask local Firestore contract.
+//
+// Covers the collections and query patterns observed in
+// openspec/specs/firestore-contracts/spec.md: usuarios, grupos, invitaciones,
+// tareas, recompensas, canjes, disputas, and notificaciones.
+//
+// This is a LOCAL executable contract. It does not imply deployed production
+// parity: production rules, indexes, App Check, providers, and Console state
+// remain [UNVERIFIED].
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    // usuarios/{uid}: profiles are read widely (group members read each other's
+    // document). Creation is self-only; updates may target another member's
+    // document when a group is joined or left.
+    match /usuarios/{userId} {
+      allow read: if signedIn();
+      allow create: if isSelf(userId);
+      allow update: if signedIn();
+      allow delete: if isSelf(userId);
+    }
+
+    // grupos/{gid}: members is a Map<uid, rol>.
+    match /grupos/{groupId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+      allow delete: if signedIn();
+    }
+
+    // invitaciones: lookup by codigo and correoDestino + estado.
+    match /invitaciones/{invitationId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+      allow delete: if signedIn();
+    }
+
+    // tareas: queries by creadoPor, asignadoA, and grupoId.
+    match /tareas/{taskId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+      allow delete: if signedIn();
+    }
+
+    // recompensas: predefined plus per-group custom rewards.
+    match /recompensas/{rewardId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+      allow delete: if signedIn();
+    }
+
+    // canjes: grupoId/usuarioUid filters plus fecha ordering.
+    match /canjes/{redemptionId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+      allow delete: if signedIn();
+    }
+
+    // disputas: iniciador filter plus pruebas[] evidence.
+    match /disputas/{disputeId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+      allow delete: if signedIn();
+    }
+
+    // notificaciones: destinatario and visto filters.
+    match /notificaciones/{notificationId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+      allow delete: if signedIn();
+    }
+
+    // Anything outside the documented contract is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
