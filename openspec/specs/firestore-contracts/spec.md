@@ -31,7 +31,8 @@ Source-of-truth priority for this spec: code → `app/build.gradle.kts` →
 
 | Collection | Producer(s) | Consumer(s) | Primary fields observed |
 |---|---|---|---|
-| `usuarios` | `AuthRepositorioFirebase.kt:30-82,160-212`; `TareaRepositorioFirebase.kt:281-334,440-494`; `RepositorioPareja.kt:118-141,247-254`; `RepositorioRecompensas.kt:91-118,131-141`; UI direct (`FragmentPareja.kt:549-570`) | `AuthRepositorioFirebase.kt:97-138,386-422`; `TareaRepositorioFirebase.kt:127-184`; `RepositorioPareja.kt:218-228`; `MainActivity.kt:484-496` (drawer) | `nombre`, `email`, `puntos`, `puntosReservados`, `puntosRecompensa`, `rachaDias`, `grupoId`, `avatarUrl`, `fechaCreacion` |
+| `usuarios` | `AuthRepositorioFirebase.kt:30-82,160-212`; `TareaRepositorioFirebase.kt:281-334,440-494`; `RepositorioPareja.kt:118-141,247-254`; `RepositorioRecompensas.kt:91-118,131-141`; canonical avatar repository (writes `avatarUpdatedAt` only, this change); UI direct (`FragmentPareja.kt:549-570`) | `AuthRepositorioFirebase.kt:97-138,386-422`; `TareaRepositorioFirebase.kt:127-184`; `RepositorioPareja.kt:218-228`; `MainActivity.kt:441-448` (drawer) | `nombre`, `email`, `puntos`, `puntosReservados`, `puntosRecompensa`, `rachaDias`, `grupoId`, `avatarUrl` (legacy, no producer after this change), `avatarUpdatedAt`, `fechaCreacion` |
+| `avatares` | canonical avatar repository, self-only upload (this change) | canonical avatar repository read by uid; `MainActivity.kt:451-509`; `FragmentPgPrincipal.kt:357-391`; `FragmentPerfil.kt:49-62,190-205` (this change) | `base64`, `contentType`, `updatedAt` |
 | `grupos` | `RepositorioPareja.kt:35-62,230-288` | `RepositorioPareja.kt:160-203,269-288`; `TareaRepositorioFirebase.kt:130-181,200-206`; UI direct (`FragmentPareja.kt:364-371`) | `nombre`, `miembros` (Map<uid,rol>), `puntos`, `fechaCreacion`, `emoji` |
 | `invitaciones` | `RepositorioPareja.kt:64-76` | `RepositorioPareja.kt:78-87,89-156` | `codigo`, `creadoPor`, `grupoId`, `correoDestino`, `estado`, `fechaCreacion`, `expiracion` |
 | `tareas` | `TareaRepositorioFirebase.kt:76-120,230-360,390-548`; `RepositorioTareas.kt:44-200`; UI direct (`FragmentTareas.kt:492`) | `TareaRepositorioFirebase.kt:122-227`; `RepositorioTareas.kt:65-200`; UI direct (`FragmentPareja.kt:549-570`, `TareasHomeAdapter.kt:74`) | full schema in `Tarea.kt:5-32`; see also `task-domain` spec |
@@ -55,8 +56,17 @@ Source-of-truth priority for this spec: code → `app/build.gradle.kts` →
 | `puntosRecompensa` | Long | `AuthRepositorioFirebase.kt:50,111`; `TareaRepositorioFirebase.kt:417-487`; `RepositorioRecompensas.kt:96-141` | `0` |
 | `rachaDias` | Long | `TareaRepositorioFirebase.kt:467,478-487`; `AuthRepositorioFirebase.kt:499-505` | `0` |
 | `grupoId` | String? | `RepositorioPareja.kt:51,129-138,247-254,290-300` | null |
-| `avatarUrl` | String? | `AvatarRepositorioFirebase.kt:69-71,163-165` (writes only; not consumed by `AvatarViewModel`) | null |
+| `avatarUrl` | String? | Legacy. Historically written by `AvatarRepositorioFirebase.kt:69-71,163-165` (Storage download URL); that implementation is removed/repurposed by this change, so after this change it has no producer and MUST NOT be used as the avatar reference | null |
+| `avatarUpdatedAt` | Timestamp? | Avatar hint written by the canonical avatar repository on a successful upload (this change); surfaced by all four `AuthRepositorioFirebase` mappers (`:125-136,194-205,375-383,404-412`) | null |
 | `fechaCreacion` | Timestamp | `Usuario.kt:19` (model) | null |
+
+#### `avatares/{uid}`
+
+| Field | Type | Source of truth | Default |
+|---|---|---|---|
+| `base64` | String | canonical avatar repository — compressed image bytes, base64-encoded (this change) | n/a |
+| `contentType` | String | canonical avatar repository (this change) | `image/jpeg` |
+| `updatedAt` | Timestamp | canonical avatar repository; also surfaced as `usuarios/{uid}.avatarUpdatedAt` (this change) | n/a |
 
 #### `grupos/{gid}`
 
@@ -80,21 +90,22 @@ Source-of-truth priority for this spec: code → `app/build.gradle.kts` →
 
 | Path | Writer | Reader | Notes |
 |---|---|---|---|
-| `avatares/{uid}/{uuid}.{ext}` | `AvatarRepositorioFirebase.kt:49,61-65` | none observed in client (`Glide` would need a public URL) | unreachable from `AvatarViewModel.kt:14-16` |
+| `avatares/{uid}/{uuid}.{ext}` | none after this change (previously `AvatarRepositorioFirebase.kt:49,61-65`) | none | Unused: avatars moved to the Firestore `avatares/{uid}` collection. `storage.rules` avatar path becomes dead and is deferred to the rules/indexes change for pruning |
 | `disputas/{tareaId}/{uuid}.jpg` | `RepositorioDisputas.kt:36-46` | `AuthRepositorioFirebase.kt:347-352` (cleanup) | URL stored in `disputas.pruebas[]` |
 
 ### Assumed server-side behaviour (UNVERIFIED)
 
 | Assumption | Required by | Evidence |
 |---|---|---|
-| Authenticated user can read/write own `usuarios/{uid}` doc | `AuthRepositorioFirebase.kt:97-138,386-422` | [UNVERIFIED] no `firestore.rules` file in repo |
+| Authenticated user can read/write own `usuarios/{uid}` doc | `AuthRepositorioFirebase.kt:97-138,386-422` | [UNVERIFIED] local `firestore.rules:27-32`; Console parity [UNVERIFIED] |
 | Group members can read each other's `usuarios` doc | `AuthRepositorioFirebase.observarUsuarios` reads ALL docs (`AuthRepositorioFirebase.kt:386-422`) | [UNVERIFIED] |
 | Any authenticated user can read `grupos` collection | `RepositorioPareja.kt:160-167,193-203` | [UNVERIFIED] |
 | `invitaciones` lookup by `codigo` requires auth | `RepositorioPareja.kt:89-156` | [UNVERIFIED] |
 | `tareas` queries with `whereEqualTo("creadoPor"|"asignadoA"|"grupoId", uid)` succeed without composite index | `TareaRepositorioFirebase.kt:145-153,187-205` | [UNVERIFIED] |
 | Composite index `tareas grupoId+estado` is configured | `TareaRepositorioFirebase.kt:201-205` | [UNVERIFIED] |
 | Storage path `disputas/{tareaId}/*` allows the disputer to read/write | `RepositorioDisputas.kt:36-46` | [UNVERIFIED] |
-| Storage path `avatares/{uid}/*` allows the owner | `AvatarRepositorioFirebase.kt:49-71` | [UNVERIFIED] |
+| Signed-in users can read `avatares/{uid}`; only the owner can write it | Fixes the [UNVERIFIED] Storage avatar path with a Firestore rule (`firestore.rules`) | [UNVERIFIED] local `firestore.rules` (added by this change); deployment/console parity [UNVERIFIED] |
+| Storage path `avatares/{uid}/*` allows the owner | Previously `AvatarRepositorioFirebase.kt:49-71` | Superseded: this Storage path is no longer used by the client after avatars move to Firestore; `storage.rules` avatar path unused and pruning deferred |
 | Cloud Function exists to clean up on user deletion | best-effort client cleanup is the only path (`AuthRepositorioFirebase.kt:259-357`) | [UNVERIFIED] no functions source in repo |
 | App Check enforcement | — | not declared in dependencies |
 | Crashlytics reporting | — | not declared in dependencies |
@@ -151,13 +162,45 @@ documented, including the indexed fields it depends on.
   `whereEqualTo("grupoId", grupoId)` (`TareaRepositorioFirebase.kt:187-205`)
 - AND each pattern MUST mark whether it requires a composite index
 
+### Requirement: Avatar bytes SHALL live in a dedicated `avatares/{uid}` collection
+
+The system MUST persist avatar bytes in the Firestore collection `avatares/{uid}`, with the
+document writer being the signed-in owner only and the document readers being any signed-in
+user (group members read each other's avatars). The document MUST contain exactly the fields
+`base64` (String, the compressed image bytes), `contentType` (String, the image MIME type),
+and `updatedAt` (Timestamp, the version marker). Avatar bytes MUST NOT be added to `usuarios`
+documents because `AuthRepositorioFirebase.observarUsuarios()` re-transmits the full
+`usuarios` document on every snapshot (`data/firebase/AuthRepositorioFirebase.kt:386-422`).
+Avatar bytes MUST NOT be stored in Firebase Storage. The local `firestore.rules` file MUST
+grant `read` to any signed-in user and `write` only to self; deployment remains out of scope
+and `[UNVERIFIED]`.
+
+#### Scenario: Writer is self only
+
+- GIVEN a signed-in user with uid `uA`
+- WHEN the client writes `avatares/uA`
+- THEN the write MUST be allowed by `firestore.rules`
+- AND a write to `avatares/uB` by `uA` MUST be denied
+
+#### Scenario: Reader is any signed-in user
+
+- GIVEN a signed-in user with uid `uA`
+- WHEN the client reads `avatares/uB` for a group member `uB`
+- THEN the read MUST be allowed by `firestore.rules`
+
+#### Scenario: Fields match the contract
+
+- GIVEN a successful avatar upload
+- WHEN the resulting `avatares/{uid}` document is inspected
+- THEN it MUST contain `base64`, `contentType`, and `updatedAt`
+- AND no avatar bytes MUST appear in `usuarios/{uid}`
+
 ## Future Convergence Work
 
 | Work item | Severity | Notes |
 |---|---|---|
 | Add `firestore.rules` and `storage.rules` in repo with explicit read/write grants | High | Today only client-side filtering; no proof of backend enforcement |
 | Add `firestore.indexes.json` for composite queries | High | `tareas whereEqualTo("grupoId", gid) orderBy("estado")` is implicit |
-| Decide avatar authority (local vs Storage) and remove the unused one | High | See `architecture-map` convergence |
 | Add `firebase-appcheck` dependency and provider configuration | Med | [UNVERIFIED] whether intended for production |
 | Add Cloud Function for transactional cleanup on user delete | Med | `AuthRepositorioFirebase.limpiarDatosAsociados` is best-effort (`AuthRepositorioFirebase.kt:259-357`) |
 | Add Crashlytics dependency and init in `TFGApplication` | Low | Observability gap |
@@ -172,9 +215,10 @@ documented, including the indexed fields it depends on.
 - **Composite-index risk** for `tareas` queries: any future `orderBy` on
   `creadoPor`/`asignadoA`/`grupoId` will require a new index. [UNVERIFIED] whether current
   rules allow without.
-- **Avatar storage path is unused.** `AvatarRepositorioFirebase` is never called from
-  `AvatarViewModel`; it is dead code that still ships. Risk: future maintainer may assume
-  uploads work.
+- **Avatar storage path is unused (resolved).** `AvatarRepositorioFirebase` is no longer dead
+  code that ships; avatars are stored in the Firestore `avatares/{uid}` collection, so the
+  `storage.rules` avatar path becomes dead and its pruning is deferred to the rules/indexes
+  change.
 
 [UNVERIFIED] All claims about Firestore rules, indexes, App Check, Cloud Functions, and
 Crashlytics.
@@ -187,3 +231,6 @@ Crashlytics.
 | Unused writer detection | `grep -r "AvatarRepositorioFirebase(" app/src/main/java` | Zero non-test callers (confirms dead-code) |
 | Composite index claims | Open Firebase console → Firestore → Indexes | Each `[UNVERIFIED]` index entry is either present or annotated |
 | Rules claim | Open Firebase console → Firestore → Rules | Each `[UNVERIFIED]` rules claim is either true or annotated |
+| `avatares/{uid}` writer/reader rule | Run the emulator; write `avatares/{self}` and attempt `avatares/{other}`; read a member's document | Self write allowed, cross-user write denied, member read allowed |
+| Avatar not in `usuarios` | Upload an avatar, inspect `usuarios/{uid}` | No `base64`/blob field present; `avatarUpdatedAt` set |
+| Storage avatar path unused | `grep -r "FirebaseStorage" app/src/main/java` on the avatar path | No avatar code reads/writes the Storage avatar path |

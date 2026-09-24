@@ -159,6 +159,39 @@ corresponding spec.
 - AND the test command field in `openspec/config.yaml` MUST remain empty or annotated
   if no automated test exists
 
+### Requirement: Binary avatar assets and preference namespaces MUST follow the canonical convention
+
+Avatar bytes MUST be stored as compressed base64 in the dedicated Firestore collection
+`avatares/{uid}` (fields `base64`, `contentType`, `updatedAt`). Binary avatar data MUST NOT be
+added to Firebase Storage and MUST NOT be added to the widely-streamed `usuarios` documents.
+Avatar uploads MUST be self-only; avatar reads MUST resolve any group member. Client-side
+compression (downscale to roughly 256px on the long edge, JPEG) and a hard size cap below the
+Firestore 1 MiB limit MUST be enforced, with oversized input rejected before any write.
+SharedPreferences namespaces MUST have a single owner and a single purpose: the retired
+`avatar_prefs` namespace MUST NOT be reintroduced, and `tfg_prefs` MUST be used only as a
+local cache of the last-known avatar, never as the authority. New binary assets MUST follow
+the same pattern rather than adding blobs to widely-streamed documents.
+
+#### Scenario: New binary asset feature
+
+- GIVEN a developer adds an avatar-like binary asset
+- WHEN they plan the storage
+- THEN the plan MUST use a dedicated Firestore collection with client-side compression and a hard size cap
+- AND the plan MUST NOT add the bytes to `usuarios` or Firebase Storage
+
+#### Scenario: Retired namespace is not reintroduced
+
+- GIVEN the change is implemented
+- WHEN production code is searched for `avatar_prefs`
+- THEN there MUST be zero matches
+
+#### Scenario: Local preferences are cache-only
+
+- GIVEN a developer needs to persist avatar state locally
+- WHEN they choose a namespace
+- THEN they MUST use `tfg_prefs` as a cache only
+- AND the local value MUST NOT be treated as proof that a remote avatar exists or is current
+
 ## Technical debt register
 
 Severity legend: **H**igh = blocks a future spec's invariants; **M**ed = divergence
@@ -167,8 +200,8 @@ between paths; **L**ow = cleanup.
 | # | Issue | Severity | Evidence | Spec to fix it | Status |
 |---|---|---|---|---|---|
 | TD-1 | Two task repos with divergent rules | H | `RepositorioTareas.kt:1-31,97-113,164-179` vs `TareaRepositorioFirebase.kt:466-494` | `task-domain` convergence | Resolved (`teamtask-task-repo-consolidation`) |
-| TD-2 | Avatar authority split (`tfg_prefs` + `avatar_prefs`) | H | `AvatarRepositorioLocal.kt:11,86`; `FragmentPgPrincipal.kt:376-380`; `MainActivity.kt:484-485` | `architecture-map` convergence | Open |
-| TD-3 | `AvatarRepositorioFirebase` is dead code | H | `AvatarViewModel.kt:14-16` (no caller); class is `class`, not `object`/`companion` | `architecture-map` convergence | Open |
+| TD-2 | Avatar authority split (`tfg_prefs` + `avatar_prefs`) | H | `AvatarRepositorioLocal.kt:11,86`; `FragmentPgPrincipal.kt:376-380`; `MainActivity.kt:484-485` | `architecture-map` convergence | Resolved (`teamtask-avatar-authority`) |
+| TD-3 | `AvatarRepositorioFirebase` is dead code | H | `AvatarViewModel.kt:14-16` (no caller); class is `class`, not `object`/`companion` | `architecture-map` convergence | Resolved (`teamtask-avatar-authority`) |
 | TD-4 | Auto-login one-shot listener may fire twice on config change | M | `MainActivity.kt:255-275` | `navigation-lifecycle` | Open |
 | TD-5 | `TareaRepositorioFirebase.observarTareas` mutates shared map without sync | M | `TareaRepositorioFirebase.kt:184-212` | `navigation-lifecycle` | Open |
 | TD-6 | `TareasHomeAdapter` external `CoroutineScope` | M | `TareasHomeAdapter.kt:39,145-210` | `navigation-lifecycle` | Open |
@@ -188,7 +221,7 @@ between paths; **L**ow = cleanup.
 |---|---|---|---|---|
 | 1 | Publish `architecture-map`, `task-domain`, `firestore-contracts`, `navigation-lifecycle`, `implementation-recipes` specs | — | docs only | Done |
 | 2 | Unify task repos (pick `TareaRepositorioFirebase`; remove `RepositorioTareas`) | 1 | refactor `FragmentTareas`, `TareasViewModel`, `VistaModeloPrincipal` | Done (`teamtask-task-repo-consolidation`) |
-| 3 | Audit and fix avatar authority (decide local vs Firebase; unify `tfg_prefs`/`avatar_prefs`; delete dead Firebase impl) | 1 | changes `AvatarViewModel`, `FragmentPerfil`, `FragmentPgPrincipal`, `MainActivity` | Pending |
+| 3 | Audit and fix avatar authority (decide local vs Firebase; unify `tfg_prefs`/`avatar_prefs`; delete dead Firebase impl) | 1 | changes `AvatarViewModel`, `FragmentPerfil`, `FragmentPgPrincipal`, `MainActivity` | Done (`teamtask-avatar-authority`) |
 | 4 | Add `firestore.rules`, `storage.rules`, `firestore.indexes.json`; commit and deploy | 1 | Local artifacts committed by `teamtask-testing-emulator-strategy` WU2 and verified against emulators; deployment, console parity, and App Check pending | Partially done |
 | 5 | Add focused tests per spec: `ParejaViewModel`, `TareaRepositorioFirebase.crearTarea`/`confirmarTarea`, `RepositorioRecompensas.canjearRecompensa` | 2 | 3-5 unit tests using `firebase emulators:exec` | Pending |
 | 6 | Refactor `TareaRepositorioFirebase.observarTareas` to typed `combine` and reiniciar-on-group-change | 5 | safer observers | Pending |
@@ -225,3 +258,8 @@ between paths; **L**ow = cleanup.
 | Stack purity | `grep -r "androidx.compose\\|dagger.hilt\\|androidx.room\\|retrofit2" app/` | Zero matches |
 | Naming | List `vista/`, `viewmodel/`, `repositorio/`, `data/firebase/` files | All match convention table |
 | Source-of-truth policy | Find a README claim contradicted by source | Spec/PR is corrected to source, not vice versa |
+| Avatar storage round-trip | Upload an image in the emulator/release build; inspect `avatares/{uid}` and a group member's dashboard card | Document contains `base64`/`contentType`/`updatedAt` under the cap; member card renders the decoded avatar; `usuarios/{uid}.avatarUpdatedAt` is set |
+| Avatar oversize rejection | Upload an image that encodes above the hard cap | Failure surfaced in UI; no `avatares` document written |
+| Avatar cross-user write denied | Attempt to write `avatares/{other}` from a signed-in user in the emulator | Write denied |
+| Avatar namespace audit | `grep -r "avatar_prefs" app/src/main/java` | Zero matches |
+| Avatar offline fallback | Disable network with a cached avatar present, then with none | Cached avatar shown when present; otherwise `R.drawable.perfil` |

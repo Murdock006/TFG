@@ -12,10 +12,10 @@ future refactors and for any reviewer that needs to know where a given concern l
 |---|---|---|
 | `vista` | `MainActivity`, Fragments, RecyclerView adapters, dialogs, navigation, **part of business rules** | `app/src/main/java/com/example/tfg/vista/*.kt` |
 | `viewmodel` | State holders for auth, groups, tasks, avatar, dashboard; mix of `StateFlow` and `LiveData` | `app/src/main/java/com/example/tfg/viewmodel/*.kt` |
-| `repositorio` | Interfaces (`TareaRepositorio`, `AuthRepositorio`, `GrupoRepositorio`) + concrete classes (`RepositorioPareja`, `RepositorioRecompensas`, `RepositorioDisputas`, `RepositorioNotificaciones`, `CategoriasRepositorio`) | `app/src/main/java/com/example/tfg/repositorio/*.kt` |
-| `data/firebase` | Firebase impls of `Auth`, `Tarea`, `Avatar` | `app/src/main/java/com/example/tfg/data/firebase/*.kt` |
+| `repositorio` | Interfaces (`TareaRepositorio`, `AuthRepositorio`, `GrupoRepositorio`, `AvatarRepositorio`) + concrete classes (`RepositorioPareja`, `RepositorioRecompensas`, `RepositorioDisputas`, `RepositorioNotificaciones`, `CategoriasRepositorio`) | `app/src/main/java/com/example/tfg/repositorio/*.kt` |
+| `data/firebase` | Firebase impls of `Auth`, `Tarea`, and the Firestore base64 avatar impl (receives its client through `FirebaseComposition`) | `app/src/main/java/com/example/tfg/data/firebase/*.kt` |
 | `data/inmemory` | In-memory substitutes for `Auth` and `Grupo` | `app/src/main/java/com/example/tfg/data/inmemory/*.kt` |
-| `data/local` | Avatar copy/delete under `filesDir/avatars/` + `tfg_prefs` SharedPreferences | `app/src/main/java/com/example/tfg/data/local/AvatarRepositorioLocal.kt` |
+| `data/local` | Local last-known avatar cache under `filesDir/avatars/` + the `tfg_prefs` SharedPreferences namespace; no avatar authority role | `app/src/main/java/com/example/tfg/data/local/AvatarRepositorioLocal.kt` |
 | `modelo` | Data classes for `Usuario`, `Tarea`, `Grupo`, `Disputa`, `Recompensa`, `Canje`, `Notificacion`, `Invitacion`; states are raw `String`, not sealed | `app/src/main/java/com/example/tfg/modelo/*.kt` |
 | `service` | `LocalizadorServicios` (service locator), `NotificationScheduler`/`NotificationWorker` (WorkManager), `IcsExporter` | `app/src/main/java/com/example/tfg/service/*.kt` |
 | `util` | `Constants` (REWARD_PERCENTAGE=0.10, STREAK_BONUS_THRESHOLD=7, INITIAL_POINTS=1000, PUNTOS_FIJOS_PERSONALIZADA=200, MULTIPLICADOR_EMERGENCIA=1.5, DOUBLE_BACK_TIMEOUT_MS=2000L) | `app/src/main/java/com/example/tfg/util/Constants.kt` |
@@ -32,7 +32,7 @@ future refactors and for any reviewer that needs to know where a given concern l
 | `UI → concrete repositorio` | `FragmentTareas.kt:47,96,381`; `FragmentRecompensas.kt:33-34`; `MainActivity.kt:302` | Notifications, disputes, recompensas |
 | `UI → Firebase SDK` | `MainActivity.kt:235,243,511-523`; `FragmentPareja.kt:364-371`; `TareasHomeAdapter.kt:74` | Auth state, group stats |
 | `UI → domain logic` (decide state/points) | `FragmentTareas.kt:354-368,415-525`; `TareasHomeAdapter.kt:158-267` | Adapter and form own rules |
-| `ViewModel → service locator` | `VistaModeloPrincipal.kt:36-42`; `TareasViewModel.kt:11`; `ParejaViewModel.kt:19-22`; `AvatarViewModel.kt:14-16` | Default repos wired in constructors |
+| `ViewModel → service locator` | `VistaModeloPrincipal.kt:36-42`; `TareasViewModel.kt:11`; `ParejaViewModel.kt:19-22`; `AvatarViewModel.kt` resolves `AvatarRepositorio` through `LocalizadorServicios.repositorioAvatar` (this change) | Default repos wired in constructors; the avatar repository is no longer constructed directly |
 | `Repository → service locator` | `TareaRepositorioFirebase.kt:87,124,376-377` | Reuses auth points API; circular dep |
 
 ## Requirements
@@ -62,15 +62,23 @@ in this spec with evidence.
 
 The system MUST resolve Firebase-backed repos through `LocalizadorServicios` (object).
 The system MUST NOT instantiate `FirebaseFirestore.getInstance()` outside `data/firebase/`
-or `LocalizadorServicios` except in `TFGApplication`.
+or `LocalizadorServicios` except in `TFGApplication`. The canonical avatar repository
+(`repositorio/AvatarRepositorio.kt`) MUST be resolved through
+`LocalizadorServicios.repositorioAvatar`, `AvatarViewModel` MUST NOT instantiate a concrete
+avatar repository, and the Firebase-backed avatar implementation MUST receive its Firestore
+client through the composition boundary rather than constructing SDK clients itself.
+`data/local/AvatarRepositorioLocal.kt` MUST NOT be an avatar authority; it MAY remain only as
+a local last-known cache.
+(Previously: the requirement carried an avatar bypass exception — `AvatarRepositorioFirebase`
+constructed its own SDK clients and `AvatarViewModel` constructed `AvatarRepositorioLocal`
+directly.)
 
 #### Scenario: Resolving `AuthRepositorio` from a ViewModel
 
 - GIVEN a ViewModel needs auth operations
 - WHEN it constructs the dependency, it MUST go through `LocalizadorServicios.repositorioAuth`
 - AND it MUST NOT call `AuthRepositorioFirebase()` directly
-- Evidence: existing exceptions documented in `data/firebase/AvatarRepositorioFirebase.kt:15-19`
-  (constructs SDKs but is unreachable from `AvatarViewModel.kt:14-16`)
+- AND the same rule MUST hold for avatar: `AvatarViewModel` MUST receive `AvatarRepositorio` through `LocalizadorServicios.repositorioAvatar`, and no avatar implementation MUST construct Firebase SDK clients outside the composition boundary
 
 #### Scenario: Resolving repos from a Fragment
 
@@ -83,7 +91,6 @@ or `LocalizadorServicios` except in `TFGApplication`.
 
 | Work item | Severity | Notes |
 |---|---|---|
-| Unify avatar authority: `AvatarViewModel` uses `AvatarRepositorioLocal` only; `AvatarRepositorioFirebase` is dead code | High | Evidence: `AvatarViewModel.kt:14-16` vs `AvatarRepositorioFirebase.kt:1-174` (no ViewModel calls it) |
 | Push direct UI→Firebase paths (`MainActivity` auth, `FragmentPareja` stats, `TareasHomeAdapter` reads) into ViewModels | Med | Evidence: `MainActivity.kt:230-283,510-523`; `FragmentPareja.kt:364-371`; `TareasHomeAdapter.kt:74` |
 | Replace `LocalizadorServicios` with constructor injection | Med | Out of scope for this change (no Hilt assumed) |
 | Convert `modelo` state `String` fields to sealed types (`Tarea.estado`, `Disputa.estado`, `Canje.estado`, `Invitacion.estado`) | Med | Currently raw strings; see `task-domain` spec for the state machine |
@@ -104,7 +111,8 @@ or `LocalizadorServicios` except in `TFGApplication`.
 |---|---|---|
 | Service-locator flag wiring | Edit `LocalizadorServicios.kt:17` to `false`, rebuild, run | No Firebase calls; in-memory only (manual; no tests) |
 | Direct Firebase imports outside `data/firebase/`, `TFGApplication.kt`, `LocalizadorServicios.kt` | `grep -r "FirebaseFirestore\|FirebaseAuth" app/src/main/java/com/example/tfg` | Matches only in documented evidence rows |
-| ViewModel constructor parameter `repo` | Read each file in `viewmodel/` | Constructor accepts an interface, not a concrete class |
+| ViewModel constructor parameter `repo` | Read each file in `viewmodel/`, including `AvatarViewModel` | Constructor accepts an interface (or resolves it through the locator), not a concrete class |
+| Avatar authority audit | `grep -r "AvatarRepositorioLocal(\|AvatarRepositorioFirebase(" app/src/main/java` | No matches outside `LocalizadorServicios`/`data/` (single authority wired) |
 | Dual task-repo usage split | `grep -r "RepositorioTareas()\|TareaRepositorioInMemory" app/src/main/java` | Zero matches (consolidation complete) |
 
 [UNVERIFIED] Whether future Firestore rules or App Check will reshape any of these allowed
