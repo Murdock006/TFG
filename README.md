@@ -59,7 +59,7 @@ TFG2/
 │
 ├── repositorio/               # Data Access Layer
 │   ├── RepositorioAuth.kt
-│   ├── RepositorioTareas.kt
+│   ├── TareaRepositorio.kt
 │   ├── RepositorioPareja.kt
 │   └── RepositorioDisputas.kt
 │
