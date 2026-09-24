@@ -9,7 +9,7 @@ user-visible behavior. All are grounded in the approved delta specs:
 
 | Debt | Mechanism (this design) | Spec requirement |
 |---|---|---|
-| **TD-4** | One Activity-owned coordinator; the Fragment **signals** message completion; the coordinator is the only caller of `Presentacion → Login`; the destination listener is stored and removed in `onDestroy` (kills the stale listener left on the retained `NavController`). | MODIFIED "Auto-login MUST require verified email…" |
+| **TD-4** | One Activity-owned coordinator; the Fragment **signals** message completion; the coordinator is the only caller of `Presentacion → Login`; the destination listener is stored and removed in `onDestroy`, so the armed one-shot listener cannot outlive the Activity and the two independent Presentacion→Login navigators cannot race. | MODIFIED "Auto-login MUST require verified email…" |
 | **TD-5** | Per-source key sets + one shared map with a single logical writer and union-based pruning in `observarTareas`, mirroring `observarTareasPorGrupo`. | ADDED "Task observation state MUST stay consistent…" |
 | **TD-6** | Adapter owns its `SupervisorJob` scope; hosts build the adapter per view and call `destroy()` from `onDestroyView`; `findNavController()` is replaced by a host navigation callback; per-bind job cancellation. | ADDED "Adapter asynchronous work MUST use a lifecycle-safe scope owner" |
 | **TD-15** | AndroidX Safe Args plugin 2.9.6; `<argument>` declarations; every writer/reader migrated to `FragmentTareasArgs` (generated typed arg class). | ADDED "Navigation arguments MUST be typed via AndroidX Safe Args" |
@@ -52,24 +52,68 @@ loses only the navigate call. The live-destination guard makes every invocation 
 stale duplicate listener firing on the same destination change — a no-op after the first
 navigation updated `currentDestination` synchronously.
 
+### Note: TD-4 scope is `Presentación → Login`; `FragmentLogin → PgPrincipal` is unchanged
+
+The single-coordinator invariant targets the **`Presentación → Login`** transition, which is where
+the duplicate-navigator race lives. The coordinator also chains the immediate
+`Login → PgPrincipal` continuation for the auto-login case (so a verified user never rests on the
+Login screen), per the delta spec's `Presentacion → Login → PgPrincipal` chain. Separately,
+`FragmentLogin.kt:94-103` performs its **own** `Login → PgPrincipal` navigation when it observes a
+non-null `VistaModeloAuth.usuario`; this is the **user-driven** login path (credentials / Google
+sign-in) and stays **exactly as-is** — no change is made to it. It does not race the coordinator:
+the coordinator's `Login → PgPrincipal` step runs only when a verified session existed at Activity
+start (auto-login), while `FragmentLogin`'s step runs only when the user authenticates on the Login
+screen (no verified session at start). The two conditions do not co-occur in the same Activity
+instance. The delta spec's "single coordinator" wording describes the auto-login chain; the manual
+login path keeps its independent navigation.
+
 ### Decision TD-4-2: Recreation safety = remove the listener in `onDestroy`
 
 **Choice**: Store the auto-login listener in a field (`autoLoginListener`) and
 `navController.removeOnDestinationChangedListener(...)` it in `onDestroy` (and after it fires).
 Remove-then-add before registering, so one Activity instance can never register two.
 
+**Corrected mechanism model (why the old "retained `NavController`" story was wrong)**:
+`NavHostFragment` is **not** retained across configuration changes — it is an ordinary
+non-retained fragment. On recreation the old fragment and its `NavHostController` are destroyed,
+and a fresh `NavHostFragment` builds a **new** `NavHostController` in the fragment's `onCreate`
+(`navHostController` is `by lazy` per fragment instance). Only the graph and the back stack survive,
+restored through `savedStateRegistry`; destination-changed listeners are in-memory and are **not**
+part of saved state. There is therefore no shared controller and no cross-Activity listener leak:
+an Activity's listeners live and die with that Activity's own controller.
+
+**The real TD-4 risks this decision addresses**:
+1. *Armed one-shot listener for the Activity's whole life.* The listener is not run-and-remove
+   atomic: the current code removes it only after the first `fragment_Presentacion` hit
+   (`MainActivity.kt:274`), so until that hit it stays registered and any later destination change
+   re-enters it. Storing it in a field and removing it in `onDestroy` bounds its lifetime to the
+   Activity and prevents accumulation if registration runs more than once.
+2. *Two independent `Presentación → Login` navigators race.* In a single Activity instance the
+   Activity's destination listener (`MainActivity.kt:266`) and `FragmentPresentacion`'s delayed
+   `findNavController().navigate(...)` (`FragmentPresentacion.kt:52`) both fire the same
+   `Presentacion → Login` action. Coordinating to one navigator (the Activity funnel, fed by the
+   Fragment's completion signal) removes the race.
+
 **Alternatives considered**:
-- *Keep removal-on-first-Presentacion only* (current behavior): insufficient. `NavHostFragment`
-  is retained across configuration changes, so its `NavController` is the **same instance** on
-  the new Activity. A config change during the auth window (no `configChanges` is declared in
-  `AndroidManifest.xml:21-31`) leaves the old Activity's listener still registered on the shared
-  controller; the new Activity registers another one → two active navigators. Rejected.
+- *Keep removal-on-first-Presentacion only* (current behavior): insufficient. The listener stays
+  armed for the Activity's whole life until a `fragment_Presentacion` hit, and it does nothing to
+  stop the second navigator. Rejected.
 - *Guard flag reset on Presentación*: works but adds state that must be reset at a second place;
   removal in `onDestroy` plus the live-destination guard already covers it. Rejected.
 
-**Rationale**: The listener leak on the retained `NavController` is the actual TD-4 defect;
-removing it in `onDestroy` is the minimum fix and matches the delta spec's recreation-safety
-invariant ("MUST NOT register more than one active navigator").
+**Rationale**: Remove-in-`onDestroy` is the minimum fix that makes the one-shot listener's lifetime
+bounded by the Activity, satisfying the delta spec's recreation-safety invariant ("MUST NOT register
+more than one active navigator"); the live-destination guard is defense-in-depth for the same
+transition being signalled twice.
+
+### Note: the bottom-nav visibility listener (`MainActivity.kt:138`) is out of TD-4 scope
+
+`MainActivity.onCreate` registers a **second**, unrelated `addOnDestinationChangedListener`
+(`MainActivity.kt:138-153`) that toggles bottom-nav/toolbar visibility and the drawer lock for the
+auth destinations. It is an intentional **permanent** observer for the Activity's whole lifetime and
+is never removed. Under the corrected model it is **not** a cross-Activity leak: it is registered on
+the Activity's own controller, which is recreated with the Activity, so it dies with it. It is not
+part of the TD-4 duplicate-navigator defect and **needs no change**.
 
 ### Decision TD-5-1: Per-source pruning with one shared writer
 
@@ -231,7 +275,7 @@ fragment_Presentacion reached ────────────────�
                                                    │
                                    binding.root.post { if (currentDestination == Login)
                                        action_fragment_Login_to_fragment_PgPrincipal }
-onDestroy ──► remove autoLoginListener (kills stale listener on retained NavController)
+onDestroy ──► remove autoLoginListener (bounds the armed listener to this Activity)
 ```
 
 ### TD-5 — observer pruning (N sources, one map)
@@ -320,12 +364,17 @@ do not support default arguments, so pass explicit `null`s).
 
 ## Testing Strategy
 
-No automated safety net exists (`openspec/config.yaml: strict_tdd: false`; roadmap step 5
-tests are pending). Layers are therefore:
+An existing JVM suite is present but narrow: `app/src/test/java/com/example/tfg/util/AvatarImagenTest.kt`
+(3 JUnit4 tests) plus `ExampleUnitTest.kt` (1 test), run together as 4 tests / 0 failures in the
+previous change. It exercises only the pure-JVM `AvatarImagen` helpers and does **not** cover any of
+the navigation/lifecycle paths this change touches. `openspec/config.yaml` sets `strict_tdd: false`
+and the roadmap step 5 tests are still pending, so the suite stays green but is not a behavioral
+safety net for this refactor. Layers are therefore:
 
 | Layer | What to Test | Approach |
 |---|---|---|
-| Unit | _None available_ | No test suite exists; adding one is roadmap step 5 (out of scope). `./gradlew test` would compile/run zero tests. |
+| Unit (existing JVM) | `AvatarImagen` helpers only | Run `.\gradlew.bat :app:testDebugUnitTest --no-daemon --console=plain` (4 tests, 0 failures expected). Regression/compile gate for untouched code; does not exercise this change. |
+| Unit (new for this change) | The navigation/lifecycle paths | None added here — focused tests are roadmap step 5 (out of scope). |
 | Integration | _None available_ | No emulator/device in this run; no integration harness. |
 | E2E / Manual | The 21 spec scenarios | Documented manual matrix below; executed by the apply/verify phases on a device. |
 
@@ -341,10 +390,17 @@ tests are pending). Layers are therefore:
   failure → Fallback decision TD-15-2).
 - `[UNVERIFIED]` until run: plugin compatibility with AGP 9.3.3 / Kotlin 2.2.10.
 
-### 2. Focused JVM checks
+### 2. Existing JVM suite (regression gate for untouched code)
 
-None available without adding test infrastructure (out of scope). Not attempted; recorded
-honestly rather than faked.
+```
+.\gradlew.bat :app:testDebugUnitTest --no-daemon --console=plain
+```
+
+- Runs the existing `AvatarImagenTest` (3 tests) + `ExampleUnitTest` (1 test): 4 tests, 0 failures
+  expected (baseline from the previous change).
+- The suite does **not** cover the navigation/lifecycle paths changed here, so it is a compile/
+  regression gate only; the manual matrix (§4) remains the behavioral net.
+- No new test infrastructure is added (out of scope; roadmap step 5).
 
 ### 3. Grep audits
 
@@ -406,9 +462,9 @@ navigation refactor.
 
 | Risk | Likelihood | Mitigation |
 |---|---|---|
-| Behavior regression with no test net | High | Preserve destinations/conditions/back rules exactly; compile + grep audits + manual matrix |
+| Behavior regression with no navigation test net | High | Preserve destinations/conditions/back rules exactly; compile + existing JVM suite + grep audits + manual matrix |
 | Safe Args plugin incompatible with AGP 9.3.3 / Kotlin 2.2.10 `[UNVERIFIED]` | Med | Compile gate first; documented Fallback (TD-15-2) requiring a spec amendment |
-| Stale auto-login listener still leaks | Low | Remove in `onDestroy` **and** live-destination guard in the funnel (defense-in-depth) |
+| Armed auto-login listener outlives the Activity | Low | Remove in `onDestroy` **and** live-destination guard in the funnel (defense-in-depth) |
 | `popUpTo` duplicate-stack fix changes back behavior | Low | Applied only when `fragment_Tareas` is the current destination (provably on the back stack); otherwise unchanged |
 | Per-source pruning deletes live rows | Low | Prune to the **union** of all source id sets, never a single snapshot |
 | `[UNVERIFIED]` Firestore threading assumption wrong | Low | Pruning is correct under the main-thread assumption; the assumption is stated, not silent |
