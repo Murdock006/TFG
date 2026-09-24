@@ -394,6 +394,7 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
             val snap = docRef.get().await()
             val tarea = docToTarea(snap) ?: return Result.failure(Exception("Tarea no encontrada"))
             if (esAutoasignada(tarea)) return Result.failure(Exception("Tarea inválida: autoasignación no permitida"))
+            if (tarea.estado != "pendiente") return Result.failure(Exception("Tarea no está en estado pendiente"))
 
             // Si requiere confirmación, marcar estado intermedio
             if (tarea.requiereConfirmacion) {
@@ -407,28 +408,36 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 val tareaTx = docToTarea(snapTx) ?: throw Exception("Tarea inválida")
                 if (tareaTx.estado != "pendiente") throw Exception("Tarea no está en estado pendiente")
 
-                // Referencia a ejecutor
+                // References
                 val ejecRef = firestore.collection("usuarios").document(ejecutorUid)
+                val creadorRef = if (!tareaTx.creadoPor.isNullOrBlank())
+                    firestore.collection("usuarios").document(tareaTx.creadoPor!!) else null
 
-                // Leer antes de escribir
+                // --- ALL reads before ANY write ---
                 val ejecSnap = t.get(ejecRef)
+                val creadorSnap = creadorRef?.let { t.get(it) }
 
-                // 10% de los puntos va a puntosRecompensa
+                // 10% de los puntos va a puntosRecompensa (floor, minimo 1)
                 val incrementoRecompensa = (tareaTx.puntos * Constants.REWARD_PERCENTAGE).toInt().coerceAtLeast(1)
                 val puntosRecompensaActuales = (ejecSnap.getLong("puntosRecompensa") ?: 0L).toInt()
 
-                // ahora aplicar escrituras
+                // --- Writes ---
                 t.update(docRef, "estado", "confirmada")
 
                 if (!ejecSnap.exists()) {
-                    val datos = mapOf("puntos" to tareaTx.puntos, "puntosRecompensa" to incrementoRecompensa)
-                    t.set(ejecRef, datos)
+                    t.set(ejecRef, mapOf("puntos" to tareaTx.puntos, "puntosRecompensa" to incrementoRecompensa))
                 } else {
                     val actuales = (ejecSnap.getLong("puntos") ?: 0L).toInt()
                     t.update(ejecRef, mapOf(
                         "puntos"           to actuales + tareaTx.puntos,
                         "puntosRecompensa" to puntosRecompensaActuales + incrementoRecompensa
                     ))
+                }
+
+                // --- Consume creator reservation (mirror confirm path :491-495) ---
+                if (creadorRef != null && creadorSnap != null) {
+                    val reservados = (creadorSnap.getLong("puntosReservados") ?: 0L).toInt()
+                    t.update(creadorRef, "puntosReservados", (reservados - tareaTx.puntos).coerceAtLeast(0))
                 }
 
                 null
