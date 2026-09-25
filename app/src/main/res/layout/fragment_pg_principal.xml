@@ -455,35 +455,11 @@
             android:nestedScrollingEnabled="false"
             android:overScrollMode="never" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCuentaSeguridad"
-            style="@style/Widget.TFG.Boton.Contorno"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="@dimen/spacing_2xl"
-            android:text="@string/cuenta_y_seguridad"
-            app:icon="@drawable/perfil"
-            app:iconGravity="textStart"
-            app:iconPadding="@dimen/spacing_sm" />
-
-            </LinearLayout>
-
-        </androidx.core.widget.NestedScrollView>
-
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-    <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" />
-
+        <!-- Estado vacío de tareas recientes: dentro del contenido desplazable (antes era una capa fija) -->
         <LinearLayout
             android:id="@+id/emptyState"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
             android:orientation="vertical"
             android:gravity="center"
             android:visibility="gone"
@@ -517,5 +493,29 @@
                 android:gravity="center"
                 android:textAppearance="@style/TextAppearance.TFG.Cuerpo" />
         </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCuentaSeguridad"
+            style="@style/Widget.TFG.Boton.Contorno"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="@dimen/spacing_2xl"
+            android:text="@string/cuenta_y_seguridad"
+            app:icon="@drawable/perfil"
+            app:iconGravity="textStart"
+            app:iconPadding="@dimen/spacing_sm" />
+
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
 
 </FrameLayout>
