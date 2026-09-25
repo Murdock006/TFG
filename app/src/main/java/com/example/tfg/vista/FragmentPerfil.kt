@@ -287,7 +287,11 @@ class FragmentPerfil : Fragment() {
             } else {
                 val msg = resultado.exceptionOrNull()?.message
                     ?: getString(R.string.eliminar_cuenta_requiere_login_reciente)
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Eliminación incompleta")
+                    .setMessage(msg)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
             }
 
             vistaModeloAuth.resetEliminacionCuentaState()

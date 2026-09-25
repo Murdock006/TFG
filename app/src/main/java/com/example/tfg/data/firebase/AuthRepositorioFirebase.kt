@@ -3,11 +3,20 @@ package com.example.tfg.data.firebase
 import android.util.Log
 import com.example.tfg.modelo.Usuario
 import com.example.tfg.repositorio.AuthRepositorio
+import com.example.tfg.repositorio.PasoLimpieza
+import com.example.tfg.repositorio.ResultadoLimpiezaCuenta
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.WriteBatch
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageException
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.Flow
 import com.example.tfg.util.Constants
@@ -20,6 +29,13 @@ class AuthRepositorioFirebase(
     private val firestore: com.google.firebase.firestore.FirebaseFirestore = FirebaseComposition.firestore(),
     private val storage: FirebaseStorage = FirebaseComposition.storage()
 ) : AuthRepositorio {
+
+    private companion object {
+        // Presupuesto acotado de reintentos por paso de limpieza (errores transitorios).
+        const val MAX_INTENTOS_LIMPIEZA = 3
+        const val DELAY_REINTENTO_MS = 300L
+        const val LIMITE_BATCH_FIRESTORE = 500
+    }
 
     private var usuariosListener: ListenerRegistration? = null
     private val TAG = "AuthRepoFirebase"
@@ -242,10 +258,14 @@ class AuthRepositorioFirebase(
                 }
             }
 
-            // 1) Limpiar datos asociados en Firestore/Storage (mejor esfuerzo)
-            limpiarDatosAsociados(uid)
+            // 1) Limpiar datos asociados y recoger el reporte por paso (nunca lanza por paso).
+            val reporte = limpiarDatosAsociados(uid)
+            if (!reporte.completado) {
+                Log.w(TAG, "Limpieza incompleta; no se elimina la cuenta uid=$uid: ${reporte.mensajeFallos()}")
+                return Result.failure(Exception(reporte.mensajeFallos()))
+            }
 
-            // 2) Borrar cuenta de Firebase Auth
+            // 2) Borrar cuenta de Firebase Auth SOLO con limpieza completa.
             usuarioActual.delete().await()
 
             // 3) Limpiar caché/sesión local
@@ -262,114 +282,217 @@ class AuthRepositorioFirebase(
         }
     }
 
-    private suspend fun limpiarDatosAsociados(uid: String) {
-        // Eliminar documento principal del usuario
-        try {
-            firestore.collection("usuarios").document(uid).delete().await()
-        } catch (e: Exception) {
-            Log.w(TAG, "No se pudo borrar documento de usuario uid=$uid", e)
+    // Colector exception-safe: intenta todos los pasos en orden y nunca lanza por un fallo
+    // de paso; el reporte resultante decide (gate) si se puede borrar la cuenta de Auth.
+    private suspend fun limpiarDatosAsociados(uid: String): ResultadoLimpiezaCuenta {
+        val pasos = mutableListOf<PasoLimpieza>()
+
+        // 1-5) Grupos: enumeración, borrado si queda vacío, disolución o actualización de miembros.
+        pasos += limpiarGrupos(uid)
+
+        // 6) Tareas creadas por el usuario (cascada destructiva y documentada).
+        pasos += ejecutarPaso(
+            nombre = "tareas:creadas",
+            descripcion = "tareas creadas por el usuario"
+        ) {
+            firestore.collection("tareas").whereEqualTo("creadoPor", uid).get().await()
+                .documents.forEach { it.reference.delete().await() }
         }
 
-        // Quitar al usuario de grupos donde participa (y borrar grupo si queda vacío)
-        try {
-            val grupos = firestore.collection("grupos").get().await()
-            for (doc in grupos.documents) {
-                val miembrosRaw = doc.get("miembros") as? Map<*, *> ?: continue
-                if (!miembrosRaw.containsKey(uid)) continue
-
-                val miembros = miembrosRaw
-                    .mapNotNull { (k, v) ->
-                        val key = k as? String ?: return@mapNotNull null
-                        val value = v as? String ?: return@mapNotNull null
-                        key to value
-                    }
-                    .toMap()
-                    .toMutableMap()
-
-                miembros.remove(uid)
-                if (miembros.isEmpty()) {
-                    doc.reference.delete().await()
-                } else {
-                    doc.reference.update("miembros", miembros).await()
+        // 7) Tareas asignadas al usuario que no creó: se desasignan, no se borran.
+        pasos += ejecutarPaso(
+            nombre = "tareas:asignadas",
+            descripcion = "tareas asignadas al usuario"
+        ) {
+            firestore.collection("tareas").whereEqualTo("asignadoA", uid).get().await()
+                .documents.forEach { doc ->
+                    if (doc.getString("creadoPor") == uid) return@forEach
+                    doc.reference.update(
+                        mapOf(
+                            "asignadoA" to null,
+                            "estado" to "pendiente",
+                            "fechaReclamada" to null,
+                            "reclamadoPor" to null,
+                            "motivoReclamo" to null
+                        )
+                    ).await()
                 }
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "No se pudieron limpiar grupos para uid=$uid", e)
         }
 
-        // Limpiar tareas creadas por el usuario
-        try {
-            val creadas = firestore.collection("tareas").whereEqualTo("creadoPor", uid).get().await()
-            for (doc in creadas.documents) {
-                doc.reference.delete().await()
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "No se pudieron borrar tareas creadas por uid=$uid", e)
+        // 8) Barridos por campo; cada paso se intenta aunque fallen los anteriores.
+        pasos += ejecutarPaso("invitaciones", "invitaciones") {
+            borrarDocumentosPorCampo("invitaciones", "creadoPor", uid)
+        }
+        pasos += ejecutarPaso("notificaciones:recibidas", "notificaciones recibidas") {
+            borrarDocumentosPorCampo("notificaciones", "destinatario", uid)
+        }
+        pasos += ejecutarPaso("notificaciones:emitidas", "notificaciones emitidas") {
+            borrarDocumentosPorCampo("notificaciones", "contenido.desde", uid)
+        }
+        pasos += ejecutarPaso("recompensas", "recompensas") {
+            borrarDocumentosPorCampo("recompensas", "creadoPor", uid)
+        }
+        pasos += ejecutarPaso("canjes", "canjes") {
+            borrarDocumentosPorCampo("canjes", "usuarioUid", uid)
         }
 
-        // Limpiar tareas asignadas al usuario (si no son creadas por él)
-        try {
-            val asignadas = firestore.collection("tareas").whereEqualTo("asignadoA", uid).get().await()
-            for (doc in asignadas.documents) {
-                if (doc.getString("creadoPor") == uid) continue
-                doc.reference.update(
-                    mapOf(
-                        "asignadoA" to null,
-                        "estado" to "pendiente",
-                        "fechaReclamada" to null,
-                        "reclamadoPor" to null,
-                        "motivoReclamo" to null
-                    )
-                ).await()
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "No se pudieron limpiar tareas asignadas a uid=$uid", e)
-        }
-
-        // Eliminar invitaciones creadas por el usuario
-        borrarDocumentosPorCampo("invitaciones", "creadoPor", uid)
-
-        // Eliminar notificaciones recibidas por el usuario
-        borrarDocumentosPorCampo("notificaciones", "destinatario", uid)
-
-        // Eliminar notificaciones emitidas por el usuario (contenido.desde)
-        borrarDocumentosPorCampo("notificaciones", "contenido.desde", uid)
-
-        // Eliminar recompensas personalizadas creadas por el usuario
-        borrarDocumentosPorCampo("recompensas", "creadoPor", uid)
-
-        // Eliminar canjes del usuario
-        borrarDocumentosPorCampo("canjes", "usuarioUid", uid)
-
-        // Eliminar disputas del usuario y sus fotos de prueba
-        try {
+        // 9) Disputas: primero la evidencia de Storage, después el documento de la disputa.
+        pasos += ejecutarPaso("disputas", "disputas y evidencias") {
             val disputas = firestore.collection("disputas").whereEqualTo("iniciador", uid).get().await()
             for (doc in disputas.documents) {
                 val pruebas = doc.get("pruebas") as? List<*>
-                pruebas
-                    ?.mapNotNull { it as? String }
-                    ?.forEach { url ->
-                        try {
-                            storage.getReferenceFromUrl(url).delete().await()
-                        } catch (e: Exception) {
-                            Log.w(TAG, "No se pudo borrar evidencia de disputa: $url", e)
-                        }
+                pruebas?.mapNotNull { it as? String }?.forEach { url ->
+                    try {
+                        storage.getReferenceFromUrl(url).delete().await()
+                    } catch (e: StorageException) {
+                        if (e.errorCode != StorageException.ERROR_OBJECT_NOT_FOUND) throw e
                     }
+                }
                 doc.reference.delete().await()
             }
-        } catch (e: Exception) {
-            Log.w(TAG, "No se pudieron limpiar disputas de uid=$uid", e)
         }
+
+        // 10) Avatar (borrado de un documento ausente es un no-op, no un fallo).
+        pasos += ejecutarPaso("avatar", "avatar") {
+            firestore.collection("avatares").document(uid).delete().await()
+        }
+
+        // 11) Perfil de usuario, SIEMPRE al final: es el ancla de identidad.
+        pasos += ejecutarPaso("usuario", "perfil de usuario") {
+            firestore.collection("usuarios").document(uid).delete().await()
+        }
+
+        return ResultadoLimpiezaCuenta(pasos)
+    }
+
+    // Envuelve un paso de limpieza sin propagar la excepción: captura éxito/fallo y reintenta
+    // solo errores transitorios hasta MAX_INTENTOS_LIMPIEZA. No hay backoff exponencial.
+    private suspend fun ejecutarPaso(
+        nombre: String,
+        descripcion: String,
+        intentosMax: Int = MAX_INTENTOS_LIMPIEZA,
+        bloque: suspend () -> Unit
+    ): PasoLimpieza = ejecutarPasoConValor(nombre, descripcion, intentosMax) { bloque(); Unit }.first
+
+    // Variante que devuelve, además del paso, el valor leído por el bloque (null si falló).
+    private suspend fun <T> ejecutarPasoConValor(
+        nombre: String,
+        descripcion: String,
+        intentosMax: Int = MAX_INTENTOS_LIMPIEZA,
+        bloque: suspend () -> T
+    ): Pair<PasoLimpieza, T?> {
+        var ultimoError: String? = null
+        for (intento in 1..intentosMax) {
+            try {
+                return PasoLimpieza(nombre, descripcion, exito = true, intentos = intento) to bloque()
+            } catch (e: Exception) {
+                ultimoError = e.message ?: e::class.java.simpleName
+                if (!esErrorTransitorio(e)) {
+                    return PasoLimpieza(nombre, descripcion, false, intento, ultimoError) to null
+                }
+                if (intento < intentosMax) delay(DELAY_REINTENTO_MS)
+            }
+        }
+        return PasoLimpieza(nombre, descripcion, false, intentosMax, ultimoError) to null
+    }
+
+    // Reintentar un fallo de autorización/entrada no aporta; solo se reintenta lo transitorio.
+    private fun esErrorTransitorio(e: Throwable): Boolean = when (e) {
+        is FirebaseNetworkException -> true
+        is FirebaseFirestoreException -> e.code in setOf(
+            FirebaseFirestoreException.Code.UNAVAILABLE,
+            FirebaseFirestoreException.Code.DEADLINE_EXCEEDED,
+            FirebaseFirestoreException.Code.ABORTED,
+            FirebaseFirestoreException.Code.RESOURCE_EXHAUSTED,
+            FirebaseFirestoreException.Code.INTERNAL,
+            FirebaseFirestoreException.Code.CANCELLED
+        )
+        else -> false
+    }
+
+    // Enumera los grupos del usuario y aplica la salida que corresponda por grupo.
+    // La enumeración fallida devuelve el paso fallido sin arriesgar escrituras ciegas.
+    private suspend fun limpiarGrupos(uid: String): List<PasoLimpieza> {
+        val pasos = mutableListOf<PasoLimpieza>()
+
+        val (pasoLectura, grupos) = ejecutarPasoConValor("grupos:enumeracion", "grupos") {
+            firestore.collection("grupos").get().await().documents
+                .filter { (it.get("miembros") as? Map<*, *>)?.containsKey(uid) == true }
+        }
+        pasos += pasoLectura
+        if (grupos == null) return pasos
+
+        for (doc in grupos) {
+            val miembros = doc.get("miembros") as? Map<*, *> ?: continue
+            val restantes = miembros.keys.filterIsInstance<String>().filter { it != uid }
+
+            when {
+                restantes.isEmpty() -> pasos += ejecutarPaso("grupo:${doc.id}:borrarVacio", "grupo") {
+                    doc.reference.delete().await()
+                }
+
+                restantes.size == 1 -> pasos += disolverGrupo(doc, restantes.first())
+
+                else -> {
+                    val nuevos = miembros.filterKeys { it is String && it != uid }
+                    pasos += ejecutarPaso("grupo:${doc.id}:miembros", "grupo") {
+                        doc.reference.update("miembros", nuevos).await()
+                    }
+                }
+            }
+        }
+        return pasos
+    }
+
+    // Disuelve un grupo de dos miembros: primero borra las tareas del grupo (dejando el documento
+    // de grupo para que un reintento lo redescubra), después un batch atómico con el borrado del
+    // grupo y el reinicio del miembro restante.
+    private suspend fun disolverGrupo(grupoDoc: DocumentSnapshot, restanteUid: String): List<PasoLimpieza> {
+        val gid = grupoDoc.id
+        val pasos = mutableListOf<PasoLimpieza>()
+
+        val (pasoTareasLectura, tareas) = ejecutarPasoConValor("grupo:$gid:tareas:leer", "tareas del grupo") {
+            firestore.collection("tareas").whereEqualTo("grupoId", gid).get().await()
+                .documents.map { it.reference }
+        }
+        pasos += pasoTareasLectura
+        if (tareas == null) return pasos
+
+        pasos += ejecutarPaso("grupo:$gid:tareas:borrar", "tareas del grupo") {
+            tareas.chunked(LIMITE_BATCH_FIRESTORE).forEach { chunk ->
+                val b = firestore.batch()
+                chunk.forEach { b.delete(it) }
+                b.commit().await()
+            }
+        }
+        if (!pasos.last().exito) return pasos
+
+        val pasoCore = ejecutarPaso("grupo:$gid:disolver", "disolución del grupo") {
+            val batch: WriteBatch = firestore.batch()
+            batch.delete(grupoDoc.reference)
+            batch.set(
+                firestore.collection("usuarios").document(restanteUid),
+                mapOf(
+                    "grupoId" to null,
+                    "puntos" to 0,
+                    "puntosReservados" to 0,
+                    "puntosRecompensa" to 0,
+                    "rachaDias" to 0
+                ),
+                SetOptions.merge()
+            )
+            batch.commit().await()
+        }
+        pasos += pasoCore.copy(nombre = "grupo:$gid:disolver", descripcion = "disolución del grupo")
+        pasos += pasoCore.copy(nombre = "grupo:$gid:limpiarGrupoId", descripcion = "grupoId del miembro restante")
+        pasos += pasoCore.copy(nombre = "grupo:$gid:resetSaldos", descripcion = "reinicio de puntos y racha del miembro restante")
+        return pasos
     }
 
     private suspend fun borrarDocumentosPorCampo(coleccion: String, campo: String, valor: String) {
-        try {
-            val snap = firestore.collection(coleccion).whereEqualTo(campo, valor).get().await()
-            for (doc in snap.documents) {
-                doc.reference.delete().await()
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "No se pudieron borrar documentos en $coleccion por $campo=$valor", e)
+        val snap = firestore.collection(coleccion).whereEqualTo(campo, valor).get().await()
+        for (doc in snap.documents) {
+            doc.reference.delete().await()
         }
     }
 
