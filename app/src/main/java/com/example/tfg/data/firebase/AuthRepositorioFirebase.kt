@@ -122,6 +122,7 @@ class AuthRepositorioFirebase(
             val puntos = reloaded.getLong("puntos")?.toInt() ?: 0
             val puntosReservados = reloaded.getLong("puntosReservados")?.toInt() ?: 0
             val puntosRecompensa = reloaded.getLong("puntosRecompensa")?.toInt() ?: 0
+            val rachaDias = reloaded.getLong("rachaDias")?.toInt() ?: 0
             val user = Usuario(
                 id = firebaseUser.uid,
                 nombre = nombre,
@@ -133,6 +134,7 @@ class AuthRepositorioFirebase(
                 puntos = puntos,
                 puntosReservados = puntosReservados,
                 puntosRecompensa = puntosRecompensa,
+                rachaDias = rachaDias,
                 avatarUpdatedAt = reloaded.getTimestamp("avatarUpdatedAt")
             )
             Log.d(TAG, "usuario cargado desde Firestore uid=${firebaseUser.uid} puntos=$puntos")
@@ -192,6 +194,7 @@ class AuthRepositorioFirebase(
              val puntos = reloaded.getLong("puntos")?.toInt() ?: 0
              val puntosReservados = reloaded.getLong("puntosReservados")?.toInt() ?: 0
              val puntosRecompensa = reloaded.getLong("puntosRecompensa")?.toInt() ?: 0
+             val rachaDias = reloaded.getLong("rachaDias")?.toInt() ?: 0
              val user = Usuario(
                  id = firebaseUser.uid,
                  nombre = nombre,
@@ -203,6 +206,7 @@ class AuthRepositorioFirebase(
                  puntos = puntos,
                  puntosReservados = puntosReservados,
                  puntosRecompensa = puntosRecompensa,
+                 rachaDias = rachaDias,
                  avatarUpdatedAt = reloaded.getTimestamp("avatarUpdatedAt")
              )
             _usuarioCache = user
@@ -381,7 +385,8 @@ class AuthRepositorioFirebase(
                 sexo = null,
                 pais = null,
                 ciudad = null,
-                email = u.email ?: ""
+                email = u.email ?: "",
+                rachaDias = 0
             )
     }
 
@@ -403,6 +408,7 @@ class AuthRepositorioFirebase(
                 val puntos = doc.getLong("puntos")?.toInt() ?: 0
                 val puntosReservados = doc.getLong("puntosReservados")?.toInt() ?: 0
                 val puntosRecompensa = doc.getLong("puntosRecompensa")?.toInt() ?: 0
+                val rachaDias = doc.getLong("rachaDias")?.toInt() ?: 0
                 Usuario(
                     id = id,
                     nombre = nombre,
@@ -412,6 +418,7 @@ class AuthRepositorioFirebase(
                     ciudad = ciudad,
                     email = email,
                     puntos = puntos, puntosReservados = puntosReservados, puntosRecompensa = puntosRecompensa,
+                    rachaDias = rachaDias,
                     avatarUpdatedAt = doc.getTimestamp("avatarUpdatedAt"))
             } ?: emptyList()
             // Actualizar caché del usuario actual con los datos frescos de Firestore

@@ -196,6 +196,7 @@
     <string name="crear_otra">Crear otra</string>
     <string name="elige_accion">Elige acción</string>
     <string name="opciones_extra_title">Opciones extra</string>
+    <string name="emergencia_opcion">🚨 Emergencia (×1.5 puntos)</string>
     <string name="tipo_recurrencia_title">Tipo de recurrencia</string>
     <string name="introduce_titulo">Introduce título</string>
     <string name="tarea_creada">Tarea creada</string>
@@ -204,6 +205,10 @@
     <string name="tarea_creada_asignada">Tarea creada y asignada</string>
     <string name="tarea_marcar_completada">Tarea marcada como completada</string>
     <string name="tarea_confirmada">Tarea confirmada</string>
+    <string name="error_grupo_no_disponible">No se pudo obtener el grupo; intenta de nuevo</string>
+    <string name="cancelar_recurrencia">Cancelar recurrencia</string>
+    <string name="cancelar_recurrencia_confirm">¿Cancelar la recurrencia de esta tarea? No se crearán más repeticiones.</string>
+    <string name="recurrencia_cancelada">Recurrencia cancelada</string>
     <string name="no_autoasignar">No podés autoasignarte tareas</string>
     <string name="disputa_creada">Disputa creada</string>
     <string name="error_subida">Error subida: %1$s</string>

@@ -182,6 +182,38 @@ class FragmentPgPrincipal : Fragment() {
             }
         }
 
+        // Resultado de completar/confirmar tarea disparado desde el adaptador de Inicio.
+        // En Inicio no se navega: solo se informa y se resetea el estado.
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                tareasVM.marcarCompletadaState.collect { result ->
+                    result?.let {
+                        if (it.isSuccess) {
+                            Toast.makeText(requireContext(), getString(R.string.tarea_marcar_completada), Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(requireContext(), it.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
+                        }
+                        tareasVM.resetMarcarCompletadaState()
+                    }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                tareasVM.confirmarTareaState.collect { result ->
+                    result?.let {
+                        if (it.isSuccess) {
+                            Toast.makeText(requireContext(), getString(R.string.tarea_confirmada), Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(requireContext(), it.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
+                        }
+                        tareasVM.resetConfirmarTareaState()
+                    }
+                }
+            }
+        }
+
         // Tareas recientes
         binding.rvTareasHome.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         binding.rvTareasHome.isNestedScrollingEnabled = false

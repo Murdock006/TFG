@@ -230,10 +230,8 @@ class FragmentCalendario : Fragment() {
     }
 
     private fun mostrarOpcionesTarea(tarea: Tarea) {
-        val usuarioId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
-        val esCreadoPor = usuarioId == tarea.creadoPor
-
-        // Construir opciones según rol: solo el creador puede gestionar la emergencia
+        // Gestionar opciones de la tarea. La emergencia (×1.5) se gestiona en el
+        // formulario de creación, no desde el calendario.
         data class Opcion(val texto: String, val accion: () -> Unit)
         val opciones = mutableListOf<Opcion>()
 
@@ -241,14 +239,6 @@ class FragmentCalendario : Fragment() {
         opciones.add(Opcion(if (tarea.esImportante) "Quitar importante" else "Marcar como importante") {
             actualizarCampo(tarea.copy(esImportante = !tarea.esImportante))
         })
-        // Solo el creador/asignador puede activar o desactivar emergencia
-        if (esCreadoPor) {
-            opciones.add(Opcion(if (tarea.esEmergencia) "Desactivar emergencia" else "🚨 Activar emergencia (×1.5 pts)") {
-                val nuevo = if (tarea.esEmergencia) tarea.copy(esEmergencia = false, multiplicadorPuntos = 1.0)
-                            else tarea.copy(esEmergencia = true, multiplicadorPuntos = 1.5)
-                actualizarCampo(nuevo)
-            })
-        }
         opciones.add(Opcion("Cambiar recordatorio (${tarea.minutosAntes} min)") { elegirMinutosRecordatorio(tarea) })
         opciones.add(Opcion("📤 Añadir al calendario") {
             com.example.tfg.service.IcsExporter.exportarTarea(requireContext(), tarea)

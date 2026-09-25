@@ -61,6 +61,38 @@ class FragmentTareasPendientes : Fragment() {
             }
         }
 
+        // Resultado de completar/confirmar tarea disparado desde el adaptador de esta pantalla.
+        // No se navega: solo se informa y se resetea el estado.
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                tareasVM.marcarCompletadaState.collect { result ->
+                    result?.let {
+                        if (it.isSuccess) {
+                            android.widget.Toast.makeText(requireContext(), getString(R.string.tarea_marcar_completada), android.widget.Toast.LENGTH_SHORT).show()
+                        } else {
+                            android.widget.Toast.makeText(requireContext(), it.exceptionOrNull()?.message ?: "Error", android.widget.Toast.LENGTH_LONG).show()
+                        }
+                        tareasVM.resetMarcarCompletadaState()
+                    }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                tareasVM.confirmarTareaState.collect { result ->
+                    result?.let {
+                        if (it.isSuccess) {
+                            android.widget.Toast.makeText(requireContext(), getString(R.string.tarea_confirmada), android.widget.Toast.LENGTH_SHORT).show()
+                        } else {
+                            android.widget.Toast.makeText(requireContext(), it.exceptionOrNull()?.message ?: "Error", android.widget.Toast.LENGTH_LONG).show()
+                        }
+                        tareasVM.resetConfirmarTareaState()
+                    }
+                }
+            }
+        }
+
         // botones para cambiar vista
         binding.btnPendientes.setOnClickListener { mostrarPendientes() }
         binding.btnAsignadas.setOnClickListener { mostrarAsignadas() }
@@ -206,9 +238,10 @@ class FragmentTareasPendientes : Fragment() {
                 }
             }
             else -> {
-                // Pendientes: tareas asignadas a mi en estado pendiente, o creadas por mi pendientes de confirmación
+                // Pendientes: tareas asignadas a mi (pendiente o esperando confirmación), o creadas por mi pendientes de confirmación
                 tareasDelGrupo.filter {
                     (it.asignadoA == uid && it.estado == "pendiente") ||
+                    (it.asignadoA == uid && it.estado == "pendiente_confirmacion") ||
                     (it.creadoPor == uid && it.estado == "pendiente_confirmacion")
                 }
             }

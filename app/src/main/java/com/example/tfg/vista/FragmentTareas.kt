@@ -123,6 +123,7 @@ class FragmentTareas : Fragment() {
                     result?.let {
                         if (it.isSuccess) {
                             Toast.makeText(requireContext(), getString(R.string.tarea_marcar_completada), Toast.LENGTH_SHORT).show()
+                            volverAInicio()
                         } else {
                             val msg = it.exceptionOrNull()?.message ?: "Error"
                             Log.e(TAG, "marcarCompletada failed: $msg")
@@ -146,6 +147,7 @@ class FragmentTareas : Fragment() {
                         ultimoBotonConfirmar = null
                         if (it.isSuccess) {
                             Toast.makeText(requireContext(), getString(R.string.tarea_confirmada), Toast.LENGTH_SHORT).show()
+                            volverAInicio()
                         } else {
                             Toast.makeText(requireContext(), it.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
                         }
@@ -227,11 +229,13 @@ class FragmentTareas : Fragment() {
             adaptCat.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             b.spCategoria.adapter = adaptCat
 
+            // Preselecciona la categoría recibida por navegación (sirve tanto para
+            // "Personalizada" como para las categorías estándar), de modo que el formulario
+            // completo —incluida la emergencia ×1.5— esté disponible para todas ellas.
             val categoriaInicialArg = navArgs?.categoria
-            val categoriaInicialPersonalizada = categoriaInicialArg.equals("personalizada", true) || categoriaInicialArg.equals("personalizado", true)
-            if (categoriaInicialPersonalizada) {
-                val idxPersonalizada = categorias.indexOfFirst { it.equals("Personalizada", true) }
-                if (idxPersonalizada >= 0) b.spCategoria.setSelection(idxPersonalizada)
+            if (!categoriaInicialArg.isNullOrBlank()) {
+                val idxInicial = categorias.indexOfFirst { it.equals(categoriaInicialArg, true) }
+                if (idxInicial >= 0) b.spCategoria.setSelection(idxInicial)
             }
 
             val dificultades = listOf("Fácil", "Media", "Difícil")
@@ -299,6 +303,8 @@ class FragmentTareas : Fragment() {
                 }
             }
 
+            // Opciones del formulario: se inicializan al entrar en modo creación y se
+            // reinician tras un envío correcto para que la siguiente tarea no las herede.
             var fechaProgramadaTs: com.google.firebase.Timestamp? = null
             var esEmergenciaLocal = false
             var esImportanteLocal = false
@@ -317,7 +323,8 @@ class FragmentTareas : Fragment() {
                 }, hoy.get(java.util.Calendar.YEAR), hoy.get(java.util.Calendar.MONTH), hoy.get(java.util.Calendar.DAY_OF_MONTH)).show()
             }
 
-            // Opciones extra: recurrencia, emergencia, importante
+            // Opciones extra: recurrencia, emergencia, importante.
+            // La emergencia (×1.5) está disponible para CUALQUIER categoría, no solo "personalizada".
             b.btnOpcionesExtra.setOnClickListener {
                 val opts = arrayOf(
                     if (esImportanteLocal) "✅ Importante (activo)" else "⭐ Marcar como importante",
@@ -361,16 +368,28 @@ class FragmentTareas : Fragment() {
                 }
                 val multiplicador = if (esEmergenciaLocal) Constants.MULTIPLICADOR_EMERGENCIA else 1.0
 
-                val tarea = Tarea(
-                    titulo = titulo, puntos = puntos, creadoPor = creadorId,
-                    categoria = categoria, dificultad = dificultad, asignadoA = asignadoUid,
-                    fechaProgramada = fechaProgramadaTs,
-                    esEmergencia = esEmergenciaLocal, multiplicadorPuntos = multiplicador,
-                    esRecurrente = esRecurrenteLocal, tipoRecurrencia = tipoRecurrenciaLocal,
-                    esImportante = esImportanteLocal,
-                    grupoId = parejaVM.grupo.value?.id
-                )
                 lifecycleScope.launch {
+                    // Garantizar grupoId: si el grupo aún no está cargado, intentar cargarlo una vez.
+                    // Sin grupo la tarea queda invisible en las vistas de grupo, así que se falla.
+                    var grupoId = parejaVM.grupo.value?.id
+                    if (grupoId.isNullOrBlank() && !creadorId.isNullOrBlank()) {
+                        try { parejaVM.cargarGrupoPorUsuario(creadorId) } catch (_: Exception) { }
+                        grupoId = parejaVM.grupo.value?.id
+                    }
+                    if (grupoId.isNullOrBlank()) {
+                        Toast.makeText(requireContext(), getString(R.string.error_grupo_no_disponible), Toast.LENGTH_LONG).show()
+                        return@launch
+                    }
+
+                    val tarea = Tarea(
+                        titulo = titulo, puntos = puntos, creadoPor = creadorId,
+                        categoria = categoria, dificultad = dificultad, asignadoA = asignadoUid,
+                        fechaProgramada = fechaProgramadaTs,
+                        esEmergencia = esEmergenciaLocal, multiplicadorPuntos = multiplicador,
+                        esRecurrente = esRecurrenteLocal, tipoRecurrencia = tipoRecurrenciaLocal,
+                        esImportante = esImportanteLocal,
+                        grupoId = grupoId
+                    )
                     val res = LocalizadorServicios.repositorioTarea.crearTarea(tarea)
                     if (res.isSuccess) {
                         val creado = res.getOrNull()
@@ -379,6 +398,12 @@ class FragmentTareas : Fragment() {
                             NotificationScheduler.scheduleReminder(requireContext(), creado.id, "Tarea: ${creado.titulo}", "Tarea programada para ${b.tvFechaProgramada.text}", trigger)
                         }
                         Toast.makeText(requireContext(), getString(R.string.tarea_creada), Toast.LENGTH_SHORT).show()
+                        // Reiniciar las opciones del formulario tras un envío correcto.
+                        esEmergenciaLocal = false
+                        esImportanteLocal = false
+                        tipoRecurrenciaLocal = null
+                        esRecurrenteLocal = false
+                        fechaProgramadaTs = null
                         // Notificar al asignado vía Firebase
                         if (!asignadoUid.isNullOrBlank() && creado != null) {
                             Log.d(TAG, "Enviando notificación Firebase (formulario): tipo=asignacion, destinatario=$asignadoUid, tareaId=${creado.id}")
@@ -408,6 +433,8 @@ class FragmentTareas : Fragment() {
             val btnAccion = view.findViewById<Button>(R.id.btnDetalleAccion)
             val btnMas = view.findViewById<Button>(R.id.btnDetalleMas)
             val btnAsignar = view.findViewById<Button>(R.id.btnDetalleAsignar)
+            val cardCancelarRecurrencia = view.findViewById<View>(R.id.cardCancelarRecurrencia)
+            val btnCancelarRecurrencia = view.findViewById<Button>(R.id.btnDetalleCancelarRecurrencia)
 
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -422,6 +449,33 @@ class FragmentTareas : Fragment() {
 
                         // Mostramos la opción de asignar siempre al creador cuando la tarea esté pendiente; no mostramos a quién está asignada aquí
                         val usuarioActualId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
+
+                        // Cancelar recurrencia: solo el creador (asignador) de una tarea recurrente.
+                        if (tarea.esRecurrente && !usuarioActualId.isBlank() && usuarioActualId == tarea.creadoPor) {
+                            cardCancelarRecurrencia.visibility = View.VISIBLE
+                            btnCancelarRecurrencia.setOnClickListener {
+                                androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                                    .setTitle(getString(R.string.cancelar_recurrencia))
+                                    .setMessage(getString(R.string.cancelar_recurrencia_confirm))
+                                    .setPositiveButton(getString(R.string.confirmar)) { _, _ ->
+                                        lifecycleScope.launch {
+                                            val actualizada = tarea.copy(esRecurrente = false, tipoRecurrencia = null)
+                                            val resRec = LocalizadorServicios.repositorioTarea.actualizarTarea(actualizada)
+                                            if (resRec.isSuccess) {
+                                                Toast.makeText(requireContext(), getString(R.string.recurrencia_cancelada), Toast.LENGTH_SHORT).show()
+                                                cardCancelarRecurrencia.visibility = View.GONE
+                                            } else {
+                                                Toast.makeText(requireContext(), resRec.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    }
+                                    .setNegativeButton(getString(R.string.cancelar), null)
+                                    .show()
+                            }
+                        } else {
+                            cardCancelarRecurrencia.visibility = View.GONE
+                        }
+
                         if (!usuarioActualId.isBlank() && usuarioActualId == tarea.creadoPor && tarea.estado == "pendiente") {
                             tvAsignado.text = ""
                             btnAsignar.visibility = View.VISIBLE
@@ -540,6 +594,22 @@ class FragmentTareas : Fragment() {
         // Alcance acotado: solo se limpian los bindings que este Fragment infla directamente.
         listaBinding = null
         crearBinding = null
+    }
+
+    // Vuelve al menú principal (Inicio) tras una acción completada correctamente,
+    // cerrando el destino actual para no apilar pantallas duplicadas.
+    private fun volverAInicio() {
+        try {
+            val navController = findNavController()
+            val actual = navController.currentDestination?.id ?: return
+            val opciones = androidx.navigation.NavOptions.Builder()
+                .setPopUpTo(actual, true)
+                .setLaunchSingleTop(true)
+                .build()
+            navController.navigate(R.id.fragment_PgPrincipal, null, opciones)
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudo volver a Inicio: ${e.message}")
+        }
     }
 
     // Adapter simple
@@ -715,7 +785,15 @@ class FragmentTareas : Fragment() {
 
                     val nombres = opciones.map { it.first }.toTypedArray()
                     androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle(getString(R.string.selecciona_miembro)).setItems(nombres) { _, idx ->
-                        lifecycleScope.launch {
+                        // Tras elegir miembro, ofrecer emergencia (×1.5) también para tareas estándar.
+                        val etiquetaEmergencia = arrayOf(getString(R.string.emergencia_opcion))
+                        val seleccionEmergencia = booleanArrayOf(false)
+                        var esEmergencia = false
+                        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                            .setTitle(getString(R.string.opciones_extra_title))
+                            .setMultiChoiceItems(etiquetaEmergencia, seleccionEmergencia) { _, _, checked -> esEmergencia = checked }
+                            .setPositiveButton(getString(R.string.crear)) { _, _ ->
+                                lifecycleScope.launch {
                             val elegidoUid = opciones[idx].second.ifBlank { null }
                             val creador = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
                             if (!creador.isNullOrBlank() && !elegidoUid.isNullOrBlank() && elegidoUid == creador) {
@@ -725,7 +803,8 @@ class FragmentTareas : Fragment() {
                             val dificultadInt = when (sug.dificultad.lowercase()) { "fácil", "facil" -> 1; "media" -> 2; else -> 3 }
                             // Las tareas preestablecidas se asignan para hoy si no se elige fecha
                             val hoy = com.google.firebase.Timestamp.now()
-                            val tarea = Tarea(titulo = sug.titulo, descripcion = sug.descripcion, categoria = categoriaId, dificultad = dificultadInt, puntos = sug.puntos, creadoPor = creador, asignadoA = elegidoUid, grupoId = parejaVM.grupo.value?.id, fechaProgramada = hoy)
+                            val multiplicador = if (esEmergencia) Constants.MULTIPLICADOR_EMERGENCIA else 1.0
+                            val tarea = Tarea(titulo = sug.titulo, descripcion = sug.descripcion, categoria = categoriaId, dificultad = dificultadInt, puntos = sug.puntos, creadoPor = creador, asignadoA = elegidoUid, grupoId = parejaVM.grupo.value?.id, fechaProgramada = hoy, esEmergencia = esEmergencia, multiplicadorPuntos = multiplicador)
                             Log.d(TAG, "Creando tarea desde sugerida: titulo=${tarea.titulo} asignadoA=${tarea.asignadoA}")
                             val res = LocalizadorServicios.repositorioTarea.crearTarea(tarea)
                             if (res.isSuccess) {
@@ -762,6 +841,9 @@ class FragmentTareas : Fragment() {
                                 Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
                             }
                         }
+                            }
+                            .setNegativeButton(getString(R.string.cancelar), null)
+                            .show()
                     }.setNegativeButton(getString(R.string.cancelar), null).show()
                 }
             }

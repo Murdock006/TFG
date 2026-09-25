@@ -124,6 +124,30 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Cancelar recurrencia (solo para el creador de una tarea recurrente) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardCancelarRecurrencia"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            app:cardCornerRadius="@dimen/corner_radius_sm"
+            app:cardElevation="@dimen/elevation_default"
+            app:cardBackgroundColor="@color/white"
+            app:strokeColor="@color/divisor"
+            app:strokeWidth="@dimen/stroke_thin"
+            android:visibility="gone">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDetalleCancelarRecurrencia"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.TFG.Boton.Contorno"
+                android:layout_margin="@dimen/spacing_md"
+                android:text="@string/cancelar_recurrencia"
+                android:textAllCaps="false" />
+
+        </com.google.android.material.card.MaterialCardView>
+
     </LinearLayout>
 
 </ScrollView>
