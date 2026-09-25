@@ -49,20 +49,20 @@ not review slices. Each phase remains independently revertible by file.
 Run after every phase that touches `AuthRepositorioFirebase.kt`; run the full set before apply
 is considered complete. Commands are PowerShell (repo root `C:\Users\Victor\AndroidStudioProjects\TFG2`).
 
-- [ ] G.1 **Compile gate** — both build types compile:
+- [x] G.1 **Compile gate** — both build types compile:
       `.\gradlew.bat :app:compileEmulatorKotlin :app:compileReleaseKotlin --no-daemon --console=plain`
-- [ ] G.2 **JVM suite** — existing regression tests plus `ResultadoLimpiezaCuentaTest`:
+- [x] G.2 **JVM suite** — existing regression tests plus `ResultadoLimpiezaCuentaTest`:
       `.\gradlew.bat :app:testDebugUnitTest --no-daemon --console=plain`
-- [ ] G.3 **Grep audit: no silent cleanup catches** —
+- [x] G.3 **Grep audit: no silent cleanup catches** —
       `Select-String -Path app/src/main/java/com/example/tfg/data/firebase/AuthRepositorioFirebase.kt -Pattern 'No se pudieron|No se pudo borrar|No se pudo limpiar'`
       returns **zero** hits inside the cleanup path (the re-auth message at `:241` and the generic
       `:261` failure are not cleanup catches).
-- [ ] G.4 **Grep audit: avatar coverage** —
+- [x] G.4 **Grep audit: avatar coverage** —
       `Select-String -Path app/src/main/java/com/example/tfg/data/firebase/AuthRepositorioFirebase.kt -Pattern 'collection\("avatares"\)'`
       returns **one** hit.
-- [ ] G.5 **Grep audit: dissolution writes present** — each pattern present:
+- [x] G.5 **Grep audit: dissolution writes present** — each pattern present:
       `'\"grupoId\" to null'`, `'whereEqualTo\("grupoId"'`, `'rachaDias'`.
-- [ ] G.6 **Grep audit: Auth-deletion gate present** —
+- [x] G.6 **Grep audit: Auth-deletion gate present** —
       `Select-String -Path app/src/main/java/com/example/tfg/data/firebase/AuthRepositorioFirebase.kt -Pattern 'if \(!reporte\.completado\)'`
       returns a hit.
 - [ ] G.7 **Manual matrix** — execute the checklist in **Manual Verification Matrix** below
@@ -92,7 +92,7 @@ result per row:
 
 ## Phase 1: Contracts & Report Unit Test
 
-- [ ] 1.1 Add the report types to `app/src/main/java/com/example/tfg/repositorio/AuthRepositorio.kt`
+- [x] 1.1 Add the report types to `app/src/main/java/com/example/tfg/repositorio/AuthRepositorio.kt`
       (edit target): `data class PasoLimpieza(nombre, descripcion, exito, intentos, error = null)`
       and `data class ResultadoLimpiezaCuenta(val pasos: List<PasoLimpieza>)` with `completado`
       (`pasos.all { it.exito }`), `fallidos` (`pasos.filterNot { it.exito }`), and
@@ -103,7 +103,7 @@ result per row:
   - Rollback: delete the two data classes; no other file references them yet.
   - Depends on: none. Parallel: safe with Phase 2 prep (import list planning).
 
-- [ ] 1.2 Create `app/src/test/java/com/example/tfg/repositorio/ResultadoLimpiezaCuentaTest.kt`
+- [x] 1.2 Create `app/src/test/java/com/example/tfg/repositorio/ResultadoLimpiezaCuentaTest.kt`
       (edit target), package `com.example.tfg.repositorio`, pure JUnit 4, no Firebase/Android types.
       Cover: all steps successful → `completado == true`; one failed step → `completado == false`,
       `fallidos` contains it, `mensajeFallos()` includes its `descripcion`; duplicate descriptions
@@ -115,7 +115,7 @@ result per row:
 
 ## Phase 2: Retry Engine & Non-Swallowing Helper
 
-- [ ] 2.1 In `app/src/main/java/com/example/tfg/data/firebase/AuthRepositorioFirebase.kt` (edit target)
+- [x] 2.1 In `app/src/main/java/com/example/tfg/data/firebase/AuthRepositorioFirebase.kt` (edit target)
       add the constants `MAX_INTENTOS_LIMPIEZA = 3`, `DELAY_REINTENTO_MS = 300L`,
       `LIMITE_BATCH_FIRESTORE = 500`, and the imports `com.google.firebase.firestore.SetOptions`,
       `com.google.firebase.firestore.DocumentSnapshot`,
@@ -129,7 +129,7 @@ result per row:
   - Rollback: remove the added imports/constants.
   - Depends on: none. Parallel: safe with Phase 1.
 
-- [ ] 2.2 Add the retry wrapper to `AuthRepositorioFirebase.kt` (edit target): `ejecutarPaso`
+- [x] 2.2 Add the retry wrapper to `AuthRepositorioFirebase.kt` (edit target): `ejecutarPaso`
       (returns `PasoLimpieza`), `ejecutarPasoConValor` (returns `Pair<PasoLimpieza, T?>`), and
       `esErrorTransitorio(e: Throwable)`. `esErrorTransitorio` returns `true` for
       `FirebaseNetworkException` and for `FirebaseFirestoreException` codes `UNAVAILABLE`,
@@ -139,7 +139,7 @@ result per row:
   - Rollback: remove the three helpers and the import from 2.1 if 2.2 is reverted too.
   - Depends on: 2.1. Parallel: 2.3 can proceed concurrently.
 
-- [ ] 2.3 Change `borrarDocumentosPorCampo` in `AuthRepositorioFirebase.kt` (edit target) so it
+- [x] 2.3 Change `borrarDocumentosPorCampo` in `AuthRepositorioFirebase.kt` (edit target) so it
       **stops swallowing**: remove the internal `try/catch` and let exceptions propagate to
       `ejecutarPaso`. Query-loop shape is unchanged. This is grep-auditable: the
       `Log.w(TAG, "No se pudieron borrar documentos…")` line at `:372` disappears from the cleanup
@@ -150,7 +150,7 @@ result per row:
 
 ## Phase 3: Group Enumeration & Dissolution
 
-- [ ] 3.1 Add `limpiarGrupos(uid): List<PasoLimpieza>` to `AuthRepositorioFirebase.kt` (edit target).
+- [x] 3.1 Add `limpiarGrupos(uid): List<PasoLimpieza>` to `AuthRepositorioFirebase.kt` (edit target).
       Enumerate groups via `ejecutarPasoConValor("grupos:enumeracion", …)` filtering on
       `miembros.containsKey(uid)`; return early if the read failed. For each group:
       no members → `ejecutarPaso("grupo:${gid}:borrarVacio", …)` deletes the group doc;
@@ -163,7 +163,7 @@ result per row:
   - Rollback: remove `limpiarGrupos` and its call site (added in 4.1); no other file depends on it.
   - Depends on: 2.2. Parallel: 3.3 depends on 3.1.
 
-- [ ] 3.2 In `disolverGrupo` (`AuthRepositorioFirebase.kt` (edit target)) implement the group-task
+- [x] 3.2 In `disolverGrupo` (`AuthRepositorioFirebase.kt` (edit target)) implement the group-task
       deletion **before** the dissolution core: query step `ejecutarPasoConValor("grupo:${gid}:tareas:leer", …)`
       over `tareas.whereEqualTo("grupoId", gid)`, then delete step
       `ejecutarPaso("grupo:${gid}:tareas:borrar", …)` deleting refs in chunks of
@@ -176,7 +176,7 @@ result per row:
   - Rollback: remove `disolverGrupo`'s task-deletion block; group core (3.3) stays intact.
   - Depends on: 3.1. Parallel: none (must precede 3.3).
 
-- [ ] 3.3 Add the atomic dissolution core in `disolverGrupo` (`AuthRepositorioFirebase.kt` (edit
+- [x] 3.3 Add the atomic dissolution core in `disolverGrupo` (`AuthRepositorioFirebase.kt` (edit
       target)): one `firestore.batch()` that `delete(grupoRef)` and
       `set(usuarios/{remainingUid}, {grupoId: null, puntos: 0, puntosReservados: 0, puntosRecompensa: 0, rachaDias: 0}, SetOptions.merge())`,
       then `commit().await()`. Emit the outcome as **three sub-steps sharing one commit outcome**:
@@ -190,7 +190,7 @@ result per row:
 
 ## Phase 4: Cleanup Coverage, Ordering & Gate
 
-- [ ] 4.1 Rebuild `limpiarDatosAsociados(uid): ResultadoLimpiezaCuenta` in
+- [x] 4.1 Rebuild `limpiarDatosAsociados(uid): ResultadoLimpiezaCuenta` in
       `AuthRepositorioFirebase.kt` (edit target) as an exception-safe collector that never throws
       for a step failure. Order: `pasos += limpiarGrupos(uid)` first, then
       `ejecutarPaso("tareas:creadas", …)` (`whereEqualTo("creadoPor", uid)` → delete each) and
@@ -201,7 +201,7 @@ result per row:
   - Rollback: revert `limpiarDatosAsociados` to the prior body; Phase 3 helpers become unused.
   - Depends on: Phase 3. Parallel: none.
 
-- [ ] 4.2 Add the field sweeps to the collector in `AuthRepositorioFirebase.kt` (edit target):
+- [x] 4.2 Add the field sweeps to the collector in `AuthRepositorioFirebase.kt` (edit target):
       `invitaciones` (`creadoPor`), `notificaciones` (`destinatario`), `notificaciones`
       (`contenido.desde`), `recompensas` (`creadoPor`), `canjes` (`usuarioUid`) — each through
       `ejecutarPaso` calling the now-propagating `borrarDocumentosPorCampo`. Every step is attempted
@@ -210,7 +210,7 @@ result per row:
   - Rollback: remove the five `ejecutarPaso` lines; the query helper stays.
   - Depends on: 4.1, 2.3. Parallel: safe with 4.3.
 
-- [ ] 4.3 Add the remaining sweep to `AuthRepositorioFirebase.kt` (edit target):
+- [x] 4.3 Add the remaining sweep to `AuthRepositorioFirebase.kt` (edit target):
       `ejecutarPaso("disputas", …)` deletes each `pruebas[]` Storage object first and only then the
       dispute doc; tolerate `StorageException.ERROR_OBJECT_NOT_FOUND` as success but rethrow any
       other storage failure so the doc is **not** deleted. Then
@@ -222,7 +222,7 @@ result per row:
   - Rollback: remove the three blocks; other sweeps remain.
   - Depends on: 4.1. Parallel: safe with 4.2/4.4.
 
-- [ ] 4.4 Harden `eliminarCuentaActual` in `AuthRepositorioFirebase.kt` (edit target): keep the
+- [x] 4.4 Harden `eliminarCuentaActual` in `AuthRepositorioFirebase.kt` (edit target): keep the
       existing re-auth block (`:231-243`) and its failure message unchanged; replace the ungated
       `limpiarDatosAsociados(uid)` + `delete()` sequence with:
       `val reporte = limpiarDatosAsociados(uid)`; if `!reporte.completado`, `Log.w` the failed steps
@@ -237,7 +237,7 @@ result per row:
 
 ## Phase 5: UI Partial-Failure Surface
 
-- [ ] 5.1 In `app/src/main/java/com/example/tfg/vista/FragmentPerfil.kt` (edit target) replace the
+- [x] 5.1 In `app/src/main/java/com/example/tfg/vista/FragmentPerfil.kt` (edit target) replace the
       partial-failure `Toast` (`:288-291`) with a persistent `AlertDialog` titled
       `"Eliminación incompleta"` showing `resultado.exceptionOrNull()?.message`. Keep the success
       branch (`limpiarEstadoLocalPostEliminacion()` + `navegarALoginLimpiandoBackstack()`,
@@ -252,7 +252,7 @@ result per row:
 
 ## Phase 6: Verification
 
-- [ ] 6.1 Run **Global Gates G.1–G.6** and record each result. G.2 must pass including
+- [x] 6.1 Run **Global Gates G.1–G.6** and record each result. G.2 must pass including
       `ResultadoLimpiezaCuentaTest`; G.3 must be zero hits; G.4 exactly one hit; G.5 all patterns;
       G.6 present.
   - Verify: the gate commands above.
@@ -268,6 +268,9 @@ result per row:
   - Verify: all matrix rows pass, or each failure is recorded with its observed evidence.
   - Rollback: N/A (verification only).
   - Depends on: 6.1. Parallel: none.
+  - Status: **NOT EXECUTED** in this apply run — no device/emulator and only one account were
+    available. Batches M1–M4 remain pending and must be run by the developer. No results are
+    claimed here.
 
 ## Scope Boundaries & Reused Files
 
