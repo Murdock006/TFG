@@ -101,7 +101,30 @@ class MainActivity : AppCompatActivity() {
         solicitarPermisoNotificaciones()
 
         // Configurar BottomNavigation
-        binding.bottomNavigation.setupWithNavController(navController)
+        // Configuración manual de la barra inferior: NavigationUI.setupWithNavController usa
+        // saveState/restoreState por pestaña, y eso restauraba pilas "envenenadas" (Inicio
+        // apilado encima de Tareas) impidiendo volver a entrar a una pestaña. Aquí navegamos
+        // sin guardar/restaurar estado por pestaña.
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            val opciones = androidx.navigation.NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                .setRestoreState(false)
+                .setPopUpTo(
+                    navController.graph.startDestinationId,
+                    inclusive = false,
+                    saveState = false
+                )
+                .build()
+            navController.navigate(item.itemId, null, opciones)
+            true
+        }
+        // Sincronizar el resaltado de la barra con el destino actual (lo que hacía
+        // NavigationUI internamente al configurar la barra).
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            binding.bottomNavigation.menu.findItem(destination.id)?.let { item ->
+                if (!item.isChecked) item.isChecked = true
+            }
+        }
 
         navigationView = binding.navigationView
         navigationViewFooter = binding.navigationViewFooter
@@ -187,7 +210,15 @@ class MainActivity : AppCompatActivity() {
                             com.example.tfg.R.id.fragment_Registro
                         )
                         if (destId in destinosSecundarios) {
-                            navController.navigate(com.example.tfg.R.id.fragment_PgPrincipal)
+                            // Cerrar el destino secundario actual (inclusive) antes de navegar a
+                            // Inicio: evita apilar un PgPrincipal duplicado y deja limpia la pila.
+                            val opciones = androidx.navigation.NavOptions.Builder()
+                                .setPopUpTo(destId!!, true)
+                                .setLaunchSingleTop(true)
+                                .build()
+                            navController.navigate(
+                                com.example.tfg.R.id.fragment_PgPrincipal, null, opciones
+                            )
                         } else {
                             if (!navController.popBackStack()) finish()
                         }
