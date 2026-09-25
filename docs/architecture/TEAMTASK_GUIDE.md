@@ -60,7 +60,7 @@ Compact state index:
 | `pendiente` → `pendiente_confirmacion` or `confirmada` | `TareaRepositorioFirebase.kt:390-435` |
 | `pendiente_confirmacion`/`completada` → `confirmada` | `TareaRepositorioFirebase.kt:441-497` |
 | `reclamada` → `confirmada` or `pendiente` | `TareaRepositorioFirebase.kt:362-388` |
-| Any state → `eliminada` | `FragmentTareas.kt:492` |
+| Any state → `eliminada` | `FragmentTareas.kt:484,572` |
 
 Three critical checks are specified in detail by the canonical spec:
 
@@ -149,7 +149,7 @@ the specs remain the detailed source of behavior and remediation constraints.
 | TD-5 | Task observer mutates shared map without sync | M | `TareaRepositorioFirebase.kt:184-212` | navigation-lifecycle | Resolved (teamtask-navigation-lifecycle-convergence) |
 | TD-6 | Adapter receives external CoroutineScope | M | `TareasHomeAdapter.kt:39,145-210` | navigation-lifecycle | Resolved (teamtask-navigation-lifecycle-convergence) |
 | TD-7 | Reclamo state and points writes are split | H | `TareaRepositorioFirebase.kt:362-388` | task-domain | Open |
-| TD-8 | Task state is raw and incompletely declared | M | `Tarea.kt:15`; `TareaRepositorioFirebase.kt:397-400,448`; `FragmentTareas.kt:492` | task-domain | Open |
+| TD-8 | Task state is raw and incompletely declared | M | `Tarea.kt:15`; `TareaRepositorioFirebase.kt:397-400,448`; `FragmentTareas.kt:484,572` | task-domain | Open |
 | TD-9 | No rules/storage-rules/indexes artifacts | H | Local artifacts now exist: `firestore.rules`, `storage.rules`, `firestore.indexes.json`, `tools/firebase/*` (committed by `teamtask-testing-emulator-strategy` WU2); deployment, console parity, and App Check remain pending; `firebase-database-ktx` has no consumer | firestore-contracts | Partially resolved (teamtask-testing-emulator-strategy) |
 | TD-10 | UI performs direct Firebase reads | M | `MainActivity.kt:235,243,511-523`; `FragmentPareja.kt:364-371`; `TareasHomeAdapter.kt:74` | architecture-map | Open |
 | TD-11 | `ejecutorUid` is ignored in one completion path | M | `RepositorioTareas.kt:86` | task-domain | Resolved (teamtask-task-repo-consolidation) |

@@ -35,7 +35,7 @@ Source-of-truth priority for this spec: code → `app/build.gradle.kts` →
 | `avatares` | canonical avatar repository, self-only upload (this change); account cleanup deletes the owner's document (this change) | canonical avatar repository read by uid; `MainActivity.kt:451-509`; `FragmentPgPrincipal.kt:357-391`; `FragmentPerfil.kt:49-62,190-205` | `base64`, `contentType`, `updatedAt` |
 | `grupos` | `RepositorioPareja.kt:35-62,230-288`; account cleanup deletes a dissolved group (this change, `AuthRepositorioFirebase.kt:418-421`) | `RepositorioPareja.kt:160-203,269-288`; `TareaRepositorioFirebase.kt:130-181,200-206`; UI direct (`FragmentPareja.kt:364-371`) | `nombre`, `miembros` (Map<uid,rol>), `puntos`, `fechaCreacion`, `emoji` |
 | `invitaciones` | `RepositorioPareja.kt:64-76`; account cleanup deletes by `creadoPor` (this change) | `RepositorioPareja.kt:78-87,89-156` | `codigo`, `creadoPor`, `grupoId`, `correoDestino`, `estado`, `fechaCreacion`, `expiracion` |
-| `tareas` | `TareaRepositorioFirebase.kt:76-120,230-360,390-548`; `RepositorioTareas.kt:44-200`; UI direct (`FragmentTareas.kt:492`); account cleanup (this change: delete by `creadoPor`/`grupoId`, unassign by `asignadoA`, `AuthRepositorioFirebase.kt:298,307`) | `TareaRepositorioFirebase.kt:122-227`; `RepositorioTareas.kt:65-200`; UI direct (`FragmentPareja.kt:549-570`, `TareasHomeAdapter.kt:74`) | full schema in `Tarea.kt:5-32`; see also `task-domain` spec |
+| `tareas` | `TareaRepositorioFirebase.kt:76-120,230-360,390-548`; `RepositorioTareas.kt:44-200`; UI direct (`FragmentTareas.kt:484,572`); account cleanup (this change: delete by `creadoPor`/`grupoId`, unassign by `asignadoA`, `AuthRepositorioFirebase.kt:298,307`) | `TareaRepositorioFirebase.kt:122-227`; `RepositorioTareas.kt:65-200`; UI direct (`FragmentPareja.kt:549-570`, `TareasHomeAdapter.kt:74`) | full schema in `Tarea.kt:5-32`; see also `task-domain` spec |
 | `recompensas` | `RepositorioRecompensas.kt:49-72`; account cleanup deletes by `creadoPor` (this change) | `RepositorioRecompensas.kt:29-46,211-225` | `titulo`, `descripcion`, `coste`, `creadoPor`, `grupoId`, `fechaCreacion`, `esPredefinida`, `esPersonalizada` |
 | `canjes` | `RepositorioRecompensas.kt:84-118`; account cleanup deletes by `usuarioUid` (this change) | `RepositorioRecompensas.kt:121-208` | `recompensaId`, `tituloRecompensa`, `coste`, `usuarioUid`, `nombreUsuario`, `grupoId`, `fecha`, `estado` |
 | `disputas` | `RepositorioDisputas.kt:17-23`; UI (`FragmentTareas.kt:96-98`) | `RepositorioDisputas.kt:26-34`; `AuthRepositorioFirebase.kt:340-353` (cleanup) | `tareaId`, `iniciador`, `estado`, `pruebas` (List<String>), `fechaCreacion` |
@@ -90,7 +90,7 @@ Source-of-truth priority for this spec: code → `app/build.gradle.kts` →
 
 | Path | Writer | Reader | Notes |
 |---|---|---|---|
-| `avatares/{uid}/{uuid}.{ext}` | none after this change (previously `AvatarRepositorioFirebase.kt:49,61-65`) | none | Unused: avatars moved to the Firestore `avatares/{uid}` collection. `storage.rules` avatar path becomes dead and is deferred to the rules/indexes change for pruning |
+| `avatares/{uid}/{uuid}.{ext}` | none after this change (previously `AvatarRepositorioFirebase.kt:49,61-65`) | none | Unused: avatars moved to the Firestore `avatares/{uid}` collection. `storage.rules` avatar path was pruned (2026-09-24 cleanup) |
 | `disputas/{tareaId}/{uuid}.jpg` | `RepositorioDisputas.kt:40-42` | `AuthRepositorioFirebase.kt:340-353` (cleanup) | URL stored in `disputas.pruebas[]`; account cleanup deletes each referenced object |
 
 ### Assumed server-side behaviour (UNVERIFIED)
@@ -105,11 +105,11 @@ Source-of-truth priority for this spec: code → `app/build.gradle.kts` →
 | Composite index `tareas grupoId+estado` is configured | `TareaRepositorioFirebase.kt:201-205` | [UNVERIFIED] |
 | Storage path `disputas/{tareaId}/*` allows the disputer to read/write | `RepositorioDisputas.kt:40-42` | [UNVERIFIED] |
 | Signed-in users can read `avatares/{uid}`; only the owner can write it | Fixes the [UNVERIFIED] Storage avatar path with a Firestore rule (`firestore.rules`) | [UNVERIFIED] local `firestore.rules`; deployment/console parity [UNVERIFIED] |
-| Storage path `avatares/{uid}/*` allows the owner | Previously `AvatarRepositorioFirebase.kt:49-71` | Superseded: this Storage path is no longer used by the client after avatars move to Firestore; `storage.rules` avatar path unused and pruning deferred |
+| Storage path `avatares/{uid}/*` allows the owner | Previously `AvatarRepositorioFirebase.kt:49-71` | Superseded: this Storage path is no longer used by the client after avatars move to Firestore; `storage.rules` avatar path pruned (2026-09-24 cleanup) |
 | Signed-in users can delete their own `avatares/{uid}` during account cleanup | `account-deletion` cleanup | [UNVERIFIED] local `firestore.rules:37-40`; Console parity [UNVERIFIED] |
 | A signed-in user can update another member's `usuarios/{uid}` (clear `grupoId`, reset balances) during group dissolution | `account-deletion` dissolution | [UNVERIFIED] local `firestore.rules:27-32`; Console parity [UNVERIFIED] |
 | A signed-in user can delete `grupos/{gid}` during group dissolution | `account-deletion` dissolution | [UNVERIFIED] local `firestore.rules:43-48`; Console parity [UNVERIFIED] |
-| Cloud Function exists to clean up on user deletion | client cleanup remains the only path (`AuthRepositorioFirebase.kt:265-363`); this change makes it verifiable and gated but still non-atomic | [UNVERIFIED] no functions source in repo |
+| Cloud Function exists to clean up on user deletion | client cleanup remains the only path (`AuthRepositorioFirebase.kt:287-413`); this change makes it verifiable and gated but still non-atomic | [UNVERIFIED] no functions source in repo |
 | App Check enforcement | — | not declared in dependencies |
 | Crashlytics reporting | — | not declared in dependencies |
 
@@ -233,7 +233,7 @@ field contract; it did not cover removal on account cleanup.)
 | Add `firestore.rules` and `storage.rules` in repo with explicit read/write grants | High | Today only client-side filtering; no proof of backend enforcement |
 | Add `firestore.indexes.json` for composite queries | High | `tareas whereEqualTo("grupoId", gid) orderBy("estado")` is implicit |
 | Add `firebase-appcheck` dependency and provider configuration | Med | [UNVERIFIED] whether intended for production |
-| Add Cloud Function for transactional cleanup on user delete | Med | `AuthRepositorioFirebase.limpiarDatosAsociados` was best-effort (`AuthRepositorioFirebase.kt:265-363`); this change makes the client cleanup verifiable and gated, but it remains non-atomic, so a transactional server-side cleanup stays a future item |
+| Add Cloud Function for transactional cleanup on user delete | Med | `AuthRepositorioFirebase.limpiarDatosAsociados` was best-effort (`AuthRepositorioFirebase.kt:287-413`); this change makes the client cleanup verifiable and gated, but it remains non-atomic, so a transactional server-side cleanup stays a future item |
 | Add Crashlytics dependency and init in `TFGApplication` | Low | Observability gap |
 
 ## Known Risks

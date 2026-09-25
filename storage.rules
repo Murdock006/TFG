@@ -4,7 +4,6 @@ rules_version = '2';
 //
 // Covers the Storage paths observed in
 // openspec/specs/firestore-contracts/spec.md:
-//   avatares/{uid}/{uuid}.{ext}
 //   disputas/{tareaId}/{uuid}.jpg
 //
 // This is a LOCAL executable contract. It does not imply deployed production
@@ -18,26 +17,12 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    function isImage() {
-      return request.resource.contentType.matches('image/.*');
-    }
-
     function isJpeg() {
       return request.resource.contentType == 'image/jpeg';
     }
 
     function underSizeLimit() {
       return request.resource.size < 5 * 1024 * 1024;
-    }
-
-    // avatares/{uid}/... : only the owner may write or delete their avatar.
-    match /avatares/{userId}/{fileName} {
-      allow read: if signedIn();
-      allow write: if signedIn()
-        && request.auth.uid == userId
-        && isImage()
-        && underSizeLimit();
-      allow delete: if signedIn() && request.auth.uid == userId;
     }
 
     // disputas/{tareaId}/... : signed-in disputers upload JPEG evidence.

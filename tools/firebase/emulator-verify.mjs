@@ -163,25 +163,25 @@ async function storageUpload(objectPath, token, contentType) {
 
 async function checkStorageRules() {
   const creator = USERS[0];
-  const executor = USERS[1];
   const token = await signIn(creator.email, creator.password);
+  const disputePath = `disputas/${GROUP_ID}-probe/probe.jpg`;
 
-  const unauth = await storageUpload(`avatares/${creator.localId}/probe.png`, null, 'image/png');
+  const unauth = await storageUpload(disputePath, null, 'image/jpeg');
   if (unauth.status !== 403) {
     throw new Error(`expected 403 for unauthenticated upload, got ${unauth.status}`);
   }
 
-  const own = await storageUpload(`avatares/${creator.localId}/probe.png`, token, 'image/png');
-  if (own.status !== 200) {
-    throw new Error(`expected 200 for own avatar upload, got ${own.status} ${await own.text()}`);
+  const jpeg = await storageUpload(disputePath, token, 'image/jpeg');
+  if (jpeg.status !== 200) {
+    throw new Error(`expected 200 for signed-in JPEG evidence, got ${jpeg.status} ${await jpeg.text()}`);
   }
 
-  const other = await storageUpload(`avatares/${executor.localId}/probe.png`, token, 'image/png');
-  if (other.status !== 403) {
-    throw new Error(`expected 403 for another user's avatar upload, got ${other.status}`);
+  const png = await storageUpload(`disputas/${GROUP_ID}-probe/probe.png`, token, 'image/png');
+  if (png.status !== 403) {
+    throw new Error(`expected 403 for non-JPEG evidence, got ${png.status}`);
   }
 
-  return `unauth=403, own=200, other=403`;
+  return `unauth=403, jpeg=200, png=403`;
 }
 
 async function firestoreCollection(collectionId) {

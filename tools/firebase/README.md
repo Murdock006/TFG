@@ -48,7 +48,7 @@ above and never fall back to production.
 | `firebase.json` | Declares only Auth (9099), Firestore (8080), and Storage (9199) on `127.0.0.1`; disables the emulator UI; points at the rules/index files. |
 | `.firebaserc` | Project alias policy. `default` and `local` both resolve to `demo-teamtask-local`. |
 | `firestore.rules` | Local contract for `usuarios`, `grupos`, `invitaciones`, `tareas`, `recompensas`, `canjes`, `disputas`, `notificaciones`; everything else denied. |
-| `storage.rules` | Local contract for `avatares/{uid}/**` and `disputas/{tareaId}/**`; everything else denied. |
+| `storage.rules` | Local contract for `disputas/{tareaId}/**`; everything else denied. |
 | `firestore.indexes.json` | Composite indexes for observed `canjes` queries and the contract `tareas` `grupoId + estado` index. |
 
 ### Alias policy (production can never be selected)
@@ -108,8 +108,8 @@ duplicates. The namespace prefix is configurable with `FIXTURE_NAMESPACE`
 2. `firestore.indexes.json` parses and a composite `canjes` query is accepted.
 3. Firestore rules deny unauthenticated writes, cross-user creates, and
    outside-contract writes; allow an own-profile write.
-4. Storage rules deny unauthenticated and cross-user uploads; allow an own
-   avatar upload.
+4. Storage rules deny unauthenticated and non-JPEG uploads; allow signed-in
+   JPEG evidence.
 5. `reset -> seed -> seed` converges to identical state with no duplicates.
 6. The namespace guard rejects a production project id and production
    credentials.
