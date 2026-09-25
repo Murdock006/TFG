@@ -52,11 +52,11 @@ remaining order risk and its mitigation.
 | 1 | Tasks created by the deleted user are **deleted** (current behavior kept). The partner loses those tasks — this cascade MUST be documented. | Fixed by owner |
 | 2 | When one member remains, the **group is dissolved**: delete the `grupos` doc and clear the remaining member's `grupoId` in Firestore and in local `tfg_prefs`. | Fixed by owner |
 | 3 | The remaining member's balances are **reset to zero**: `puntos`, `puntosReservados`, `puntosRecompensa`. | Fixed by owner |
-| 3a | `rachaDias`: **recommended to reset to zero too** for a coherent clean slate. Flagged for confirmation; if the owner declines, the reset excludes `rachaDias`. | Recommendation — confirm |
-| 4 | **DERIVED DECISION — CONFIRM BEFORE APPLY**: the dissolved group's remaining tasks are **deleted too** (tasks whose `grupoId` is the dissolved group, not already removed by decisions 1/3). Rationale: a coherent clean slate; the group no longer exists, so its tasks would otherwise be orphaned. This is inferred from decisions 2+3, **not** an explicit owner instruction. | Derived — flag |
+| 3a | `rachaDias`: **recommended to reset to zero too** for a coherent clean slate. Flagged for confirmation; if the owner declines, the reset excludes `rachaDias`. | Confirmed by owner — reset includes `rachaDias` |
+| 4 | **CONFIRMED by the owner (2026-09-24)**: the dissolved group's remaining tasks are **deleted too** (tasks whose `grupoId` is the dissolved group, not already removed by decisions 1/3). Rationale: a coherent clean slate; the group no longer exists, so its tasks would otherwise be orphaned. This is inferred from decisions 2+3, **not** an explicit owner instruction. | Confirmed |
 
 > Decision 4 is destructive and irreversible without a Firebase point-in-time restore
-> ([UNVERIFIED] console capability). Do not implement it until the owner confirms.
+> ([UNVERIFIED] console capability). Confirmed by the owner on 2026-09-24.
 
 ## Capabilities
 
