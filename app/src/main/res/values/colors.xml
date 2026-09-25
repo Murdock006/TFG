@@ -46,6 +46,8 @@
     <color name="rojo">#FCA5A5</color>
     <!-- Emergencia: rojo intenso para el borde/marca de tareas con multiplicador -->
     <color name="emergencia">#D32F2F</color>
+    <!-- Recurrencia: violeta distintivo (nunca se confunde con el rojo de emergencia) -->
+    <color name="recurrente">#7B1FA2</color>
     <color name="azul">#3B82F6</color>
     <color name="info">#3B82F6</color>
 

@@ -68,7 +68,10 @@ class TareasHomeAdapter(
             oldItem.puntos == newItem.puntos &&
             oldItem.dificultad == newItem.dificultad &&
             oldItem.asignadoA == newItem.asignadoA &&
-            oldItem.creadoPor == newItem.creadoPor
+            oldItem.creadoPor == newItem.creadoPor &&
+            oldItem.esEmergencia == newItem.esEmergencia &&
+            oldItem.multiplicadorPuntos == newItem.multiplicadorPuntos &&
+            oldItem.esRecurrente == newItem.esRecurrente
     }
 
     inner class VH(val root: View) : RecyclerView.ViewHolder(root) {
@@ -123,11 +126,15 @@ class TareasHomeAdapter(
         val puntosMostrados = (t.puntos * t.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
         holder.tvTitulo.text = t.titulo
         holder.tvDificultad?.text = difTxt
-        holder.tvMeta.text = "$puntosMostrados pts${if (t.esEmergencia) " 🚨" else ""} · ${estadoLegible.replaceFirstChar { it.uppercase() }}"
+        holder.tvMeta.text = "$puntosMostrados pts${if (t.esEmergencia) " 🚨" else ""}${if (t.esRecurrente) " 🔄" else ""} · ${estadoLegible.replaceFirstChar { it.uppercase() }}"
 
-        // Marca visual de emergencia (borde rojo). Se resetea en cada bind porque el holder se recicla.
+        // Marca visual de emergencia (borde rojo) y recurrencia (borde violeta). Se resetea en cada
+        // bind porque el holder se recicla. Si es ambas, el borde rojo de emergencia tiene prioridad.
         if (t.esEmergencia) {
             holder.cardRoot.strokeColor = ContextCompat.getColor(holder.cardRoot.context, R.color.emergencia)
+            holder.cardRoot.strokeWidth = holder.cardRoot.resources.getDimensionPixelSize(R.dimen.stroke_thick)
+        } else if (t.esRecurrente) {
+            holder.cardRoot.strokeColor = ContextCompat.getColor(holder.cardRoot.context, R.color.recurrente)
             holder.cardRoot.strokeWidth = holder.cardRoot.resources.getDimensionPixelSize(R.dimen.stroke_thick)
         } else {
             holder.cardRoot.strokeColor = ContextCompat.getColor(holder.cardRoot.context, R.color.divisor)

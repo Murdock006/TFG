@@ -449,12 +449,16 @@ class FragmentTareas : Fragment() {
                             val dif = when (tarea.dificultad) {1->"Fácil";2->"Media";else->"Difícil"}
                         // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
                         val puntosMostrados = (tarea.puntos * tarea.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
-                        tvMeta.text = "$puntosMostrados pts · $dif${if (tarea.esEmergencia) " · 🚨 Emergencia ×${tarea.multiplicadorPuntos}" else ""}"
+                        tvMeta.text = "$puntosMostrados pts · $dif${if (tarea.esEmergencia) " · 🚨 Emergencia ×${tarea.multiplicadorPuntos}" else ""}${if (tarea.esRecurrente) " · 🔄 Recurrente" else ""}"
                         tvDesc.text = tarea.descripcion ?: ""
 
-                        // Marca visual de emergencia (borde rojo) en la tarjeta de detalle.
+                        // Marca visual de emergencia (borde rojo) / recurrencia (borde violeta) en la
+                        // tarjeta de detalle. Si es ambas, el borde rojo de emergencia tiene prioridad.
                         if (tarea.esEmergencia) {
                             cardDetalle?.strokeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.emergencia)
+                            cardDetalle?.strokeWidth = resources.getDimensionPixelSize(R.dimen.stroke_thick)
+                        } else if (tarea.esRecurrente) {
+                            cardDetalle?.strokeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.recurrente)
                             cardDetalle?.strokeWidth = resources.getDimensionPixelSize(R.dimen.stroke_thick)
                         } else {
                             cardDetalle?.strokeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.divisor)
@@ -656,11 +660,15 @@ class FragmentTareas : Fragment() {
             val dif = when (tarea.dificultad) {1->"Fácil";2->"Media";else->"Difícil"}
             // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
             val puntosMostrados = (tarea.puntos * tarea.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
-            holder.tvMeta.text = "$puntosMostrados pts${if (tarea.esEmergencia) " 🚨" else ""} · $dif"
+            holder.tvMeta.text = "$puntosMostrados pts${if (tarea.esEmergencia) " 🚨" else ""}${if (tarea.esRecurrente) " 🔄" else ""} · $dif"
 
-            // Marca visual de emergencia (borde rojo). Se resetea en cada bind porque el holder se recicla.
+            // Marca visual de emergencia (borde rojo) y recurrencia (borde violeta). Se resetea en
+            // cada bind porque el holder se recicla. Si es ambas, el rojo de emergencia tiene prioridad.
             if (tarea.esEmergencia) {
                 holder.cardRoot.strokeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.emergencia)
+                holder.cardRoot.strokeWidth = resources.getDimensionPixelSize(R.dimen.stroke_thick)
+            } else if (tarea.esRecurrente) {
+                holder.cardRoot.strokeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.recurrente)
                 holder.cardRoot.strokeWidth = resources.getDimensionPixelSize(R.dimen.stroke_thick)
             } else {
                 holder.cardRoot.strokeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.divisor)
@@ -930,6 +938,7 @@ class FragmentTareas : Fragment() {
         val puntosMostrados = (tarea.puntos * tarea.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
         sb.append("Puntos: $puntosMostrados\n")
         if (tarea.esEmergencia) sb.append("🚨 Emergencia ×${tarea.multiplicadorPuntos}\n")
+        if (tarea.esRecurrente) sb.append("🔄 Recurrente${if (!tarea.tipoRecurrencia.isNullOrBlank()) " (${tarea.tipoRecurrencia})" else ""}\n")
         if (!tarea.descripcion.isNullOrBlank()) sb.append("\n${tarea.descripcion}\n")
 
         // cerrar = positive

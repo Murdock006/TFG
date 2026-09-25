@@ -219,7 +219,7 @@ class FragmentCalendario : Fragment() {
             }
             val badge = buildString {
                 if (t.esEmergencia) append(" 🚨 Emergencia x${t.multiplicadorPuntos}")
-                if (t.esRecurrente) append(" 🔁 ${t.tipoRecurrencia ?: ""}")
+                if (t.esRecurrente) append(" 🔄 ${t.tipoRecurrencia ?: ""}")
             }
             // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
             val puntosMostrados = (t.puntos * t.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
@@ -229,9 +229,13 @@ class FragmentCalendario : Fragment() {
             // Color de fondo por importancia
             holder.card.setCardBackgroundColor(if (t.esImportante) 0xFFFFFDE7.toInt() else requireContext().getColor(R.color.fondo))
 
-            // Marca visual de emergencia (borde rojo). Se resetea en cada bind porque el holder se recicla.
+            // Marca visual de emergencia (borde rojo) y recurrencia (borde violeta). Se resetea en cada
+            // bind porque el holder se recicla. Si es ambas, el rojo de emergencia tiene prioridad.
             if (t.esEmergencia) {
                 holder.card.strokeColor = requireContext().getColor(R.color.emergencia)
+                holder.card.strokeWidth = requireContext().resources.getDimensionPixelSize(R.dimen.stroke_thick)
+            } else if (t.esRecurrente) {
+                holder.card.strokeColor = requireContext().getColor(R.color.recurrente)
                 holder.card.strokeWidth = requireContext().resources.getDimensionPixelSize(R.dimen.stroke_thick)
             } else {
                 holder.card.strokeWidth = 0
