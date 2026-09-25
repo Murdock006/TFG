@@ -225,6 +225,30 @@ as a typed `<argument>` in `nav_graph.xml` and consumed through generated access
   argument
 - Evidence: `MainActivity.kt:133,206`; `NotificationScheduler.kt:74-80`
 
+### Requirement: Destructive account cleanup MUST be verifiable, idempotent, and gated
+
+Account-deletion cleanup MUST collect a per-step success/failure result instead of swallowing
+failures, MUST retry transient failures a bounded number of times, and MUST only delete the
+Firebase Auth account after every cleanup step succeeded. Cleanup operations MUST be idempotent
+so a retry re-runs the whole cleanup safely. A partial cleanup is accepted as non-atomic but MUST
+be surfaced; success MUST NOT be reported when a step failed. The re-authentication dialog and
+the elimination info page MUST be preserved.
+
+#### Scenario: New destructive cleanup
+
+- GIVEN a developer adds a cleanup that deletes or updates multiple documents
+- WHEN they implement it
+- THEN each step MUST produce a success/failure result
+- AND the overall result MUST be a failure naming the failed step(s) when any step failed
+- AND the Auth account deletion MUST be gated on an all-successful cleanup
+
+#### Scenario: Failure is not swallowed
+
+- GIVEN a cleanup step throws an exception
+- WHEN the flow completes
+- THEN the caller MUST receive a failure
+- AND the UI MUST NOT show a success outcome
+
 ## Technical debt register
 
 Severity legend: **H**igh = blocks a future spec's invariants; **M**ed = divergence
@@ -244,7 +268,7 @@ between paths; **L**ow = cleanup.
 | TD-10 | UI direct Firebase reads | M | `MainActivity.kt:235,243,511-523`; `FragmentPareja.kt:364-371`; `TareasHomeAdapter.kt:74` | `architecture-map` | Open |
 | TD-11 | `ejecutorUid` param ignored in `RepositorioTareas.marcarCompletada` no-confirm path | M | `RepositorioTareas.kt:86` (overrides with `tareaTx.asignadoA ?: ejecutorUid`) | `task-domain` | Resolved (`teamtask-task-repo-consolidation`) |
 | TD-12 | Disputa state machine has no resolver | M | `Disputa.kt:9`; `RepositorioDisputas.kt:17-34` | `task-domain` | Open |
-| TD-13 | Best-effort account cleanup | M | `AuthRepositorioFirebase.kt:259-357` | `firestore-contracts` | Open |
+| TD-13 | Best-effort account cleanup | M | `AuthRepositorioFirebase.kt:265-363`; this change makes cleanup complete, verifiable, and gated | `firestore-contracts` | Resolved (`teamtask-account-deletion-security`) |
 | TD-14 | `USAR_FIREBASE` flag in `LocalizadorServicios` has no test | L | Selector removed by `teamtask-testing-emulator-strategy` WU1; `LocalizadorServicios` now requires the initialized `FirebaseComposition` | `architecture-map` | Resolved (`teamtask-testing-emulator-strategy`) |
 | TD-15 | Manual navigation bundles | L | `MainActivity.kt:225`; `TareasHomeAdapter.kt:274`; `FragmentPgPrincipal.kt:78-99,312-316`; `FragmentTareas.kt:56-57,78,155,205,226,397` | `navigation-lifecycle` | Resolved (`teamtask-navigation-lifecycle-convergence`) |
 
@@ -258,7 +282,7 @@ between paths; **L**ow = cleanup.
 | 4 | Add `firestore.rules`, `storage.rules`, `firestore.indexes.json`; commit and deploy | 1 | Local artifacts committed by `teamtask-testing-emulator-strategy` WU2 and verified against emulators; deployment, console parity, and App Check pending | Partially done |
 | 5 | Add focused tests per spec: `ParejaViewModel`, `TareaRepositorioFirebase.crearTarea`/`confirmarTarea`, `RepositorioRecompensas.canjearRecompensa` | 2 | 3-5 unit tests using `firebase emulators:exec` | Pending |
 | 6 | Refactor `TareaRepositorioFirebase.observarTareas` to typed `combine` and reiniciar-on-group-change | 5 | safer observers | Done (`teamtask-navigation-lifecycle-convergence`) |
-| 7 | Encapsulate logout + auto-login flow into dedicated controllers | 1 | smaller `MainActivity` | Pending |
+| 7 | Harden account deletion and security cleanup | 4, 5 | Highest-blast-radius code/server work | Done (`teamtask-account-deletion-security`) |
 
 ## Future Convergence Work
 
@@ -296,3 +320,10 @@ between paths; **L**ow = cleanup.
 | Avatar cross-user write denied | Attempt to write `avatares/{other}` from a signed-in user in the emulator | Write denied |
 | Avatar namespace audit | `grep -r "avatar_prefs" app/src/main/java` | Zero matches |
 | Avatar offline fallback | Disable network with a cached avatar present, then with none | Cached avatar shown when present; otherwise `R.drawable.perfil` |
+| Account cleanup coverage | Delete an account with data in every collection; inspect `usuarios`, `avatares`, `grupos`, `tareas`, `invitaciones`, `notificaciones`, `recompensas`, `canjes`, `disputas`, and the dispute Storage folder | No document remains for the deleted uid; `avatares/{uid}` is gone; dispute evidence is gone |
+| Dissolution reset | Two-member group; delete one account; inspect the remaining member's `usuarios` doc and device | `grupoId` is `null`; `puntos`/`puntosReservados`/`puntosRecompensa`/`rachaDias` are `0`; the remaining device clears its local `tfg_prefs` `grupoId` |
+| Dissolution task deletion | Two-member group with tasks; delete one account | All tasks with that `grupoId` are deleted |
+| Auth-deletion gate | Force one cleanup step to fail; run deletion | Auth account is NOT deleted; failure names the failed step; success is not shown |
+| Residual Auth-delete failure | Complete cleanup, then force `FirebaseAuth.delete()` to fail | Account survives with cleaned data; the re-auth message is shown; retry re-runs the idempotent cleanup |
+| Re-auth and info UX preserved | Review the dialog and the elimination info page | `ELIMINAR` + password dialog and the `EliminacionCuentaActivity` info page are unchanged |
+| Strict-TDD status | Inspect `openspec/config.yaml:6` | `strict_tdd: false` remains; the manual matrix is the only verification barrier |
