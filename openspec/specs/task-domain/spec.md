@@ -21,7 +21,7 @@ transitions are:
 | `pendiente` | `confirmada` (no `pendiente_confirmacion`) | `marcarCompletada` with `requiereConfirmacion=false` in transaction | `TareaRepositorioFirebase.kt:404-435` |
 | `pendiente_confirmacion` or `completada` | `confirmada` | `confirmarTarea` in transaction | `TareaRepositorioFirebase.kt:441-497` |
 | `reclamada` | `confirmada` or `pendiente` | `resolverReclamo(aceptado=true|false)` | `TareaRepositorioFirebase.kt:362-388` |
-| any | `eliminada` | `actualizarTarea(estado="eliminada")` from UI | `FragmentTareas.kt:492` |
+| any (not `eliminada`) | `eliminada` | `actualizarTarea(estado="eliminada")` from UI: the "Eliminar" action on a personalizada or the "Cancelar recurrencia" action on a `pendiente` recurring instance (creator only) | `FragmentTareas.kt:568`, `FragmentTareas.kt:480` |
 
 The state `eliminada` and `pendiente_confirmacion` are NOT declared in the model
 comment (`Tarea.kt:15` lists only `pendiente | completada | confirmada | reclamada`).
@@ -40,6 +40,7 @@ Source: `modelo/Usuario.kt:13-16`; constants `util/Constants.kt:4-9`.
 | Confirm (with `multiplicador>=1`, racha bonus) | `puntosReservados -= puntos` (coerced to ≥0) | `puntos += puntosBase*(1+bonus)`; `puntosRecompensa += max(1, floor(puntosFinales*0.10))`; `rachaDias += 1` | `TareaRepositorioFirebase.kt:466-494` |
 | `marcarCompletada` no-confirm | `puntosReservados -= puntos` (coerced to ≥0) | `puntos += puntos`; `puntosRecompensa += max(1, floor(puntos*0.10))` (no racha, no multiplicador) | `TareaRepositorioFirebase.kt:404-435` |
 | `resolverReclamo(aceptado=true)` | `puntosReservados -= puntos` (via `liberarPuntos`) | `puntos += puntos` (via `sumarPuntosConBonificacion`) | `TareaRepositorioFirebase.kt:362-388` (transfers done OUTSIDE the `update` tx) |
+| Soft-delete (`eliminada`, from a non-`eliminada` state) | release = `min(puntos, puntosReservados)`; `puntosReservados -= release`; `puntos += release` | — | `TareaRepositorioFirebase.kt:307-370` (inside the `actualizarTarea` tx, reads before writes) |
 | Canjear recompensa | — | `puntosRecompensa -= coste`; `canjes` doc created with `estado="pendiente"` | `RepositorioRecompensas.kt:84-118` |
 | `responderCanje(aceptado=false)` | — | `puntosRecompensa += coste` | `RepositorioRecompensas.kt:121-146` |
 | Streak bonus | — | If new `rachaDias` ≥ `STREAK_BONUS_THRESHOLD=7`, add `floor(puntos*0.10)` to `puntos` | `AuthRepositorioFirebase.kt:493-511`; `Constants.kt:7-8` |
@@ -58,6 +59,11 @@ Source: `modelo/Usuario.kt:13-16`; constants `util/Constants.kt:4-9`.
   (`TareaRepositorioFirebase.kt:499-524`).
 - `rotarMiembros=true` swaps `asignadoA` to `creadoPor` (only if different); otherwise
   keeps the same assignee (`TareaRepositorioFirebase.kt:504-510`).
+- Cancelling a recurrence (`esRecurrente=true`, `estado="pendiente"`, creator only) soft-deletes
+  the pending instance (`estado="eliminada"`, `esRecurrente=false`) instead of only clearing the
+  recurrence flags (`FragmentTareas.kt:467-484`). Because a soft-deleted pending instance never
+  reaches `confirmarTarea`, no next occurrence is spawned and the task disappears from every list
+  and the calendar.
 
 ### Disputes
 
@@ -250,6 +256,50 @@ this path by this change.
 - AND no `usuarios` document MUST be created for a creator
 - Evidence: creator guard `TareaRepositorioFirebase.kt:492`
 
+### Requirement: Soft-deleting a task MUST release the creator's reservation
+
+When `actualizarTarea` transitions a task INTO `estado="eliminada"` from any state other than
+`eliminada`, the system MUST, inside the same `firestore.runTransaction` and with every read
+performed before any write, release the creator's reservation with the same semantics as
+`AuthRepositorioFirebase.liberarPuntos`:
+
+- `release = min(tarea.puntos, creador.puntosReservados)`;
+- `creador.puntosReservados -= release` (never negative);
+- `creador.puntos += release`.
+
+The release MUST run exactly once per transition (a task already `eliminada` MUST NOT release
+again), and MUST be a no-op when the task has no creator. This applies to ALL soft-delete paths,
+including the "Cancelar recurrencia" action, closing the pre-existing hole where any soft-deleted
+task kept its reservation stuck. Lists and the calendar MUST NOT render tasks whose
+`estado="eliminada"`.
+
+#### Scenario: Cancel recurrence releases the reservation
+
+- GIVEN a `pendiente` recurring task with `puntos=100`, `creadoPor="uC"`, `asignadoA="uE"`
+- AND creator `uC` has `puntos=900`, `puntosReservados=100`
+- WHEN the creator cancels the recurrence so the task becomes `estado="eliminada"`
+- THEN `usuarios/uC.puntosReservados` MUST be `0`
+- AND `usuarios/uC.puntos` MUST be `900 + 100 = 1000`
+- AND no next occurrence MUST be created
+- AND the task MUST NOT appear in any list or the calendar
+- Evidence: `FragmentTareas.kt:467-484`; release `TareaRepositorioFirebase.kt:307-370`
+
+#### Scenario: Deleting an already-eliminada task releases nothing
+
+- GIVEN a task with `estado="eliminada"` and creator `uC`
+- WHEN `actualizarTarea` runs again with `estado="eliminada"`
+- THEN the creator's `puntos`/`puntosReservados` MUST NOT change
+- Evidence: guard `TareaRepositorioFirebase.kt:309` (`previoTx.estado != "eliminada"`)
+
+#### Scenario: Release is clamped to the reserved amount
+
+- GIVEN a `pendiente` task with `puntos=100`, `creadoPor="uC"`
+- AND creator `uC` has `puntos=900`, `puntosReservados=30`
+- WHEN the task is soft-deleted
+- THEN `usuarios/uC.puntosReservados` MUST be `0`
+- AND `usuarios/uC.puntos` MUST be `900 + 30 = 930` (release clamped to `min(100, 30)`)
+- Evidence: `TareaRepositorioFirebase.kt:368-370`
+
 ## Future Convergence Work
 
 | Work item | Severity | Notes |
@@ -258,7 +308,7 @@ this path by this change.
 | Re-evaluate `resolverReclamo` point transfer (currently OUTSIDE the doc `update` transaction) | High | Two-step write is not atomic; can leave inconsistent state |
 | Make `recompensa.canje` filtering and authorization server-side | Med | Today client filters own uid (`RepositorioRecompensas.kt:179-208`) |
 | Implement dispute resolution state machine (`en_progreso`, `cerrada`) | Med | Model declares it, repo does not (`Disputa.kt:9`; `RepositorioDisputas.kt:1-47`) |
-| Add `tarea.eliminada` policy (soft delete vs hard delete) | Low | `FragmentTareas.kt:492` sets state but `eliminarCuentaActual` deletes (`AuthRepositorioFirebase.kt:296-302`) |
+| Define `tarea.eliminada` retention/tombstone policy | Low | Soft delete now releases the creator reservation (`TareaRepositorioFirebase.kt:307-370`); documents still persist with `estado="eliminada"` and account deletion hard-deletes (`AuthRepositorioFirebase.kt:296-302`) |
 
 ## Known Risks
 
@@ -279,3 +329,5 @@ triggers). The repo contains no such artefacts.
 | Auto-assign via full impl | Call `TareaRepositorioFirebase.crearTarea` with `creadoPor==asignadoA` | `Result.failure` |
 | No-confirmation reservation consumption | Create a `requiereConfirmacion=false` task with `puntos=100`, mark complete, inspect `usuarios/{creador}` | `puntosReservados` decreased by 100 (coerced ≥0) |
 | No-confirmation executor credit | Same task, inspect `usuarios/{ejecutorUid}` | `puntos` +100; `puntosRecompensa` +10 |
+| Soft-delete releases reservation | Soft-delete a task (Eliminar or Cancelar recurrencia), inspect `usuarios/{creador}` | `puntosReservados` decreased, `puntos` increased by the released amount |
+| Eliminada hidden from lists | Soft-delete a task, open Inicio/Tareas/Calendario | Task not rendered in any list or calendar |
