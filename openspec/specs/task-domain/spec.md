@@ -34,9 +34,9 @@ Source: `modelo/Usuario.kt:13-16`; constants `util/Constants.kt:4-9`.
 
 | Operation | Effect on creator (`puntos`/`puntosReservados`) | Effect on ejecutor (`puntos`/`puntosRecompensa`) | Evidence |
 |---|---|---|---|
-| Create with `puntos>0` | `puntos -= puntos`; `puntosReservados += puntos` | — | `TareaRepositorioFirebase.kt:85-91` via `LocalizadorServicios.repositorioAuth.reservarPuntos` (`AuthRepositorioFirebase.kt:440-454`) |
-| Assign (`asignadoA` becomes non-blank) | `puntosReservados += puntos`; `puntos` unchanged | — | `TareaRepositorioFirebase.kt:295-303` (in `actualizarTarea` tx) |
-| Unassign (`asignadoA` becomes blank) | `puntosReservados -= min(reservados, puntos)`; `puntos` unchanged | — | `TareaRepositorioFirebase.kt:306-316` |
+| Create with `puntos>0` | `puntos -= puntos`; `puntosReservados += puntos`; creation FAILS and no task doc is written if `reservarPuntos` returns failure (insufficient funds) | — | `TareaRepositorioFirebase.kt:92-101` via `LocalizadorServicios.repositorioAuth.reservarPuntos` (`AuthRepositorioFirebase.kt:450-464`) |
+| Assign (`asignadoA` becomes non-blank) | no balance change; reservation owner is creation | — | `TareaRepositorioFirebase.kt:299-350` (in `actualizarTarea` tx; assign-path reservation removed) |
+| Unassign (`asignadoA` becomes blank) | no balance change; reservation owner is creation | — | `TareaRepositorioFirebase.kt:299-350` (in `actualizarTarea` tx; unassign-path release removed) |
 | Confirm (with `multiplicador>=1`, racha bonus) | `puntosReservados -= puntos` (coerced to ≥0) | `puntos += puntosBase*(1+bonus)`; `puntosRecompensa += max(1, floor(puntosFinales*0.10))`; `rachaDias += 1` | `TareaRepositorioFirebase.kt:466-494` |
 | `marcarCompletada` no-confirm | `puntosReservados -= puntos` (coerced to ≥0) | `puntos += puntos`; `puntosRecompensa += max(1, floor(puntos*0.10))` (no racha, no multiplicador) | `TareaRepositorioFirebase.kt:404-435` |
 | `resolverReclamo(aceptado=true)` | `puntosReservados -= puntos` (via `liberarPuntos`) | `puntos += puntos` (via `sumarPuntosConBonificacion`) | `TareaRepositorioFirebase.kt:362-388` (transfers done OUTSIDE the `update` tx) |
@@ -73,7 +73,11 @@ Source: `modelo/Usuario.kt:13-16`; constants `util/Constants.kt:4-9`.
 ### Requirement: Task creation MUST reserve points when `puntos>0`
 
 The system MUST subtract the task `puntos` from the creator's `puntos` and add the same
-amount to `puntosReservados` when creating a non-personalized task with `puntos>0`.
+amount to `puntosReservados` when creating a task with `puntos>0`.
+Creation is the SINGLE OWNER of the reservation: assign/unassign MUST NOT mutate balances,
+and the reservation is consumed at confirmation/completion. `crearTarea` MUST inspect the
+`Result` returned by `reservarPuntos` (which never throws) and MUST fail without writing the
+task document when the reservation fails.
 
 #### Scenario: Creator has enough points
 
@@ -81,15 +85,15 @@ amount to `puntosReservados` when creating a non-personalized task with `puntos>
 - WHEN they create a task with `puntos=100`
 - THEN the creator's `puntos` MUST be `900`
 - AND `puntosReservados` MUST be `100`
-- Evidence path: `TareaRepositorioFirebase.kt:85-91` → `AuthRepositorioFirebase.kt:440-454`
+- Evidence path: `TareaRepositorioFirebase.kt:92-101` → `AuthRepositorioFirebase.kt:450-464`
 
 #### Scenario: Creator has insufficient points
 
 - GIVEN a creator with `puntos=50`
 - WHEN they create a task with `puntos=100`
-- THEN the creation MUST fail with `Result.failure`
+- THEN the creation MUST fail with `Result.failure(Exception("Fondos insuficientes para reservar 100 puntos"))`
 - AND no task document MUST be written
-- Evidence: `AuthRepositorioFirebase.kt:446` throws `Fondos insuficientes`
+- Evidence: `crearTarea` checks `reserva.isFailure` (`TareaRepositorioFirebase.kt:95-101`); `reservarPuntos` returns `Result.failure("Fondos insuficientes")` (`AuthRepositorioFirebase.kt:456`)
 
 ### Requirement: Task confirmation MUST credit points and rewards atomically
 
