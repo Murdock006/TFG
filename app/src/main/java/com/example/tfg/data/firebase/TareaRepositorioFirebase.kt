@@ -304,6 +304,9 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 // `puntos > 0` y hay creador). Asignar o desasignar NUNCA tocan saldos; la reserva
                 // se consume al confirmar/completar. Por eso aquí solo queda la transferencia.
                 val necesitaTransferir = (previoTx != null && previoTx.estado == "completada" && tareaNormalizada.estado == "confirmada")
+                // Al pasar a "eliminada" (soft delete) desde cualquier otro estado se libera la
+                // reserva del creador (puntosReservados -> puntos), igual que `liberarPuntos`.
+                val necesitaLiberar = (previoTx != null && previoTx.estado != "eliminada" && tareaNormalizada.estado == "eliminada")
 
                 // referencias cacheadas
                 val refsPorUid = mutableMapOf<String, com.google.firebase.firestore.DocumentReference>()
@@ -320,6 +323,16 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                         val ref = firestore.collection("usuarios").document(uid)
                         refsPorUid[uid] = ref
                         snapsLectura[uid] = t.get(ref)
+                    }
+                }
+
+                // Lectura del creador para liberar la reserva (antes de cualquier escritura).
+                if (necesitaLiberar) {
+                    val creador = previoTx?.creadoPor ?: tareaNormalizada.creadoPor
+                    if (!creador.isNullOrBlank() && !refsPorUid.containsKey(creador)) {
+                        val ref = firestore.collection("usuarios").document(creador)
+                        refsPorUid[creador] = ref
+                        snapsLectura[creador] = t.get(ref)
                     }
                 }
 
@@ -341,6 +354,22 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                     }
 
                     t.update(ejecRef, mapOf("puntos" to puntosAct + tareaNormalizada.puntos))
+                }
+
+                // Liberar la reserva del creador al eliminar la tarea (una sola vez):
+                // aLiberar = min(puntos, reservados); reservados -= aLiberar; puntos += aLiberar.
+                if (necesitaLiberar) {
+                    val creador = previoTx?.creadoPor ?: tareaNormalizada.creadoPor
+                    if (!creador.isNullOrBlank()) {
+                        val creadRef = refsPorUid[creador] ?: firestore.collection("usuarios").document(creador)
+                        val creadSnapLocal = snapsLectura[creador] ?: t.get(creadRef)
+                        val reservadosAct = (creadSnapLocal.getLong("puntosReservados") ?: 0L).toInt()
+                        val puntosAct = (creadSnapLocal.getLong("puntos") ?: 0L).toInt()
+                        val aLiberar = minOf(tareaNormalizada.puntos, reservadosAct)
+                        val nuevoReservados = (reservadosAct - aLiberar).coerceAtLeast(0)
+                        val nuevoPuntos = puntosAct + aLiberar
+                        t.update(creadRef, mapOf("puntos" to nuevoPuntos, "puntosReservados" to nuevoReservados))
+                    }
                 }
 
                 // por último escribir la tarea actualizada (última escritura)

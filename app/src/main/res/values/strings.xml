@@ -207,7 +207,7 @@
     <string name="tarea_confirmada">Tarea confirmada</string>
     <string name="error_grupo_no_disponible">No se pudo obtener el grupo; intenta de nuevo</string>
     <string name="cancelar_recurrencia">Cancelar recurrencia</string>
-    <string name="cancelar_recurrencia_confirm">¿Cancelar la recurrencia de esta tarea? No se crearán más repeticiones.</string>
+    <string name="cancelar_recurrencia_confirm">¿Cancelar la recurrencia de esta tarea? Se eliminará la tarea pendiente y no se crearán más repeticiones.</string>
     <string name="recurrencia_cancelada">Recurrencia cancelada</string>
     <string name="no_autoasignar">No podés autoasignarte tareas</string>
     <string name="disputa_creada">Disputa creada</string>

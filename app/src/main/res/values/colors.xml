@@ -44,6 +44,8 @@
     <color name="naranja">#FCD34D</color>
     <color name="error">#EF4444</color>
     <color name="rojo">#FCA5A5</color>
+    <!-- Emergencia: rojo intenso para el borde/marca de tareas con multiplicador -->
+    <color name="emergencia">#D32F2F</color>
     <color name="azul">#3B82F6</color>
     <color name="info">#3B82F6</color>
 

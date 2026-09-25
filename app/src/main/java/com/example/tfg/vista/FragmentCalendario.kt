@@ -7,7 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.cardview.widget.CardView
+import com.google.android.material.card.MaterialCardView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -104,7 +104,8 @@ class FragmentCalendario : Fragment() {
                         tareasJob = viewLifecycleOwner.lifecycleScope.launch {
                             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                                 LocalizadorServicios.repositorioTarea.observarTareas().collect { lista ->
-                                    todasLasTareas = lista.filter { it.grupoId == grupoIdActual }
+                                    // Excluir tareas eliminadas (soft delete) del calendario.
+                                    todasLasTareas = lista.filter { it.grupoId == grupoIdActual && it.estado != "eliminada" }
                                     filtrarYMostrar(adapter, b)
                                 }
                             }
@@ -149,7 +150,9 @@ class FragmentCalendario : Fragment() {
     }
 
     private fun actualizarResumen(b: FragmentCalendarioBinding, tareas: List<Tarea>) {
-        val puntosDisponibles = tareas.filter { it.estado == "pendiente" }.sumOf { it.puntos }
+        // En emergencia se suman los puntos efectivos (puntos × multiplicador), no los base.
+        val puntosDisponibles = tareas.filter { it.estado == "pendiente" }
+            .sumOf { (it.puntos * it.multiplicadorPuntos.coerceAtLeast(1.0)).toInt() }
         val importantesCount = tareas.count { it.esImportante }
         b.tvResumenDia.text = buildString {
             append("${tareas.size} tarea(s) · $puntosDisponibles pts disponibles")
@@ -162,14 +165,15 @@ class FragmentCalendario : Fragment() {
         private var items: List<Tarea> = emptyList()
         fun setItems(list: List<Tarea>) { items = list; notifyDataSetChanged() }
 
-        inner class VH(val card: CardView, val tvTitulo: TextView, val tvInfo: TextView, val tvHora: TextView, val ivImportante: ImageView) : RecyclerView.ViewHolder(card)
+        inner class VH(val card: MaterialCardView, val tvTitulo: TextView, val tvInfo: TextView, val tvHora: TextView, val ivImportante: ImageView) : RecyclerView.ViewHolder(card)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-            val card = CardView(parent.context).apply {
+            val card = MaterialCardView(parent.context).apply {
                 layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).also { (it as RecyclerView.LayoutParams).setMargins(0,0,0,12) }
                 radius = 12f
                 cardElevation = 4f
                 setCardBackgroundColor(parent.context.getColor(R.color.fondo))
+                strokeWidth = 0
             }
             val ll = LinearLayout(parent.context).apply {
                 orientation = LinearLayout.VERTICAL
@@ -217,11 +221,21 @@ class FragmentCalendario : Fragment() {
                 if (t.esEmergencia) append(" 🚨 Emergencia x${t.multiplicadorPuntos}")
                 if (t.esRecurrente) append(" 🔁 ${t.tipoRecurrencia ?: ""}")
             }
-            holder.tvInfo.text = "${t.puntos} pts · $estadoTexto$badge"
+            // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
+            val puntosMostrados = (t.puntos * t.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
+            holder.tvInfo.text = "$puntosMostrados pts · $estadoTexto$badge"
             holder.ivImportante.visibility = if (t.esImportante) View.VISIBLE else View.GONE
 
             // Color de fondo por importancia
             holder.card.setCardBackgroundColor(if (t.esImportante) 0xFFFFFDE7.toInt() else requireContext().getColor(R.color.fondo))
+
+            // Marca visual de emergencia (borde rojo). Se resetea en cada bind porque el holder se recicla.
+            if (t.esEmergencia) {
+                holder.card.strokeColor = requireContext().getColor(R.color.emergencia)
+                holder.card.strokeWidth = requireContext().resources.getDimensionPixelSize(R.dimen.stroke_thick)
+            } else {
+                holder.card.strokeWidth = 0
+            }
 
             holder.card.setOnClickListener { mostrarOpcionesTarea(t) }
         }

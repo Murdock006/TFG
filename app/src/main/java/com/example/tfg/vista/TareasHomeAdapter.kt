@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
 import com.example.tfg.R
 import com.example.tfg.modelo.Tarea
 import com.example.tfg.modelo.Usuario
@@ -51,7 +52,11 @@ class TareasHomeAdapter(
 
     fun destroy() { adapterJob.cancel() }
 
-    fun updateItems(list: List<Tarea>) { submitList(null); submitList(list) }
+    // Las tareas eliminadas (soft delete) no deben aparecer en ninguna lista.
+    fun updateItems(list: List<Tarea>) {
+        val visibles = list.filter { it.estado != "eliminada" }
+        submitList(null); submitList(visibles)
+    }
     fun updateUsuarios(list: List<Usuario>) { usuarios = list; notifyDataSetChanged() }
 
     class TareaDiffCallback : DiffUtil.ItemCallback<Tarea>() {
@@ -67,6 +72,7 @@ class TareasHomeAdapter(
     }
 
     inner class VH(val root: View) : RecyclerView.ViewHolder(root) {
+        val cardRoot: MaterialCardView = root.findViewById(R.id.cardRoot)
         val tvTitulo: TextView = root.findViewById(R.id.tvTituloTarea)
         val tvDificultad: TextView? = root.findViewById(R.id.tvDificultad)
         val tvMeta: TextView = root.findViewById(R.id.tvMetaTarea)
@@ -113,9 +119,20 @@ class TareasHomeAdapter(
         }
 
         val difTxt = when (t.dificultad) { 1 -> "Fácil"; 2 -> "Media"; else -> "Difícil" }
+        // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
+        val puntosMostrados = (t.puntos * t.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
         holder.tvTitulo.text = t.titulo
         holder.tvDificultad?.text = difTxt
-        holder.tvMeta.text = "${t.puntos} pts · ${estadoLegible.replaceFirstChar { it.uppercase() }}"
+        holder.tvMeta.text = "$puntosMostrados pts${if (t.esEmergencia) " 🚨" else ""} · ${estadoLegible.replaceFirstChar { it.uppercase() }}"
+
+        // Marca visual de emergencia (borde rojo). Se resetea en cada bind porque el holder se recicla.
+        if (t.esEmergencia) {
+            holder.cardRoot.strokeColor = ContextCompat.getColor(holder.cardRoot.context, R.color.emergencia)
+            holder.cardRoot.strokeWidth = holder.cardRoot.resources.getDimensionPixelSize(R.dimen.stroke_thick)
+        } else {
+            holder.cardRoot.strokeColor = ContextCompat.getColor(holder.cardRoot.context, R.color.divisor)
+            holder.cardRoot.strokeWidth = holder.cardRoot.resources.getDimensionPixelSize(R.dimen.stroke_thin)
+        }
 
         // Indicador de dificultad con colores semánticos del tema + drawable redondeado
         val colorRes = when (t.dificultad) {

@@ -193,10 +193,12 @@ class FragmentTareas : Fragment() {
                 viewLifecycleOwner.lifecycleScope.launch {
                     viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                         LocalizadorServicios.repositorioTarea.observarTareas().collect { list ->
-                            adapter.setItems(list)
+                            // Las tareas eliminadas (soft delete) no se listan.
+                            val visibles = list.filter { it.estado != "eliminada" }
+                            adapter.setItems(visibles)
                             b.progressBar.visibility = View.GONE
 
-                            if (list.isEmpty()) {
+                            if (visibles.isEmpty()) {
                                 b.rvTareas.visibility = View.GONE
                                 b.emptyState.visibility = View.VISIBLE
                             } else {
@@ -435,6 +437,7 @@ class FragmentTareas : Fragment() {
             val btnAsignar = view.findViewById<Button>(R.id.btnDetalleAsignar)
             val cardCancelarRecurrencia = view.findViewById<View>(R.id.cardCancelarRecurrencia)
             val btnCancelarRecurrencia = view.findViewById<Button>(R.id.btnDetalleCancelarRecurrencia)
+            val cardDetalle = view.findViewById<com.google.android.material.card.MaterialCardView>(R.id.cardDetallePrincipal)
 
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -444,14 +447,27 @@ class FragmentTareas : Fragment() {
                         if (tarea != null) {
                             tvTitulo.text = tarea.titulo
                             val dif = when (tarea.dificultad) {1->"Fácil";2->"Media";else->"Difícil"}
-                        tvMeta.text = "${tarea.puntos} pts · $dif"
+                        // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
+                        val puntosMostrados = (tarea.puntos * tarea.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
+                        tvMeta.text = "$puntosMostrados pts · $dif${if (tarea.esEmergencia) " · 🚨 Emergencia ×${tarea.multiplicadorPuntos}" else ""}"
                         tvDesc.text = tarea.descripcion ?: ""
+
+                        // Marca visual de emergencia (borde rojo) en la tarjeta de detalle.
+                        if (tarea.esEmergencia) {
+                            cardDetalle?.strokeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.emergencia)
+                            cardDetalle?.strokeWidth = resources.getDimensionPixelSize(R.dimen.stroke_thick)
+                        } else {
+                            cardDetalle?.strokeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.divisor)
+                            cardDetalle?.strokeWidth = resources.getDimensionPixelSize(R.dimen.stroke_thin)
+                        }
 
                         // Mostramos la opción de asignar siempre al creador cuando la tarea esté pendiente; no mostramos a quién está asignada aquí
                         val usuarioActualId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
 
-                        // Cancelar recurrencia: solo el creador (asignador) de una tarea recurrente.
-                        if (tarea.esRecurrente && !usuarioActualId.isBlank() && usuarioActualId == tarea.creadoPor) {
+                        // Cancelar recurrencia: solo el creador (asignador) de una instancia
+                        // recurrente activa y pendiente. Al cancelar, la instancia pendiente se
+                        // elimina (soft delete) y no se genera ninguna repetición posterior.
+                        if (tarea.esRecurrente && tarea.estado == "pendiente" && !usuarioActualId.isBlank() && usuarioActualId == tarea.creadoPor) {
                             cardCancelarRecurrencia.visibility = View.VISIBLE
                             btnCancelarRecurrencia.setOnClickListener {
                                 androidx.appcompat.app.AlertDialog.Builder(requireContext())
@@ -459,7 +475,9 @@ class FragmentTareas : Fragment() {
                                     .setMessage(getString(R.string.cancelar_recurrencia_confirm))
                                     .setPositiveButton(getString(R.string.confirmar)) { _, _ ->
                                         lifecycleScope.launch {
-                                            val actualizada = tarea.copy(esRecurrente = false, tipoRecurrencia = null)
+                                            // Soft delete: la instancia desaparece de las listas y
+                                            // el repositorio libera la reserva del creador.
+                                            val actualizada = tarea.copy(esRecurrente = false, tipoRecurrencia = null, estado = "eliminada")
                                             val resRec = LocalizadorServicios.repositorioTarea.actualizarTarea(actualizada)
                                             if (resRec.isSuccess) {
                                                 Toast.makeText(requireContext(), getString(R.string.recurrencia_cancelada), Toast.LENGTH_SHORT).show()
@@ -622,7 +640,7 @@ class FragmentTareas : Fragment() {
             val tvMeta: TextView = root.findViewById(R.id.tvMetaTarea)
             val tvAsignado: TextView = root.findViewById(R.id.tvAsignado)
             val btnAccion: Button = root.findViewById(R.id.btnAccionTarea)
-            val cardRoot: androidx.cardview.widget.CardView = root.findViewById(R.id.cardRoot)
+            val cardRoot: com.google.android.material.card.MaterialCardView = root.findViewById(R.id.cardRoot)
             val vIndicator: View? = root.findViewById(R.id.vIndicator)
         }
 
@@ -636,7 +654,18 @@ class FragmentTareas : Fragment() {
             val usuarioId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
             holder.tvTitulo.text = tarea.titulo
             val dif = when (tarea.dificultad) {1->"Fácil";2->"Media";else->"Difícil"}
-            holder.tvMeta.text = "${tarea.puntos} pts · $dif"
+            // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
+            val puntosMostrados = (tarea.puntos * tarea.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
+            holder.tvMeta.text = "$puntosMostrados pts${if (tarea.esEmergencia) " 🚨" else ""} · $dif"
+
+            // Marca visual de emergencia (borde rojo). Se resetea en cada bind porque el holder se recicla.
+            if (tarea.esEmergencia) {
+                holder.cardRoot.strokeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.emergencia)
+                holder.cardRoot.strokeWidth = resources.getDimensionPixelSize(R.dimen.stroke_thick)
+            } else {
+                holder.cardRoot.strokeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.divisor)
+                holder.cardRoot.strokeWidth = resources.getDimensionPixelSize(R.dimen.stroke_thin)
+            }
 
             // No mostrar asignación en la tarjeta de lista (se gestiona en detalle)
             holder.tvAsignado.visibility = View.GONE
@@ -897,7 +926,10 @@ class FragmentTareas : Fragment() {
         val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
         val sb = StringBuilder()
         sb.append("Título: ${tarea.titulo}\n")
-        sb.append("Puntos: ${tarea.puntos}\n")
+        // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
+        val puntosMostrados = (tarea.puntos * tarea.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
+        sb.append("Puntos: $puntosMostrados\n")
+        if (tarea.esEmergencia) sb.append("🚨 Emergencia ×${tarea.multiplicadorPuntos}\n")
         if (!tarea.descripcion.isNullOrBlank()) sb.append("\n${tarea.descripcion}\n")
 
         // cerrar = positive
