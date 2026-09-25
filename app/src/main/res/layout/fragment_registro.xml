@@ -168,7 +168,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:imeOptions="flagNoExtractUi"
-                        android:inputType="none"
+                        android:inputType="textCapWords"
                         android:textSize="15sp"
                         android:textColor="@color/texto_principal"
                         android:textColorHint="@color/gris" />
