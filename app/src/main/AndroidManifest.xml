@@ -21,6 +21,7 @@
         <activity
             android:name="com.example.tfg.vista.MainActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.TFG.Splash"
             android:windowSoftInputMode="adjustResize|stateHidden">
             <intent-filter>
@@ -32,6 +33,7 @@
         <activity
             android:name="com.example.tfg.vista.EliminacionCuentaActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:label="@string/info_eliminacion_titulo"
             android:parentActivityName="com.example.tfg.vista.MainActivity" />
         <provider
