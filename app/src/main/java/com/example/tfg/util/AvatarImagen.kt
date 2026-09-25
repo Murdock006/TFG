@@ -40,8 +40,10 @@ object AvatarImagen {
     ): ByteArray? {
         return try {
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
-                ?: return null
+            // The bounds pass returns null by design (it only fills `bounds`), so the null-check
+            // must guard the stream itself, not decodeStream's return value.
+            val flujoBounds = resolver.openInputStream(uri) ?: return null
+            flujoBounds.use { BitmapFactory.decodeStream(it, null, bounds) }
             if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
 
             val opciones = BitmapFactory.Options().apply {
