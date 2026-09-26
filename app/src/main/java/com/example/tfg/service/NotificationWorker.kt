@@ -52,7 +52,7 @@ class NotificationWorker(appContext: Context, params: WorkerParameters) : Corout
 
     private fun createChannelIfNeeded(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Recordatorios de TFG"
+            val name = "Recordatorios de TeamTask"
             val descriptionText = "Notificaciones para tareas programadas"
             val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(CHANNEL_ID, name, importance)

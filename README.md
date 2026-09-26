@@ -1,4 +1,4 @@
-# TFG2 - Aplicación de Gestión de Tareas en Grupo TeamTask 👥📋
+# TeamTask - Aplicación de Gestión de Tareas en Grupo 👥📋
 
 Una aplicación Android moderna para **gestionar tareas colaborativas en grupos**, con sistema de puntos, recompensas, calendario y disputas. Construida con **MVVM**, **Kotlin Coroutines**, **StateFlow** y **Firebase Firestore**.
 
@@ -45,7 +45,7 @@ Una aplicación Android moderna para **gestionar tareas colaborativas en grupos*
 ## 🏗️ Arquitectura
 
 ```
-TFG2/
+TeamTask/
 ├── vista/                     # UI Layer (Fragments & Adapters)
 │   ├── Fragment*.kt          # Fragments (Tareas, Pareja, Principal, etc.)
 │   ├── *Adapter.kt           # RecyclerView Adapters
@@ -132,8 +132,8 @@ Model Classes
 
 1. **Clonar el repositorio**
 ```bash
-git clone https://github.com/tu-usuario/TFG2.git
-cd TFG2
+git clone https://github.com/Murdock006/TFG.git
+cd TFG
 ```
 
 2. **Configurar Firebase**

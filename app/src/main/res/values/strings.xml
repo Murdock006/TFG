@@ -132,7 +132,7 @@
     <string name="drawer_racha_format">Racha: %1$d días</string>
     <string name="reset_password_enviado">Te enviamos un email para cambiar la contraseña.</string>
     <string name="reset_password_error">No se pudo enviar el email. Inténtalo de nuevo.</string>
-    <string name="soporte_asunto">Soporte TFG2</string>
+    <string name="soporte_asunto">Soporte TeamTask</string>
     <string name="ayuda_titulo">Ayuda</string>
     <string name="ayuda_texto">¿Necesitas ayuda? Aquí tienes una guía rápida:\n\n- Crear o entrar en un grupo: desde Pareja, crea un grupo o acepta una invitación.\n- Asignar tareas: en Tareas puedes crear tareas y asignarlas a tu pareja.\n- Puntos: ganas puntos al completar tareas; se descuentan al canjear recompensas.\n- Recompensas: en Recompensas puedes canjear puntos por premios.\n- Racha: representa los días seguidos completando tareas.\n- Si algo falla: revisa tu conexión y, si sigue, escríbenos desde "Contactar soporte".\n</string>
     <string name="avatar_usuario">Avatar de usuario</string>

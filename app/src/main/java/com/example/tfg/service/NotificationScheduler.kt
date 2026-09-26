@@ -87,7 +87,7 @@ object NotificationScheduler {
 
     private fun createChannelIfNeeded(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Recordatorios de TFG"
+            val name = "Recordatorios de TeamTask"
             val descriptionText = "Notificaciones para tareas programadas y asignaciones"
             val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(NotificationWorker.CHANNEL_ID, name, importance)
