@@ -130,6 +130,7 @@ class MainActivity : AppCompatActivity() {
         navigationViewFooter = binding.navigationViewFooter
         setupDrawer()
         observarUsuarioDrawerHeader()
+        refrescarAvatarToolbar()
 
         // Ajustar insets: padding fijo superior moderado + padding inferior dinámico para navigation bar
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
@@ -447,6 +448,11 @@ class MainActivity : AppCompatActivity() {
             binding.drawerLayout.openDrawer(Gravity.START)
         }
 
+        // El avatar de la toolbar abre el drawer (mismo gesto que la barra superior).
+        binding.toolbarAvatarContainer.setOnClickListener {
+            binding.drawerLayout.openDrawer(Gravity.START)
+        }
+
         binding.drawerLayout.addDrawerListener(object : DrawerLayout.SimpleDrawerListener() {
             override fun onDrawerOpened(drawerView: View) {
                 super.onDrawerOpened(drawerView)
@@ -563,31 +569,72 @@ private fun observarUsuarioDrawerHeader() {
                 }
                 
                 // Resolver el avatar a través del repositorio canónico (cualquier usuario)
-                avatarDrawerJob?.cancel()
-                avatarDrawerJob = lifecycleScope.launch {
-                    val bitmap = LocalizadorServicios.repositorioAvatar
-                        .obtenerAvatar(usuario.id, usuario.avatarUpdatedAt)
-                    if (bitmap != null) {
-                        Glide.with(this@MainActivity)
-                            .load(bitmap)
-                            .circleCrop()
-                            .placeholder(com.example.tfg.R.drawable.perfil)
-                            .into(ivAvatar)
-                    } else {
-                        Glide.with(this@MainActivity).clear(ivAvatar)
-                        ivAvatar.setImageResource(com.example.tfg.R.drawable.perfil)
-                    }
-                }
+                cargarAvatarEnVistas(usuario.id, usuario.avatarUpdatedAt, ivAvatar)
             } else {
                 tvNombre.text = getString(com.example.tfg.R.string.no_hay_usuario)
                 tvEmail.text = ""
                 tvGrupo.text = getString(com.example.tfg.R.string.drawer_pareja_sin_grupo)
                 tvRacha.text = ""
-                Glide.with(this).clear(ivAvatar)
-                ivAvatar.setImageResource(com.example.tfg.R.drawable.perfil)
+                pintarAvatarGenerico(ivAvatar)
+                pintarAvatarGenerico(binding.ivToolbarAvatar)
             }
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Error en refrescarHeaderDrawer", e)
+        }
+    }
+
+    /**
+     * Carga el avatar de [uid] en el header del drawer y en el avatar de la toolbar,
+     * reutilizando un único job para cancelar cargas anteriores.
+     */
+    private fun cargarAvatarEnVistas(uid: String, avatarUpdatedAt: com.google.firebase.Timestamp?, ivHeader: ImageView) {
+        avatarDrawerJob?.cancel()
+        avatarDrawerJob = lifecycleScope.launch {
+            val bitmap = LocalizadorServicios.repositorioAvatar.obtenerAvatar(uid, avatarUpdatedAt)
+            val destinos = listOfNotNull(ivHeader, binding.ivToolbarAvatar)
+            if (bitmap != null) {
+                destinos.forEach { vista ->
+                    Glide.with(this@MainActivity)
+                        .load(bitmap)
+                        .circleCrop()
+                        .placeholder(com.example.tfg.R.drawable.perfil)
+                        .into(vista)
+                }
+            } else {
+                destinos.forEach { pintarAvatarGenerico(it) }
+            }
+        }
+    }
+
+    private fun pintarAvatarGenerico(vista: ImageView?) {
+        vista ?: return
+        Glide.with(this).clear(vista)
+        vista.setImageResource(com.example.tfg.R.drawable.perfil)
+    }
+
+    /**
+     * Carga el avatar de la toolbar de forma independiente al drawer, para que
+     * esté visible aunque el menú lateral nunca se haya abierto.
+     */
+    private fun refrescarAvatarToolbar() {
+        val usuario = LocalizadorServicios.repositorioAuth.usuarioActual() ?: run {
+            pintarAvatarGenerico(binding.ivToolbarAvatar)
+            return
+        }
+        avatarDrawerJob?.cancel()
+        avatarDrawerJob = lifecycleScope.launch {
+            val bitmap = LocalizadorServicios.repositorioAvatar
+                .obtenerAvatar(usuario.id, usuario.avatarUpdatedAt)
+            val vista = binding.ivToolbarAvatar
+            if (bitmap != null) {
+                Glide.with(this@MainActivity)
+                    .load(bitmap)
+                    .circleCrop()
+                    .placeholder(com.example.tfg.R.drawable.perfil)
+                    .into(vista)
+            } else {
+                pintarAvatarGenerico(vista)
+            }
         }
     }
 

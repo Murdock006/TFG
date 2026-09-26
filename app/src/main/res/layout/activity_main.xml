@@ -20,14 +20,32 @@
             android:layout_height="wrap_content"
             android:background="@color/white"
             android:minHeight="56dp"
-            app:title="Menú Usuario"
+            app:title="Menú"
             app:titleTextColor="@color/texto_principal"
-            app:navigationIcon="@android:drawable/ic_menu_sort_by_size"
-            app:navigationIconTint="@color/texto_principal"
-            android:contentDescription="@string/abrir"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:contentInsetStartWithNavigation="0dp">
+
+            <FrameLayout
+                android:id="@+id/toolbarAvatarContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/spacing_sm"
+                android:contentDescription="@string/abrir"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:padding="4dp">
+
+                <ImageView
+                    android:id="@+id/ivToolbarAvatar"
+                    android:layout_width="@dimen/avatar_sm"
+                    android:layout_height="@dimen/avatar_sm"
+                    android:background="@drawable/bg_drawer_avatar"
+                    android:contentDescription="@string/cd_avatar_usuario"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/perfil" />
+            </FrameLayout>
+        </com.google.android.material.appbar.MaterialToolbar>
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/nav_host_fragment"
