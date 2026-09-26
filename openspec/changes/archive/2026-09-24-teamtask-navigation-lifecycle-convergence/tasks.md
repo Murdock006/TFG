@@ -275,7 +275,7 @@ available in this run, so the manual matrix rows are executed on a device by app
   - **Verify**: every row matches its expected result (delta spec scenarios 14, 17–21).
   - **Rollback**: N/A (audit); mismatches are fixed by revisiting the owning phase.
   - **Depends / Parallel**: after 8.2.
-- [ ] 8.4 **Manual navigation matrix (authoritative behavioral net).** Execute the 21-scenario matrix referenced below on a device; record pass/fail per row.
+- [x] 8.4 **Manual navigation matrix — WAIVED by owner decision (2026-09-26).** The owner decided the app will be validated by real user testing instead of a hand-executed device matrix; no rows were claimed as passed. All executable checks for this change are green (compile gates, grep audits, JVM suite).
   - **Verify**: all 21 rows pass with unchanged observable behavior. Failures block archive and are triaged against the owning phase.
   - **Rollback**: partial reverts per commit set (A, B, or C).
   - **Depends / Parallel**: after 8.1; runs alongside 8.3.
@@ -322,12 +322,12 @@ in this docs-only phase; apply/verify run them.
 
 ## Definition of Done (change-level)
 
-- [ ] All four debts (TD-4, TD-5, TD-6, TD-15) implemented and independently revertible.
-- [ ] Compile gate green for both flavors; Safe Args resolved (or Fallback TD-15-2 + spec amendment).
-- [ ] Existing JVM suite green (4 tests, 0 failures).
-- [ ] All seven grep audits match expected; zero raw navigation-key sites remain.
-- [ ] Manual matrix (21 scenarios) passes with unchanged observable behavior.
-- [ ] Guide §6/§7/§9 updated; delta non-requirement tables recorded for archive.
+- [x] All four debts (TD-4, TD-5, TD-6, TD-15) implemented and independently revertible.
+- [x] Compile gate green for both flavors; Safe Args resolved (2.9.6).
+- [x] Existing JVM suite green (4 tests, 0 failures at apply time).
+- [x] All seven grep audits match expected; zero raw navigation-key sites remain.
+- [x] Manual matrix — WAIVED by owner decision (2026-09-26); validation moves to real user testing, no rows claimed as passed.
+- [x] Guide §6/§7/§9 updated; delta non-requirement tables recorded for archive.
 
 ## Guard Notes
 

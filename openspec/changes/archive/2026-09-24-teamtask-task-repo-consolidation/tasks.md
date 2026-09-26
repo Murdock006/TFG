@@ -267,7 +267,7 @@ new guard row (A1). There is no automated test net; state that explicitly in the
   - **Rollback**: n/a.
   - **Depends/Parallel**: requires Phases 1-2. Parallel with 4.1/4.3/4.4.
 
-- [ ] **4.3 Run the manual verification matrix (emulator or device).**
+- [x] **4.3 Manual verification matrix — WAIVED by owner decision (2026-09-26).** The owner decided the app will be validated by real user testing instead of a hand-executed device matrix; no rows were claimed as passed. All executable checks for this change are green (compile gates, grep audits, JVM suite).
   - Execute the matrix below. Rows 1-8 are the design's matrix; row 9 is the A1 guard row.
   - **Verify**: every row matches its expected result.
   - **Rollback**: n/a (verification task). On failure, diagnose the specific Phase 1 task.

@@ -65,8 +65,9 @@ is considered complete. Commands are PowerShell (repo root `C:\Users\Victor\Andr
 - [x] G.6 **Grep audit: Auth-deletion gate present** —
       `Select-String -Path app/src/main/java/com/example/tfg/data/firebase/AuthRepositorioFirebase.kt -Pattern 'if \(!reporte\.completado\)'`
       returns a hit.
-- [ ] G.7 **Manual matrix** — execute the checklist in **Manual Verification Matrix** below
-      against the Firebase project/console. No device/emulator exists in this run.
+- [x] G.7 **Manual matrix — WAIVED by owner decision (2026-09-26).** The owner decided the app
+      will be validated by real user testing instead of hand-executed batches; no rows are claimed
+      as passed.
 
 ## Manual Verification Matrix
 
@@ -259,18 +260,15 @@ result per row:
   - Rollback: N/A (verification only).
   - Depends on: Phases 1–5. Parallel: none.
 
-- [ ] 6.2 Execute **Manual Verification Matrix** batches M1–M4 against the Firebase
-      project/console and record per-row results in `verify-report.md` (read-only for this phase;
-      created by `sdd-verify`). Keep `[UNVERIFIED]` markers for console-only rule parity: production
-      may deny the cross-user `usuarios` update, the self `avatares` delete, or the `grupos` delete;
-      if denied, the affected step fails, the Auth account is not deleted, and the failure is
-      surfaced (accepted behavior).
-  - Verify: all matrix rows pass, or each failure is recorded with its observed evidence.
+- [x] 6.2 Manual Verification Matrix — WAIVED by owner decision (2026-09-26). The owner decided
+      the app will be validated by real user testing instead of hand-executed M1–M4 batches; no rows
+      were claimed as passed. All executable checks for this change are green (compile gates, grep
+      audits, JVM suite).
+  - Verify: N/A (waived).
   - Rollback: N/A (verification only).
-  - Depends on: 6.1. Parallel: none.
-  - Status: **NOT EXECUTED** in this apply run — no device/emulator and only one account were
-    available. Batches M1–M4 remain pending and must be run by the developer. No results are
-    claimed here.
+  - Status: **WAIVED (2026-09-26)** — the owner decided the app will be validated by real user
+    testing instead of hand-executed M1–M4 batches. No rows are claimed as passed. Console-only rule
+    parity keeps its `[UNVERIFIED]` markers.
 
 ## Scope Boundaries & Reused Files
 

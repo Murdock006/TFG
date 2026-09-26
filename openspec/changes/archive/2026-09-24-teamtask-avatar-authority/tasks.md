@@ -363,7 +363,7 @@ automated avatar test net; state that explicitly in the apply report.
   - **Rollback**: n/a.
   - **Depends/Parallel**: requires Phases 2-3. Parallel with 4.1/4.2/4.4/4.5.
 
-- [ ] **4.4 Run the manual verification matrix (emulator build).**
+- [x] **4.4 Manual verification matrix — WAIVED by owner decision (2026-09-26).** The owner decided the app will be validated by real user testing instead of a hand-executed device matrix; no rows were claimed as passed. All executable checks for this change are green (compile gates, grep audits, JVM suite).
   - Execute the 12-row matrix below (the design's matrix, reproduced here for apply convenience).
   - **Verify**: every row matches its expected result.
   - **Rollback**: n/a (verification task). On failure, diagnose the specific Phase 1-3 task.
