@@ -615,9 +615,19 @@ private fun observarUsuarioDrawerHeader() {
             .setMessage(getString(com.example.tfg.R.string.ayuda_texto))
             .setPositiveButton(android.R.string.ok, null)
             .setNeutralButton(getString(com.example.tfg.R.string.ayuda_info_eliminacion)) { _, _ ->
-                startActivity(Intent(this, EliminacionCuentaActivity::class.java))
+                abrirInfoEliminacionCuenta()
             }
             .show()
+    }
+
+    private fun abrirInfoEliminacionCuenta() {
+        val url = getString(com.example.tfg.R.string.info_eliminacion_url)
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        try {
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(this, getString(com.example.tfg.R.string.ayuda_error_navegador), Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun contactarSoporte() {
@@ -633,12 +643,12 @@ private fun observarUsuarioDrawerHeader() {
     }
 
     private fun abrirPoliticaPrivacidad() {
-        val url = "https://teamtask.app/privacy"
+        val url = getString(com.example.tfg.R.string.politica_privacidad_url)
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         try {
             startActivity(intent)
         } catch (_: Exception) {
-            Toast.makeText(this, "No se pudo abrir la política de privacidad", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(com.example.tfg.R.string.ayuda_error_navegador), Toast.LENGTH_LONG).show()
         }
     }
 

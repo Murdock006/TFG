@@ -25,13 +25,14 @@ documented cascade); when one member remains the group is dissolved and the rema
 `grupoId` is cleared in Firestore and, reactively, locally; the remaining member's `puntos`,
 `puntosReservados`, `puntosRecompensa`, and `rachaDias` are reset to `0`; the dissolved group's
 remaining tasks are deleted; `avatares/{uid}` is deleted; cleanup is verifiable and gates the
-Auth deletion; the re-authentication dialog and the `EliminacionCuentaActivity` info page are
-preserved. Production/Console parity of the required cleanup writes remains `[UNVERIFIED]`.
+Auth deletion; the re-authentication dialog is preserved and the elimination info page opens the
+published Play-compliance URL in the device browser. Production/Console parity of the required
+cleanup writes remains `[UNVERIFIED]`.
 
 Grounding: `proposal.md` (New Capabilities; Resolved Decisions 1-6; Approach sections 1-4),
-`exploration.md`, and source `data/firebase/AuthRepositorioFirebase.kt:225-263,265-374`,
+`exploration.md`, and source `data/firebase/AuthRepositorioFirebase.kt:225-263,287-413`,
 `vista/FragmentPerfil.kt:208-315`, `viewmodel/VistaModeloAuth.kt:102-124`,
-`viewmodel/ParejaViewModel.kt:39-40,83-105`, `vista/EliminacionCuentaActivity.kt:10-31`,
+`viewmodel/ParejaViewModel.kt:39-40,83-105`,
 `repositorio/RepositorioPareja.kt:231-263,291-302`, `modelo/Usuario.kt:13-17`,
 `modelo/Grupo.kt:8`, and `firestore.rules`.
 
@@ -69,9 +70,9 @@ system MUST surface the re-authentication message and MUST NOT report success.
 
 The account-deletion confirmation dialog MUST require the literal text `ELIMINAR` and a
 non-blank password before dispatching the deletion. The dialog MUST be preserved as-is
-(`vista/FragmentPerfil.kt:214-275`). The informational `EliminacionCuentaActivity` page
-(`vista/EliminacionCuentaActivity.kt:10-31`) MUST be preserved and MUST NOT become part of the
-mutation flow.
+(`vista/FragmentPerfil.kt:214-275`). The informational elimination page MUST NOT become part of the
+mutation flow; it opens the published Play-compliance URL in the device browser
+(`vista/MainActivity.kt` → `abrirInfoEliminacionCuenta`).
 
 #### Scenario: Wrong confirmation text is rejected
 

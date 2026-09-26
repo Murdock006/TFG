@@ -325,5 +325,5 @@ between paths; **L**ow = cleanup.
 | Dissolution task deletion | Two-member group with tasks; delete one account | All tasks with that `grupoId` are deleted |
 | Auth-deletion gate | Force one cleanup step to fail; run deletion | Auth account is NOT deleted; failure names the failed step; success is not shown |
 | Residual Auth-delete failure | Complete cleanup, then force `FirebaseAuth.delete()` to fail | Account survives with cleaned data; the re-auth message is shown; retry re-runs the idempotent cleanup |
-| Re-auth and info UX preserved | Review the dialog and the elimination info page | `ELIMINAR` + password dialog and the `EliminacionCuentaActivity` info page are unchanged |
+| Re-auth and info UX preserved | Review the dialog and the elimination info page | `ELIMINAR` + password dialog unchanged; info page opens the published Play-compliance URL in the browser |
 | Strict-TDD status | Inspect `openspec/config.yaml:6` | `strict_tdd: false` remains; the manual matrix is the only verification barrier |

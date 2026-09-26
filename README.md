@@ -320,26 +320,33 @@ Errores comunes:
 
 ---
 
-## 🔐 Cumplimiento Play Store (eliminación de cuenta)
+## 🔐 Cumplimiento Play Store (páginas legales)
 
-Se añadió una página web para solicitudes de eliminación de cuenta, requerida por Google Play para apps con creación de cuentas:
+La app publica en GitHub Pages las páginas requeridas por Google Play para apps con creación de cuentas:
 
-- Archivo local: `docs/playstore/eliminacion-cuenta.html`
+| Página | Archivo publicado | URL pública |
+|---|---|---|
+| Eliminación de cuenta | `docs/playstore/eliminacion-cuenta.html` | `https://murdock006.github.io/TFG/playstore/eliminacion-cuenta.html` |
+| Política de Privacidad | `docs/playstore/politica-privacidad.html` | `https://murdock006.github.io/TFG/playstore/politica-privacidad.html` |
+
 - Email de contacto oficial de la app: `hello@sintaxys.es`
 
-### Publicación sugerida (GitHub Pages)
+La app abre esas URLs públicas en el navegador: la política desde el menú lateral (*Política de Privacidad*) y la eliminación desde el diálogo de Ayuda (*Más información sobre eliminación de cuenta*). El HTML de eliminación queda además como respaldo offline en `app/src/main/assets/eliminacion-cuenta.html`.
+
+### Publicación (GitHub Pages)
 
 1. Subir cambios al repositorio remoto.
 2. En GitHub: **Settings → Pages**.
 3. Source: `Deploy from a branch`.
-4. Branch: `master` (o `main` según corresponda), carpeta `/docs`.
-5. URL esperada tras publicar:
-   - `https://<tu-usuario>.github.io/TFG2/playstore/eliminacion-cuenta.html`
+4. Branch: `master`, carpeta `/docs`.
+5. URLs publicadas: `https://murdock006.github.io/TFG/playstore/<archivo>.html` (Pages sirve la carpeta `/docs` en la raíz del sitio, por eso la URL no incluye `docs/`). Tras añadir un archivo nuevo, Pages tarda ~1 minuto en publicarlo.
 
-### Dónde colocarla en Play Console
+### Dónde colocarlas en Play Console
 
-En **Contenido de la app → Seguridad de los datos → Eliminación de cuenta**, usar la URL publicada.
-La página debe ser accesible sin login y ofrecer una ruta clara de solicitud (incluida en el HTML).
+- **Contenido de la app → Seguridad de los datos → Eliminación de cuenta**: usar la URL de eliminación.
+- **Contenido de la app → Política de privacidad**: usar la URL de política de privacidad.
+
+Ambas páginas deben ser accesibles sin login.
 
 ---
 
