@@ -23,6 +23,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TFG"
+rootProject.name = "TeamTask"
 include(":app")
  
