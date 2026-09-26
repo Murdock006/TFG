@@ -8,7 +8,7 @@
 
     <fragment
         android:id="@+id/fragment_Presentacion"
-        android:name="com.example.tfg.vista.FragmentPresentacion"
+        android:name="es.sintaxys.teamtask.vista.FragmentPresentacion"
         android:label="fragment_presentacion"
         tools:layout="@layout/fragment_presentacion" >
         <action
@@ -17,7 +17,7 @@
     </fragment>
     <fragment
         android:id="@+id/fragment_Login"
-        android:name="com.example.tfg.vista.FragmentLogin"
+        android:name="es.sintaxys.teamtask.vista.FragmentLogin"
         android:label="fragment_login"
         tools:layout="@layout/fragment_login" >
         <action
@@ -29,7 +29,7 @@
     </fragment>
     <fragment
         android:id="@+id/fragment_PgPrincipal"
-        android:name="com.example.tfg.vista.FragmentPgPrincipal"
+        android:name="es.sintaxys.teamtask.vista.FragmentPgPrincipal"
         android:label="fragment_pg_principal"
         tools:layout="@layout/fragment_pg_principal" >
         <action
@@ -55,31 +55,31 @@
 
     <fragment
         android:id="@+id/fragment_Recompensas"
-        android:name="com.example.tfg.vista.FragmentRecompensas"
+        android:name="es.sintaxys.teamtask.vista.FragmentRecompensas"
         android:label="fragment_recompensas"
         tools:layout="@layout/fragment_recompensas" />
 
     <fragment
         android:id="@+id/fragment_Perfil"
-        android:name="com.example.tfg.vista.FragmentPerfil"
+        android:name="es.sintaxys.teamtask.vista.FragmentPerfil"
         android:label="fragment_perfil"
         tools:layout="@layout/fragment_perfil" />
 
     <fragment
         android:id="@+id/fragment_Registro"
-        android:name="com.example.tfg.vista.FragmentRegistro"
+        android:name="es.sintaxys.teamtask.vista.FragmentRegistro"
         android:label="fragment_registro"
         tools:layout="@layout/fragment_registro" />
 
     <fragment
         android:id="@+id/fragment_Pareja"
-        android:name="com.example.tfg.vista.FragmentPareja"
+        android:name="es.sintaxys.teamtask.vista.FragmentPareja"
         android:label="fragment_pareja"
         tools:layout="@layout/fragment_pareja" />
 
     <fragment
         android:id="@+id/fragment_Tareas"
-        android:name="com.example.tfg.vista.FragmentTareas"
+        android:name="es.sintaxys.teamtask.vista.FragmentTareas"
         android:label="fragment_tareas"
         tools:layout="@layout/fragment_tareas_lista" >
         <argument
@@ -101,13 +101,13 @@
 
     <fragment
         android:id="@+id/fragment_Calendario"
-        android:name="com.example.tfg.vista.FragmentCalendario"
+        android:name="es.sintaxys.teamtask.vista.FragmentCalendario"
         android:label="fragment_calendario"
         tools:layout="@layout/fragment_calendario" />
 
     <fragment
         android:id="@+id/fragment_TareasPendientes"
-        android:name="com.example.tfg.vista.FragmentTareasPendientes"
+        android:name="es.sintaxys.teamtask.vista.FragmentTareasPendientes"
         android:label="fragment_tareas_pendientes"
         tools:layout="@layout/fragment_tareas_pendientes" />
 

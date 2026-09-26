@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:fillViewport="true"
     android:background="@color/fondo"
-    tools:context="com.example.tfg.vista.FragmentRegistro">
+    tools:context="es.sintaxys.teamtask.vista.FragmentRegistro">
 
     <LinearLayout
         android:layout_width="match_parent"

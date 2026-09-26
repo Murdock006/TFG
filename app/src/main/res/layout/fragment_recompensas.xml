@@ -8,7 +8,7 @@
     android:layout_marginTop="20dp"
     android:paddingBottom="72dp"
     android:background="@color/fondo"
-    tools:context="com.example.tfg.vista.FragmentRecompensas">
+    tools:context="es.sintaxys.teamtask.vista.FragmentRecompensas">
 
     <TextView
         android:id="@+id/tv_recompensas"

@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/fondo"
     android:paddingBottom="72dp"
-    tools:context=".vista.FragmentPresentacion">
+    tools:context="es.sintaxys.teamtask.vista.FragmentPresentacion">
 
 
     <ImageView

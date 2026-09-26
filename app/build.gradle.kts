@@ -6,12 +6,12 @@ plugins {
 }
 
 android {
-    namespace = "com.example.tfg"
+    namespace = "es.sintaxys.teamtask"
 
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.tfg"
+        applicationId = "es.sintaxys.teamtask"
         minSdk = 28
         targetSdk = 36
         versionCode = 1
@@ -20,7 +20,7 @@ android {
         buildConfigField("String", "FIREBASE_MODE", "\"RELEASE\"")
         buildConfigField("String", "FIREBASE_HOST", "\"\"")
         buildConfigField("String", "FIREBASE_PROJECT_ID", "\"teamtask-3a855\"")
-        buildConfigField("String", "FIREBASE_APPLICATION_ID", "\"1:680542959178:android:4e4a8b88dffdec5df918b3\"")
+        buildConfigField("String", "FIREBASE_APPLICATION_ID", "\"1:680542959178:android:653f3c35ed1a10d2f918b3\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -39,7 +39,7 @@ android {
             buildConfigField("String", "FIREBASE_MODE", "\"RELEASE\"")
             buildConfigField("String", "FIREBASE_HOST", "\"\"")
             buildConfigField("String", "FIREBASE_PROJECT_ID", "\"teamtask-3a855\"")
-            buildConfigField("String", "FIREBASE_APPLICATION_ID", "\"1:680542959178:android:4e4a8b88dffdec5df918b3\"")
+            buildConfigField("String", "FIREBASE_APPLICATION_ID", "\"1:680542959178:android:653f3c35ed1a10d2f918b3\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

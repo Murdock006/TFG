@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:name="com.example.tfg.TFGApplication"
+        android:name="es.sintaxys.teamtask.TFGApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -19,7 +19,7 @@
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/Theme.TFG">
         <activity
-            android:name="com.example.tfg.vista.MainActivity"
+            android:name="es.sintaxys.teamtask.vista.MainActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.TFG.Splash"

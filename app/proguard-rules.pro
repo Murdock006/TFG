@@ -46,8 +46,8 @@
 # ==========================================
 # Firebase Firestore — keep model classes
 # ==========================================
--keep class com.example.tfg.modelo.** { *; }
--keep class com.example.tfg.modelo.**$* { *; }
+-keep class es.sintaxys.teamtask.modelo.** { *; }
+-keep class es.sintaxys.teamtask.modelo.**$* { *; }
 
 # ==========================================
 # Firebase Realtime Database
@@ -113,7 +113,7 @@
 # ==========================================
 # Keep all custom Android classes (ViewModels, Services, etc.)
 # ==========================================
--keep class com.example.tfg.viewmodel.** { *; }
--keep class com.example.tfg.service.** { *; }
--keep class com.example.tfg.vista.** { *; }
--keep class com.example.tfg.repositorio.** { *; }
+-keep class es.sintaxys.teamtask.viewmodel.** { *; }
+-keep class es.sintaxys.teamtask.service.** { *; }
+-keep class es.sintaxys.teamtask.vista.** { *; }
+-keep class es.sintaxys.teamtask.repositorio.** { *; }
