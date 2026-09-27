@@ -5,7 +5,7 @@
 
     <!-- Puntos y UI general -->
     <string name="tus_puntos">Tus puntos</string>
-    <string name="comprar_puntos_info">Puedes comprar más puntos:\n1000 = 5€\nMás info en el Menú lateral</string>
+
     <string name="tu_companero">Puntos del grupo</string>
     <string name="vincula_pareja">Vincula a tu pareja para ver sus puntos</string>
     <string name="asignar_tareas">Asignar Tareas</string>

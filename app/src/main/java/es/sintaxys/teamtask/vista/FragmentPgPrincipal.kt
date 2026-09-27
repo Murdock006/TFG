@@ -99,43 +99,8 @@ class FragmentPgPrincipal : Fragment() {
 
         vistaModelo.actualizarTexto()
 
-        // Conectar botones de UI a acciones de navegación
-        binding.categoriaCocina.setOnClickListener {
-            findNavController().navigate(
-                es.sintaxys.teamtask.R.id.fragment_Tareas,
-                FragmentTareasArgs(taskId = null, modo = null, categoria = "cocina").toBundle()
-            )
-        }
-        binding.categoriaLimpieza.setOnClickListener {
-            findNavController().navigate(
-                es.sintaxys.teamtask.R.id.fragment_Tareas,
-                FragmentTareasArgs(taskId = null, modo = null, categoria = "limpieza").toBundle()
-            )
-        }
-        binding.categoriaRopa.setOnClickListener {
-            findNavController().navigate(
-                es.sintaxys.teamtask.R.id.fragment_Tareas,
-                FragmentTareasArgs(taskId = null, modo = null, categoria = "ropa").toBundle()
-            )
-        }
-        binding.categoriaMascotas.setOnClickListener {
-            findNavController().navigate(
-                es.sintaxys.teamtask.R.id.fragment_Tareas,
-                FragmentTareasArgs(taskId = null, modo = null, categoria = "mascotas").toBundle()
-            )
-        }
-        binding.categoriaRecados.setOnClickListener {
-            findNavController().navigate(
-                es.sintaxys.teamtask.R.id.fragment_Tareas,
-                FragmentTareasArgs(taskId = null, modo = null, categoria = "recados").toBundle()
-            )
-        }
-        binding.categoriaPersonalizado.setOnClickListener {
-            findNavController().navigate(
-                es.sintaxys.teamtask.R.id.fragment_Tareas,
-                FragmentTareasArgs(taskId = null, modo = null, categoria = "personalizado").toBundle()
-            )
-        }
+        // Los listeners de las tarjetas de categoría se registran más abajo en
+        // setupCategoriaAsignacion (tap corto navega, long press asigna con fecha/hora).
 
         // Configurar RecyclerView horizontal de miembros
         miembrosAdapterHorizontal = MiembrosHorizontalAdapter()
