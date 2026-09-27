@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- BRAND - Índigo (acento principal) -->
-    <color name="primario">#5B5BD6</color>
-    <color name="primario_variant">#3D3D99</color>
-    <color name="acento">#5B5BD6</color>
+    <!-- BRAND - Esmeralda (acento principal) -->
+    <color name="primario">#0E9F6E</color>
+    <color name="primario_variant">#0A7D56</color>
+    <color name="acento">#0E9F6E</color>
     <color name="on_acento">#FFFFFF</color>
-    <color name="brand_500">#5B5BD6</color>
-    <color name="brand_600">#3D3D99</color>
-    <color name="brand_400">#7C7CE0</color>
-    <color name="brand_100">#E8E8FA</color>
-    <color name="brand_50">#F4F4FD</color>
+    <color name="brand_500">#0E9F6E</color>
+    <color name="brand_600">#0A7D56</color>
+    <color name="brand_400">#34C79A</color>
+    <color name="brand_100">#D6F2E6</color>
+    <color name="brand_50">#EFFAF5</color>
 
     <!-- NEUTRALES (jerarquía) -->
     <color name="negro">#000000</color>
@@ -60,11 +60,11 @@
     <color name="divider">#E5E7EB</color>
 
     <!-- Compatibilidad retroactiva -->
-    <color name="azul_principal">#5B5BD6</color>
-    <color name="light_blue_600">#5B5BD6</color>
-    <color name="light_blue_900">#3D3D99</color>
-    <color name="light_blue_A200">#E8E8FA</color>
-    <color name="light_blue_A400">#7C7CE0</color>
+    <color name="azul_principal">#0E9F6E</color>
+    <color name="light_blue_600">#0E9F6E</color>
+    <color name="light_blue_900">#0A7D56</color>
+    <color name="light_blue_A200">#D6F2E6</color>
+    <color name="light_blue_A400">#34C79A</color>
     <color name="google_text">#5F6368</color>
     <color name="google_ripple">#F3F4F6</color>
     <color name="google_stroke">#D1D5DB</color>
