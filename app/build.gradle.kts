@@ -22,10 +22,24 @@ android {
         buildConfigField("String", "FIREBASE_PROJECT_ID", "\"teamtask-3a855\"")
         buildConfigField("String", "FIREBASE_APPLICATION_ID", "\"1:680542959178:android:653f3c35ed1a10d2f918b3\"")
 
+        // AdMob - IDs REALES usados en release (y como valor por defecto).
+        // En debug/emulator se sobreescriben con los IDs de TEST de Google para
+        // evitar baneos por clicks propios durante el desarrollo.
+        buildConfigField("String", "AD_APP_ID", "\"ca-app-pub-9694061031182900~3914949375\"")
+        buildConfigField("String", "AD_REWARDED_UNIT_ID", "\"ca-app-pub-9694061031182900/5383195280\"")
+        manifestPlaceholders["admobAppId"] = "ca-app-pub-9694061031182900~3914949375"
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        // IDs de TEST de AdMob para desarrollo local.
+        // Se define antes de "emulator" para que este herede los mismos valores via initWith(debug).
+        getByName("debug") {
+            buildConfigField("String", "AD_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
+            buildConfigField("String", "AD_REWARDED_UNIT_ID", "\"ca-app-pub-3940256099942544/5224354917\"")
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
+        }
         create("emulator") {
             initWith(getByName("debug"))
             matchingFallbacks += listOf("debug")
@@ -72,6 +86,9 @@ dependencies {
 
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")
+
+    // Google Mobile Ads (AdMob) - anuncios recompensados
+    implementation("com.google.android.gms:play-services-ads:25.4.0")
 
     // Await para Tasks de Firebase desde coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")

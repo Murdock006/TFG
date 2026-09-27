@@ -1,5 +1,6 @@
 package es.sintaxys.teamtask.vista
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,6 +18,13 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.rewarded.RewardedAd
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
+import es.sintaxys.teamtask.BuildConfig
 import es.sintaxys.teamtask.R
 import es.sintaxys.teamtask.databinding.FragmentPgPrincipalBinding
 import es.sintaxys.teamtask.viewmodel.VistaModeloPrincipal
@@ -36,6 +44,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class FragmentPgPrincipal : Fragment() {
 
@@ -52,6 +63,16 @@ class FragmentPgPrincipal : Fragment() {
     private lateinit var miembrosAdapterHorizontal: MiembrosHorizontalAdapter
     // adapter de tareas recientes, construido por vista para poder destruirlo en onDestroyView
     private var tareaAdapter: TareasHomeAdapter? = null
+
+    // Anuncio recompensado (AdMob). Se carga y se recicla siguiendo el ciclo de la vista.
+    private var rewardedAd: RewardedAd? = null
+    private var cargandoAnuncio = false
+
+    companion object {
+        private const val PREFS_NAME = "tfg_prefs"
+        private const val MAX_ANUNCIOS_DIA = 3
+        private const val PUNTOS_POR_ANUNCIO = 20
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -409,14 +430,133 @@ class FragmentPgPrincipal : Fragment() {
             android.util.Log.w("FragmentPgPrincipal", "Error ocultando botones asignar: ${e.message}")
         }
 
-        // Botón comprar puntos → abre el drawer
+        // Botón de anuncio recompensado → límite diario, mostrar y recargar
         try {
-            binding.btnComprarPuntos.setOnClickListener {
-                val drawer = requireActivity().findViewById<androidx.drawerlayout.widget.DrawerLayout>(R.id.drawerLayout)
-                drawer.openDrawer(android.view.Gravity.START)
-            }
+            binding.btnVerAnuncio.setOnClickListener { alPulsarVerAnuncio() }
+            actualizarTextoBotonAnuncio()
+            cargarAnuncioRecompensado()
         } catch (e: Exception) {
-            android.util.Log.w("FragmentPgPrincipal", "Error configurando botón comprar puntos: ${e.message}")
+            android.util.Log.w("FragmentPgPrincipal", "Error configurando botón de anuncio: ${e.message}")
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // El contador puede haber cambiado de día; refresca el texto y asegura un anuncio cargado.
+        actualizarTextoBotonAnuncio()
+        cargarAnuncioRecompensado()
+    }
+
+    // --- Anuncio recompensado (AdMob) ---
+
+    /**
+     * Carga un rewarded si no hay uno listo.
+     * El ad unit ID sale de BuildConfig: en debug/emulator usa el ID de TEST de Google y en
+     * release el ID REAL (ver buildConfigField AD_REWARDED_UNIT_ID en app/build.gradle.kts).
+     */
+    private fun cargarAnuncioRecompensado() {
+        if (rewardedAd != null || cargandoAnuncio) return
+        cargandoAnuncio = true
+        RewardedAd.load(
+            requireContext(),
+            BuildConfig.AD_REWARDED_UNIT_ID,
+            AdRequest.Builder().build(),
+            object : RewardedAdLoadCallback() {
+                override fun onAdLoaded(ad: RewardedAd) {
+                    rewardedAd = ad
+                    cargandoAnuncio = false
+                }
+
+                override fun onAdFailedToLoad(error: LoadAdError) {
+                    rewardedAd = null
+                    cargandoAnuncio = false
+                }
+            }
+        )
+    }
+
+    private fun alPulsarVerAnuncio() {
+        // Verificación del límite ANTES de mostrar.
+        if (anunciosRestantesHoy() <= 0) {
+            Toast.makeText(requireContext(), R.string.anuncio_limite_alcanzado, Toast.LENGTH_SHORT).show()
+            return
+        }
+        val ad = rewardedAd
+        if (ad == null) {
+            Toast.makeText(requireContext(), R.string.anuncio_no_disponible, Toast.LENGTH_SHORT).show()
+            cargarAnuncioRecompensado()
+            return
+        }
+        // Evita un segundo show si el usuario pulsa dos veces seguidas.
+        rewardedAd = null
+        ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdDismissedFullScreenContent() {
+                // Reciclar: soltar el anuncio consumido y pedir otro para la próxima vez.
+                rewardedAd = null
+                cargarAnuncioRecompensado()
+            }
+
+            override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                rewardedAd = null
+                cargarAnuncioRecompensado()
+            }
+        }
+        ad.show(requireActivity()) { onUsuarioRecompensado() }
+    }
+
+    private fun onUsuarioRecompensado() {
+        // Verificación del límite DESPUÉS de la recompensa: nunca superar el máximo diario.
+        if (anunciosRestantesHoy() <= 0) {
+            Toast.makeText(requireContext(), R.string.anuncio_limite_alcanzado, Toast.LENGTH_SHORT).show()
+            actualizarTextoBotonAnuncio()
+            return
+        }
+        val uid = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
+        if (uid == null) {
+            Toast.makeText(requireContext(), R.string.anuncio_sin_sesion, Toast.LENGTH_SHORT).show()
+            return
+        }
+        // Consumir el cupo del día solo cuando hay sesión (no gastar cupo sin recompensa).
+        registrarAnuncioVisto()
+        actualizarTextoBotonAnuncio()
+        viewLifecycleOwner.lifecycleScope.launch {
+            val res = LocalizadorServicios.repositorioAuth.sumarPuntos(uid, PUNTOS_POR_ANUNCIO)
+            val ctx = context ?: return@launch
+            Toast.makeText(
+                ctx,
+                if (res.isSuccess) getString(R.string.anuncio_recompensa_obtenida, PUNTOS_POR_ANUNCIO)
+                else getString(R.string.anuncio_error_recompensa),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    // --- Límite diario persistido en SharedPreferences ("tfg_prefs") ---
+
+    private fun claveAnunciosHoy(): String {
+        val fecha = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
+        return "ad_rewards_$fecha"
+    }
+
+    private fun anunciosVistosHoy(): Int =
+        requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getInt(claveAnunciosHoy(), 0)
+
+    private fun anunciosRestantesHoy(): Int =
+        (MAX_ANUNCIOS_DIA - anunciosVistosHoy()).coerceAtLeast(0)
+
+    private fun registrarAnuncioVisto() {
+        val prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val vistosHoy = prefs.getInt(claveAnunciosHoy(), 0)
+        prefs.edit().putInt(claveAnunciosHoy(), vistosHoy + 1).apply()
+    }
+
+    private fun actualizarTextoBotonAnuncio() {
+        val restantes = anunciosRestantesHoy()
+        binding.tvVerAnuncio.text = if (restantes > 0) {
+            getString(R.string.ver_anuncio_restantes, PUNTOS_POR_ANUNCIO, restantes)
+        } else {
+            getString(R.string.anuncio_limite_alcanzado)
         }
     }
     override fun onDestroyView() {
@@ -426,6 +566,9 @@ class FragmentPgPrincipal : Fragment() {
         tareasHomeJob = null
         tareaAdapter?.destroy()
         tareaAdapter = null
+        // Soltar la referencia al anuncio al destruir la vista.
+        rewardedAd = null
+        cargandoAnuncio = false
     }
 
     private inner class MiembrosHorizontalAdapter : RecyclerView.Adapter<MiembrosHorizontalAdapter.MV>() {

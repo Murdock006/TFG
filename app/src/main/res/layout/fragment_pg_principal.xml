@@ -94,9 +94,9 @@
                         android:textAppearance="@style/TextAppearance.TFG.Label" />
                 </LinearLayout>
 
-                <!-- Lado derecho: info compra puntos (clickable) -->
+                <!-- Lado derecho: ver anuncio recompensado (clickable) -->
                 <LinearLayout
-                    android:id="@+id/btnComprarPuntos"
+                    android:id="@+id/btnVerAnuncio"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
@@ -110,13 +110,13 @@
                     <ImageView
                         android:layout_width="32dp"
                         android:layout_height="32dp"
-                        android:src="@android:drawable/ic_menu_add"
-                        android:contentDescription="comprar puntos"
+                        android:src="@android:drawable/ic_media_play"
+                        android:contentDescription="@string/cd_btn_ver_anuncio"
                         app:tint="@color/gris" />
 
                     <TextView
-                        android:id="@+id/tvComprarPuntos"
-                        android:text="@string/comprar_puntos_info"
+                        android:id="@+id/tvVerAnuncio"
+                        android:text="@string/ver_anuncio_recompensa"
                         android:textSize="10sp"
                         android:layout_height="wrap_content"
                         android:layout_width="100dp"

@@ -115,6 +115,16 @@
     <!-- Google Sign-In -->
     <string name="google_client_id">680542959178-j04kes04m6jpf6v7omp51f9522qbcjbq.apps.googleusercontent.com</string>
 
+    <!-- Anuncio recompensado (AdMob) -->
+    <string name="ver_anuncio_recompensa">Ver anuncio y ganar puntos</string>
+    <string name="ver_anuncio_restantes">Ver anuncio y ganar %1$d puntos\n(quedan %2$d hoy)</string>
+    <string name="anuncio_limite_alcanzado">Has alcanzado el límite de anuncios por hoy</string>
+    <string name="anuncio_no_disponible">El anuncio no está listo. Inténtalo de nuevo en unos segundos.</string>
+    <string name="anuncio_recompensa_obtenida">¡Ganaste %1$d puntos!</string>
+    <string name="anuncio_error_recompensa">No se pudieron añadir los puntos. Inténtalo de nuevo.</string>
+    <string name="anuncio_sin_sesion">Inicia sesión para obtener puntos.</string>
+    <string name="cd_btn_ver_anuncio">Ver anuncio recompensado</string>
+
     <!-- Cumplimiento Play Store: eliminación de cuenta -->
     <string name="eliminar_cuenta">Eliminar cuenta</string>
     <string name="eliminar_cuenta_titulo">Eliminar cuenta definitivamente</string>

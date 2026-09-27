@@ -18,6 +18,11 @@
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/Theme.TFG">
+        <!-- App ID de AdMob: se resuelve por manifestPlaceholders ("admobAppId").
+             debug/emulator usan el ID de TEST; release usa el ID REAL. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}" />
         <activity
             android:name="es.sintaxys.teamtask.vista.MainActivity"
             android:exported="true"
