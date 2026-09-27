@@ -33,6 +33,9 @@ interface AuthRepositorio {
     fun usuarioActual(): Usuario?
     fun observarUsuarios(): Flow<List<Usuario>>
 
+    // actualización del nombre visible del usuario
+    suspend fun actualizarNombre(usuarioId: String, nombre: String): Result<Unit>
+
     // operaciones de puntos
     suspend fun sumarPuntos(usuarioId: String, puntos: Int): Result<Int>
     suspend fun reservarPuntos(usuarioId: String, puntos: Int): Result<Unit>

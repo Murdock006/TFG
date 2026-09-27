@@ -37,6 +37,7 @@ import es.sintaxys.teamtask.modelo.Usuario
 import es.sintaxys.teamtask.modelo.Notificacion
 import es.sintaxys.teamtask.util.Constants
 import es.sintaxys.teamtask.util.SelectorFechaHora
+import es.sintaxys.teamtask.util.nombreVisible
 import es.sintaxys.teamtask.repositorio.CategoriasRepositorio
 import es.sintaxys.teamtask.repositorio.RepositorioNotificaciones
 import com.google.firebase.Timestamp
@@ -278,14 +279,7 @@ class FragmentPgPrincipal : Fragment() {
                                 grupo.miembros.keys.forEach { uid ->
                                     if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                                     val usuario = usuariosCache.find { it.id == uid }
-                                    val display = when {
-                                        usuario?.nombre?.isNotBlank() == true -> {
-                                            val mailOrId = if (usuario.email.isNotBlank()) usuario.email else usuario.id
-                                            "${usuario.nombre} (${mailOrId})"
-                                        }
-                                        usuario?.email?.isNotBlank() == true -> usuario.email
-                                        else -> uid
-                                    }
+                                    val display = usuario?.nombreVisible() ?: uid
                                     opcionesMiembros.add(Pair(display, uid))
                                 }
                             }
@@ -551,7 +545,7 @@ class FragmentPgPrincipal : Fragment() {
         }
         override fun onBindViewHolder(holder: MV, position: Int) {
             val (u, rol) = items[position]
-            holder.tvNombre.text = if (u.nombre.isNotBlank()) u.nombre else u.email.ifBlank { u.id }
+            holder.tvNombre.text = u.nombreVisible()
             holder.tvPuntos.text = u.puntos.toString()
             holder.tvRol.text = rol
 

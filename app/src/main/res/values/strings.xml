@@ -175,6 +175,9 @@
     <string name="puntos_fijos_200">Puntos fijos: 200 pts</string>
     <string name="perfil">Perfil</string>
     <string name="cambiar_avatar">Cambiar avatar</string>
+    <string name="cambiar_nombre">Cambiar nombre</string>
+    <string name="cambiar_nombre_vacio">El nombre no puede estar vacío</string>
+    <string name="cambiar_nombre_error">No se pudo actualizar el nombre</string>
     <string name="info_perfil">Información del perfil</string>
     <string name="perfil_pareja_title">Perfil de pareja</string>
     <string name="progreso_tareas">Progreso de tareas</string>

@@ -503,6 +503,27 @@ class AuthRepositorioFirebase(
             )
     }
 
+    override suspend fun actualizarNombre(usuarioId: String, nombre: String): Result<Unit> {
+        return try {
+            val nombreLimpio = nombre.trim()
+            if (nombreLimpio.isBlank()) {
+                return Result.failure(Exception("El nombre no puede estar vacío"))
+            }
+            firestore.collection("usuarios").document(usuarioId)
+                .update("nombre", nombreLimpio).await()
+            // Refrescar la caché local para que usuarioActual() devuelva el nombre nuevo
+            // de inmediato, sin esperar al snapshot listener de observarUsuarios().
+            _usuarioCache = _usuarioCache?.let {
+                if (it.id == usuarioId) it.copy(nombre = nombreLimpio) else it
+            }
+            Log.d(TAG, "actualizarNombre OK usuario=$usuarioId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "actualizarNombre error", e)
+            Result.failure(Exception(e.message ?: "No se pudo actualizar el nombre"))
+        }
+    }
+
     override fun observarUsuarios(): Flow<List<Usuario>> = callbackFlow {
         val coll = firestore.collection("usuarios")
         val listener = coll.addSnapshotListener { snapshot, error ->

@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import es.sintaxys.teamtask.service.firebase.FirebaseComposition
+import es.sintaxys.teamtask.util.nombreVisible
 import kotlinx.coroutines.tasks.await
 import android.util.TypedValue
 import com.github.mikephil.charting.data.PieData
@@ -263,7 +264,8 @@ class FragmentPareja : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
                 val usuariosCacheLocal = try { LocalizadorServicios.repositorioAuth.observarUsuarios().first() } catch (_: Exception) { emptyList<Usuario>() }
                 val miembrosTexto = g.miembros.map { (uid, rol) ->
-                    val nombre = usuariosCacheLocal.find { it.id == uid }?.nombre ?: usuariosCacheLocal.find { it.id == uid }?.email ?: uid
+                    val usuario = usuariosCacheLocal.find { it.id == uid }
+                    val nombre = usuario?.nombreVisible() ?: uid
                     "- $nombre ($rol)"
                 }.joinToString("\n")
                 AlertDialog.Builder(requireContext())
@@ -522,7 +524,7 @@ class FragmentPareja : Fragment() {
     private fun actualizarListaMiembrosConUsuarios(g: es.sintaxys.teamtask.modelo.Grupo, usuarios: List<Usuario>) {
         val myId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
         lifecycleScope.launch {
-            val items = try { resolverNombresMiembros(g.miembros, usuarios) } catch (e: Exception) { g.miembros.map { (uid, rol) -> uid to rol } }
+            val items = try { resolverNombresMiembros(g.miembros, usuarios) } catch (e: Exception) { g.miembros.map { (uid, rol) -> Triple(uid, rol, uid) } }
             withContext(Dispatchers.Main) {
                 adapter.setItems(items)
                 tvGroupName.text = g.nombre
@@ -545,51 +547,39 @@ class FragmentPareja : Fragment() {
         }
     }
 
-    private suspend fun resolverNombresMiembros(miembros: Map<String,String>, usuariosCache: List<Usuario>): List<Pair<String,String>> {
+    private suspend fun resolverNombresMiembros(miembros: Map<String,String>, usuariosCache: List<Usuario>): List<Triple<String,String,String>> {
         val db = FirebaseComposition.firestore()
-        val result = mutableListOf<Pair<String,String>>()
+        val result = mutableListOf<Triple<String,String,String>>()
         for ((uid, rol) in miembros) {
             val u = usuariosCache.find { it.id == uid }
             if (u != null) {
-                val display = if (u.nombre.isNotBlank()) "${u.nombre} (${u.email})" else (u.email.ifEmpty { u.id })
-                result.add(display to rol)
+                result.add(Triple(u.nombreVisible(), rol, uid))
             } else {
                 try {
                     val doc = db.collection("usuarios").document(uid).get().await()
                     if (doc.exists()) {
                         val nombre = doc.getString("nombre") ?: ""
                         val email = doc.getString("email") ?: ""
-                        val display = if (nombre.isNotBlank()) "$nombre ($email)" else (email.ifEmpty { uid })
-                        result.add(display to rol)
+                        val visible = Usuario(id = uid, nombre = nombre, email = email).nombreVisible()
+                        result.add(Triple(visible, rol, uid))
                     } else {
-                        result.add(uid to rol)
+                        result.add(Triple(uid, rol, uid))
                     }
                 } catch (e: Exception) {
                     android.util.Log.w("FragmentPareja", "resolverNombresMiembros: fallo leyendo usuarios/$uid: ${e.message}")
-                    result.add(uid to rol)
+                    result.add(Triple(uid, rol, uid))
                 }
             }
         }
         return result
     }
 
-    private fun extraerIdentificadorDeDisplay(nombreCompleto: String): String? {
-        val inicio = nombreCompleto.lastIndexOf('(')
-        val fin = nombreCompleto.lastIndexOf(')')
-        if (inicio >= 0 && fin > inicio) {
-            val dentro = nombreCompleto.substring(inicio + 1, fin).trim()
-            if (dentro.isNotBlank()) return dentro
-        }
-        val texto = nombreCompleto.trim()
-        return if (texto.isBlank()) null else texto
-    }
-
     private inner class MiembrosAdapter : RecyclerView.Adapter<MiembrosAdapter.VH>() {
-        private var items: List<Pair<String,String>> = emptyList()
+        private var items: List<Triple<String,String,String>> = emptyList()
         // Almacenar también puntos por uid para mostrar en el badge
         private var puntosMap: Map<String,Int> = emptyMap()
 
-        fun setItems(list: List<Pair<String,String>>) { items = list; notifyDataSetChanged() }
+        fun setItems(list: List<Triple<String,String,String>>) { items = list; notifyDataSetChanged() }
         fun setPuntosMap(map: Map<String,Int>) { puntosMap = map; notifyDataSetChanged() }
 
         inner class VH(val root: View) : RecyclerView.ViewHolder(root) {
@@ -606,20 +596,14 @@ class FragmentPareja : Fragment() {
         }
 
         override fun onBindViewHolder(holder: VH, position: Int) {
-            val (nombreCompleto, rol) = items[position]
-            // nombreCompleto tiene formato "Nombre (email)" o solo email/uid
-            val partes = nombreCompleto.split("(")
-            val nombre = partes[0].trim()
-            val email  = if (partes.size > 1) partes[1].trimEnd(')').trim() else ""
-            val inicial = nombre.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+            val (nombreVisible, rol, uid) = items[position]
+            val inicial = nombreVisible.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
             holder.tvAvatar.text  = inicial
-            holder.tvNombre.text  = nombre.ifBlank { email }
-            holder.tvEmail.text   = if (email.isNotBlank()) "$email • $rol" else rol
-            val identificador = extraerIdentificadorDeDisplay(nombreCompleto)
-            val puntosDesdeMap = identificador?.let { puntosMap[it] }
-            val puntosDesdeCache = identificador?.let { idOrEmail ->
-                usuariosCacheActual.find { it.id == idOrEmail || it.email == idOrEmail }?.puntos
-            }
+            holder.tvNombre.text  = nombreVisible
+            // La vista secundaria muestra el rol; el correo nunca se renderiza.
+            holder.tvEmail.text   = rol
+            val puntosDesdeMap = puntosMap[uid]
+            val puntosDesdeCache = usuariosCacheActual.find { it.id == uid }?.puntos
             val puntos = puntosDesdeMap ?: puntosDesdeCache ?: 0
             holder.tvPuntos.text  = "$puntos pts"
         }

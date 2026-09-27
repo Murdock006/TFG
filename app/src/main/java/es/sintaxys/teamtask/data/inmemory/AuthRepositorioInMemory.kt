@@ -58,6 +58,20 @@ class AuthRepositorioInMemory : AuthRepositorio {
 
     override fun observarUsuarios(): Flow<List<Usuario>> = usuariosFlow
 
+    override suspend fun actualizarNombre(usuarioId: String, nombre: String): Result<Unit> {
+        return withContext(Dispatchers.Default) {
+            val idx = usuarios.indexOfFirst { it.id == usuarioId }
+            if (idx < 0) return@withContext Result.failure(Exception("Usuario no encontrado"))
+            val nombreLimpio = nombre.trim()
+            if (nombreLimpio.isBlank()) return@withContext Result.failure(Exception("El nombre no puede estar vacío"))
+            val nuevo = usuarios[idx].copy(nombre = nombreLimpio)
+            usuarios[idx] = nuevo
+            if (usuarioLogueado?.id == usuarioId) usuarioLogueado = nuevo
+            usuariosFlow.value = usuarios.toList()
+            Result.success(Unit)
+        }
+    }
+
     override suspend fun sumarPuntos(usuarioId: String, puntos: Int): Result<Int> {
         return withContext(Dispatchers.Default) {
             val idx = usuarios.indexOfFirst { it.id == usuarioId }

@@ -36,6 +36,7 @@ import es.sintaxys.teamtask.util.AvatarImagen
 import es.sintaxys.teamtask.util.Constants
 import es.sintaxys.teamtask.util.SelectorFechaHora
 import es.sintaxys.teamtask.util.TareaUi
+import es.sintaxys.teamtask.util.nombreVisible
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -310,11 +311,7 @@ class FragmentTareas : Fragment() {
                         g?.miembros?.keys?.forEach { uid ->
                             if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                             val u = usuariosCacheGlobal.find { it.id == uid }
-                            val display = when {
-                                u != null && u.nombre.isNotBlank() -> if (u.email.isNotBlank()) "${u.nombre} (${u.email})" else u.nombre
-                                u != null && u.email.isNotBlank() -> u.email
-                                else -> uid
-                            }
+                            val display = u?.nombreVisible() ?: uid
                             miembrosParaSpinner.add(Pair(display, uid))
                         }
                         // poblar adaptador con solo los textos
@@ -534,11 +531,7 @@ class FragmentTareas : Fragment() {
                                         grupo.miembros.keys.forEach { uid ->
                                             if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                                             val u2 = usuarios.find { it.id == uid }
-                                            val display = when {
-                                                u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
-                                                u2 != null && u2.email.isNotBlank() -> u2.email
-                                                else -> "Usuario"
-                                            }
+                                            val display = u2?.nombreVisible() ?: uid
                                             opciones.add(Pair(display, uid))
                                         }
                                     }
@@ -829,11 +822,7 @@ class FragmentTareas : Fragment() {
                             grupo.miembros.keys.forEach { uid ->
                                 if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                                 val u2 = usuarios.find { it.id == uid }
-                                val display = when {
-                                    u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
-                                    u2 != null && u2.email.isNotBlank() -> u2.email
-                                    else -> "Usuario"
-                                }
+                                val display = u2?.nombreVisible() ?: uid
                                 opciones.add(Pair(display, uid))
                             }
                         }
@@ -936,11 +925,7 @@ class FragmentTareas : Fragment() {
                         grupo.miembros.keys.forEach { uid ->
                             if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                             val u2 = usuarios.find { it.id == uid }
-                            val display = when {
-                                u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
-                                u2 != null && u2.email.isNotBlank() -> u2.email
-                                else -> "Usuario"
-                            }
+                            val display = u2?.nombreVisible() ?: uid
                             opciones.add(Pair(display, uid))
                         }
                     }
@@ -1373,11 +1358,7 @@ class FragmentTareas : Fragment() {
                     grupo.miembros.keys.forEach { uid ->
                         if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                         val u2 = usuarios.find { it.id == uid }
-                        val display = when {
-                            u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
-                            u2 != null && u2.email.isNotBlank() -> u2.email
-                            else -> "Usuario"
-                        }
+                        val display = u2?.nombreVisible() ?: uid
                         opciones.add(Pair(display, uid))
                     }
                 }
@@ -1461,11 +1442,7 @@ class FragmentTareas : Fragment() {
                         grupo.miembros.keys.forEach { uid ->
                             if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                             val u2 = usuarios.find { it.id == uid }
-                            val display = when {
-                                u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
-                                u2 != null && u2.email.isNotBlank() -> u2.email
-                                else -> "Usuario"
-                            }
+                            val display = u2?.nombreVisible() ?: uid
                             opciones.add(Pair(display, uid))
                         }
                     }

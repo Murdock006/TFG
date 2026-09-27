@@ -23,6 +23,7 @@ import es.sintaxys.teamtask.service.LocalizadorServicios
 import es.sintaxys.teamtask.viewmodel.ParejaViewModel
 import es.sintaxys.teamtask.viewmodel.TareasViewModel
 import es.sintaxys.teamtask.util.TareaUi
+import es.sintaxys.teamtask.util.nombreVisible
 import com.google.firebase.Timestamp
 import es.sintaxys.teamtask.service.firebase.FirebaseComposition
 import kotlinx.coroutines.CoroutineScope
@@ -95,10 +96,14 @@ class TareasHomeAdapter(
     private suspend fun obtenerNombreUsuario(uid: String?): String {
         if (uid.isNullOrBlank()) return "Desconocido"
         val u = usuarios.find { it.id == uid }
-        if (u != null) return if (u.nombre.isNotBlank()) u.nombre else (if (u.email.isNotBlank()) u.email else uid)
+        if (u != null) return u.nombreVisible()
         return try {
             val doc = FirebaseComposition.firestore().collection("usuarios").document(uid).get().await()
-            doc.getString("nombre") ?: doc.getString("email") ?: uid
+            Usuario(
+                id = uid,
+                nombre = doc.getString("nombre") ?: "",
+                email = doc.getString("email") ?: ""
+            ).nombreVisible()
         } catch (e: Exception) {
             Log.w(TAG, "obtenerNombreUsuario fallo: ${e.message}")
             uid
@@ -194,7 +199,7 @@ class TareasHomeAdapter(
             val cacheAsignado = if (usuarioId != t.asignadoA) usuarios.find { it.id == t.asignadoA } else null
 
             fun nombreDesdeCache(u: es.sintaxys.teamtask.modelo.Usuario?): String? =
-                u?.let { if (it.nombre.isNotBlank()) it.nombre else if (it.email.isNotBlank()) it.email else null }
+                u?.nombreVisible()
 
             if (usuarioId == t.asignadoA && cacheCreador != null) {
                 holder.tvAsignado.text = "Te la asignó: ${nombreDesdeCache(cacheCreador) ?: cacheCreador.id}"
@@ -246,11 +251,7 @@ class TareasHomeAdapter(
                                 grupo.miembros.keys.forEach { uid ->
                                     if (!uidActual.isNullOrBlank() && uid == uidActual) return@forEach
                                     val u2 = usuariosList.find { it.id == uid }
-                                    val display = when {
-                                        u2 != null && u2.nombre.isNotBlank() -> if (u2.email.isNotBlank()) "${u2.nombre} (${u2.email})" else u2.nombre
-                                        u2 != null && u2.email.isNotBlank() -> u2.email
-                                        else -> "Usuario"
-                                    }
+                                    val display = u2?.nombreVisible() ?: uid
                                     opciones.add(Pair(display, uid))
                                 }
                             }

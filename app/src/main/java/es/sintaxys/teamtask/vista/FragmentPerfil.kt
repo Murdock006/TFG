@@ -34,12 +34,18 @@ import kotlinx.coroutines.launch
 
 class FragmentPerfil : Fragment() {
 
+    private companion object {
+        // Límite razonable para el nombre mostrado en la UI.
+        const val LONGITUD_MAXIMA_NOMBRE = 40
+    }
+
     private val parejaVM: ParejaViewModel by activityViewModels()
     private val vistaModeloAuth: VistaModeloAuth by viewModels()
     private val avatarVM: AvatarViewModel by viewModels()
 
     private lateinit var tvInfo: TextView
     private lateinit var btnEliminarCuenta: Button
+    private lateinit var btnCambiarNombre: Button
     private lateinit var ivAvatarPerfil: ImageView
     private lateinit var btnSeleccionarAvatar: Button
     private lateinit var pbCargandoAvatar: ProgressBar
@@ -71,6 +77,7 @@ class FragmentPerfil : Fragment() {
 
         tvInfo = view.findViewById(R.id.tv_perfil_info)
         btnEliminarCuenta = view.findViewById(R.id.btnEliminarCuenta)
+        btnCambiarNombre = view.findViewById(R.id.btnCambiarNombre)
         ivAvatarPerfil = view.findViewById(R.id.ivAvatarPerfil)
         btnSeleccionarAvatar = view.findViewById(R.id.btnSeleccionarAvatar)
         pbCargandoAvatar = view.findViewById(R.id.pbCargandoAvatar)
@@ -81,6 +88,8 @@ class FragmentPerfil : Fragment() {
         configurarAvatarUI()
         configurarEliminacionCuenta()
         observarResultadoEliminacionCuenta()
+        configurarEdicionNombre()
+        observarResultadoEdicionNombre()
         
         // Cargar avatar actual al iniciar
         avatarVM.cargarAvatarActual()
@@ -202,6 +211,74 @@ class FragmentPerfil : Fragment() {
                     }
                 }
             }
+        }
+    }
+
+    private fun configurarEdicionNombre() {
+        btnCambiarNombre.setOnClickListener {
+            mostrarDialogoEditarNombre()
+        }
+    }
+
+    private fun mostrarDialogoEditarNombre() {
+        val inputNombre = EditText(requireContext()).apply {
+            hint = getString(R.string.nombre_hint)
+            setSingleLine(true)
+            // Precargar el nombre real del campo `nombre` (no `nombreVisible()`):
+            // si el usuario se registró con Google sin nombre, el campo está vacío
+            // y NO debe precargarse su correo como si fuera un nombre.
+            filters = arrayOf(android.text.InputFilter.LengthFilter(LONGITUD_MAXIMA_NOMBRE))
+            setText(LocalizadorServicios.repositorioAuth.usuarioActual()?.nombre ?: "")
+            setSelection(text?.length ?: 0)
+        }
+
+        val container = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            val pad = (20 * resources.displayMetrics.density).toInt()
+            setPadding(pad, pad / 2, pad, 0)
+            addView(
+                inputNombre,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            )
+        }
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.cambiar_nombre))
+            .setView(container)
+            .setNegativeButton(getString(R.string.cancelar), null)
+            .setPositiveButton(getString(R.string.guardar), null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val nombre = inputNombre.text?.toString()?.trim() ?: ""
+                if (nombre.isEmpty()) {
+                    Toast.makeText(requireContext(), getString(R.string.cambiar_nombre_vacio), Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
+                vistaModeloAuth.actualizarNombre(nombre)
+                dialog.dismiss()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun observarResultadoEdicionNombre() {
+        vistaModeloAuth.nombreActualizado.observe(viewLifecycleOwner) { resultado ->
+            if (resultado == null) return@observe
+
+            if (resultado.isSuccess) {
+                Toast.makeText(requireContext(), getString(R.string.nombre_actualizado), Toast.LENGTH_SHORT).show()
+            } else {
+                val msg = resultado.exceptionOrNull()?.message ?: getString(R.string.cambiar_nombre_error)
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+            }
+
+            vistaModeloAuth.resetNombreActualizadoState()
         }
     }
 

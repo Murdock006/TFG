@@ -24,6 +24,9 @@ class VistaModeloAuth(
     private val _eliminacionCuenta = MutableLiveData<Result<Unit>?>(null)
     val eliminacionCuenta: LiveData<Result<Unit>?> = _eliminacionCuenta
 
+    private val _nombreActualizado = MutableLiveData<Result<Unit>?>(null)
+    val nombreActualizado: LiveData<Result<Unit>?> = _nombreActualizado
+
     private val TAG = "VistaModeloAuth"
 
     fun registrar(
@@ -121,6 +124,35 @@ class VistaModeloAuth(
 
     fun resetEliminacionCuentaState() {
         _eliminacionCuenta.value = null
+    }
+
+    fun actualizarNombre(nombre: String) {
+        viewModelScope.launch {
+            try {
+                val usuarioId = repositorio.usuarioActual()?.id
+                if (usuarioId.isNullOrBlank()) {
+                    _nombreActualizado.value = Result.failure(Exception("No hay usuario autenticado"))
+                    return@launch
+                }
+                val res = repositorio.actualizarNombre(usuarioId, nombre)
+                if (res.isSuccess) {
+                    // Refrescar el usuario observado para que la UI muestre el nombre nuevo.
+                    _usuario.value = repositorio.usuarioActual()
+                    _error.value = null
+                } else {
+                    _error.value = res.exceptionOrNull()?.message ?: "No se pudo actualizar el nombre"
+                }
+                _nombreActualizado.value = res
+            } catch (e: Exception) {
+                val msg = e.message ?: "No se pudo actualizar el nombre"
+                _error.value = msg
+                _nombreActualizado.value = Result.failure(Exception(msg))
+            }
+        }
+    }
+
+    fun resetNombreActualizadoState() {
+        _nombreActualizado.value = null
     }
 
     // Nuevo: login usando token de proveedor externo (ej. Google idToken)
