@@ -436,6 +436,20 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
             // Si requiere confirmación, marcar estado intermedio
             if (tarea.requiereConfirmacion) {
                 docRef.update(mapOf("estado" to "pendiente_confirmacion")).await()
+
+                // Notificación fuera de la transacción: avisar al creador de que debe confirmar.
+                try {
+                    val creadorUid = tarea.creadoPor
+                    if (!creadorUid.isNullOrBlank()) {
+                        val repoNot = es.sintaxys.teamtask.repositorio.RepositorioNotificaciones()
+                        val contenido = mapOf("tipo" to "confirmacion_pendiente", "tareaId" to tarea.id, "titulo" to tarea.titulo, "desde" to ejecutorUid)
+                        val not = es.sintaxys.teamtask.modelo.Notificacion(id = "", tipo = "confirmacion_pendiente", contenido = contenido, destinatario = creadorUid, visto = false, fecha = com.google.firebase.Timestamp.now())
+                        repoNot.enviarNotificacion(not)
+                    }
+                } catch (e: Exception) {
+                    // ignore notification failures
+                }
+
                 return Result.success(Unit)
             }
 
@@ -542,6 +556,19 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
 
                 null
             }.await()
+
+            // Notificación al ejecutor (fuera de la transacción): su tarea fue confirmada.
+            try {
+                val ejecutorNotifUid = tarea.asignadoA
+                if (!ejecutorNotifUid.isNullOrBlank()) {
+                    val repoNot = es.sintaxys.teamtask.repositorio.RepositorioNotificaciones()
+                    val contenido = mapOf("tipo" to "tarea_confirmada", "tareaId" to tarea.id, "titulo" to tarea.titulo, "puntos" to tarea.puntos)
+                    val not = es.sintaxys.teamtask.modelo.Notificacion(id = "", tipo = "tarea_confirmada", contenido = contenido, destinatario = ejecutorNotifUid, visto = false, fecha = com.google.firebase.Timestamp.now())
+                    repoNot.enviarNotificacion(not)
+                }
+            } catch (e: Exception) {
+                // ignore notification failures
+            }
 
             // --- Crear siguiente tarea si es recurrente (fuera de la transacción) ---
             if (tarea.esRecurrente && !tarea.tipoRecurrencia.isNullOrBlank()) {

@@ -6,6 +6,7 @@ import es.sintaxys.teamtask.modelo.Invitacion
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.Transaction
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -42,17 +43,25 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseCompo
                 "fechaCreacion" to Timestamp.now(),
                 "emoji" to emoji
             )
-            // Usar batch para crear documento y actualizar usuario
+            // Referencias: grupo nuevo y documento del usuario creador
             val newDocRef = firestore.collection(coleccionGrupos).document()
             val userRef = firestore.collection(coleccionUsuarios).document(creadorUid)
 
-            val batch = firestore.batch()
-            batch.set(newDocRef, grupoData)
-            // usar set con merge para crear/actualizar el documento usuario sin fallar si no existe
-            batch.set(userRef, mapOf("grupoId" to newDocRef.id), SetOptions.merge())
+            // Transacción atómica: limpiar la membresía del grupo anterior (si existe) y crear el nuevo.
+            firestore.runTransaction { t ->
+                // Lecturas primero: vínculo actual del usuario (su grupo previo).
+                val userSnap = t.get(userRef)
+                val grupoAnteriorId = userSnap.getString("grupoId")
+                if (!grupoAnteriorId.isNullOrBlank() && grupoAnteriorId != newDocRef.id) {
+                    quitarMiembroEnTransaccion(t, grupoAnteriorId, creadorUid)
+                }
 
-            // Ejecutar batch
-            batch.commit().await()
+                // Escrituras: crear el grupo y actualizar el vínculo del usuario.
+                t.set(newDocRef, grupoData)
+                // usar set con merge para crear/actualizar el documento usuario sin fallar si no existe
+                t.set(userRef, mapOf("grupoId" to newDocRef.id), SetOptions.merge())
+                null
+            }.await()
 
             Log.d(TAG, "crearGrupo(nombre) OK id=${newDocRef.id}")
             Result.success(newDocRef.id)
@@ -118,7 +127,14 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseCompo
             val grupoRef = firestore.collection(coleccionGrupos).document(invitacion.grupoId)
             val userRef = firestore.collection(coleccionUsuarios).document(usuarioUid)
             firestore.runTransaction { t ->
+                // Lecturas primero: grupo destino y vínculo actual del usuario (su grupo previo).
                 val snap = t.get(grupoRef)
+                val userSnap = t.get(userRef)
+                val grupoAnteriorId = userSnap.getString("grupoId")
+                if (!grupoAnteriorId.isNullOrBlank() && grupoAnteriorId != invitacion.grupoId) {
+                    quitarMiembroEnTransaccion(t, grupoAnteriorId, usuarioUid)
+                }
+
                 val grupoObj = snap.toObject(Grupo::class.java)
                 val miembros = grupoObj?.miembros ?: emptyMap()
                 val nuevos = HashMap(miembros)
@@ -132,6 +148,7 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseCompo
                     // si falla, intentar update
                     t.update(userRef, "grupoId", invitacion.grupoId)
                 }
+                null
             }.await()
 
             // Asegurar por seguridad que el campo grupoId queda persistido en el documento de usuario
@@ -228,23 +245,34 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseCompo
         }
     }
 
+    /**
+     * Quita a [usuarioUid] del campo `miembros` del grupo [grupoId] dentro de una transacción.
+     * Si el grupo queda sin miembros, se elimina. Devuelve `true` si el grupo existía.
+     * No debe invocarse después de la primera escritura de la transacción (haría lecturas tras escribir).
+     */
+    private fun quitarMiembroEnTransaccion(t: Transaction, grupoId: String, usuarioUid: String): Boolean {
+        val grupoRef = firestore.collection(coleccionGrupos).document(grupoId)
+        val snap = t.get(grupoRef)
+        if (!snap.exists()) return false
+        val grupoObj = snap.toObject(Grupo::class.java)
+        val miembros = grupoObj?.miembros?.toMutableMap() ?: mutableMapOf()
+        miembros.remove(usuarioUid)
+        if (miembros.isEmpty()) {
+            // borrar grupo si no quedan miembros
+            t.delete(grupoRef)
+        } else {
+            t.update(grupoRef, "miembros", miembros)
+        }
+        return true
+    }
+
     suspend fun quitarMiembroGrupo(grupoId: String, usuarioUid: String): Result<Unit> {
         return try {
-            val grupoRef = firestore.collection(coleccionGrupos).document(grupoId)
             val userRef = firestore.collection(coleccionUsuarios).document(usuarioUid)
 
             firestore.runTransaction { t ->
-                val snap = t.get(grupoRef)
-                if (!snap.exists()) throw Exception("Grupo no encontrado")
-                val grupoObj = snap.toObject(Grupo::class.java)
-                val miembros = grupoObj?.miembros?.toMutableMap() ?: mutableMapOf()
-                miembros.remove(usuarioUid)
-                if (miembros.isEmpty()) {
-                    // borrar grupo si no quedan miembros
-                    t.delete(grupoRef)
-                } else {
-                    t.update(grupoRef, "miembros", miembros)
-                }
+                // reutiliza la limpieza común: quita al usuario y borra el grupo si queda vacío
+                if (!quitarMiembroEnTransaccion(t, grupoId, usuarioUid)) throw Exception("Grupo no encontrado")
                 // limpiar campo grupoId del usuario (poner a null)
                 try {
                     t.update(userRef, "grupoId", null)
@@ -252,6 +280,7 @@ class RepositorioPareja(private val firestore: FirebaseFirestore = FirebaseCompo
                     // si userRef no existe, crear/merge con null
                     t.set(userRef, mapOf("grupoId" to null))
                 }
+                null
             }.await()
 
             Log.d(TAG, "quitarMiembroGrupo OK usuario=$usuarioUid grupo=$grupoId")
