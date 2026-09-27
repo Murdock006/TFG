@@ -175,7 +175,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="#F8F8F8">
+                android:background="@color/superficie_variant">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -190,7 +190,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textAppearance="@style/TextAppearance.TFG.Titulo"
-                    android:textColor="@color/negro"
+                    android:textColor="@color/texto_principal"
                     android:layout_marginBottom="@dimen/spacing_xs" />
 
                 <TextView
@@ -221,7 +221,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textAppearance="@style/TextAppearance.TFG.Titulo"
-                    android:textColor="@color/negro"
+                    android:textColor="@color/texto_principal"
                     android:layout_marginBottom="@dimen/spacing_xs" />
 
                 <TextView
@@ -278,7 +278,7 @@
                     android:layout_marginBottom="@dimen/spacing_sm"
                     app:cardCornerRadius="@dimen/corner_radius_md"
                     app:cardElevation="@dimen/elevation_none"
-                    app:cardBackgroundColor="#F5F5F5"
+                    app:cardBackgroundColor="@color/superficie_variant"
                     app:strokeColor="@color/divisor"
                     app:strokeWidth="@dimen/stroke_thin">
 

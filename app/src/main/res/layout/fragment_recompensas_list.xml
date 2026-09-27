@@ -48,7 +48,7 @@
                 android:text="— pts"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                android:textColor="@color/negro"
+                android:textColor="@color/texto_principal"
                 android:background="@drawable/bg_badge_puntos"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"

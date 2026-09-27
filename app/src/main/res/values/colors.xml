@@ -59,6 +59,25 @@
     <color name="divisor">#E5E7EB</color>
     <color name="divider">#E5E7EB</color>
 
+    <!-- TOKENS ADAPTABLES AL TEMA (se sobreescriben en values-night) -->
+    <!-- Texto sobre chips semánticos claros: debe seguir siendo oscuro en ambos temas -->
+    <color name="texto_sobre_semantico">#111827</color>
+    <!-- Fondo del chip de estado neutro (sin color semántico) -->
+    <color name="chip_neutral">#6B7280</color>
+    <!-- Ítem seleccionado / no seleccionado de la barra de navegación inferior -->
+    <color name="nav_item_selected">#000000</color>
+    <color name="nav_item_unselected">#9E9E9E</color>
+    <!-- Fondo de tarjeta marcada como importante (calendario) -->
+    <color name="importante_bg">#FFFDE7</color>
+    <!-- Fondos suaves de canjes (recompensas) -->
+    <color name="canje_disponible_bg">#F1F8E9</color>
+    <color name="canje_aceptado_bg">#F1F8E9</color>
+    <color name="canje_rechazado_bg">#FFEBEE</color>
+    <!-- Círculo base del avatar de miembro -->
+    <color name="avatar_miembro_bg">#333333</color>
+    <!-- Indicador de solapamiento del ítem activo -->
+    <color name="indicador_activo">#1A000000</color>
+
     <!-- Compatibilidad retroactiva -->
     <color name="azul_principal">#0E9F6E</color>
     <color name="light_blue_600">#0E9F6E</color>

@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <group android:checkableBehavior="single">
+    <!--
+        Acciones del drawer. checkableBehavior="none" evita que queden marcadas como
+        estados; solo el selector de tema es checkable.
+    -->
+    <group
+        android:id="@+id/grupoAccionesDrawer"
+        android:checkableBehavior="none">
         <item
             android:id="@+id/menuCuentaSeguridad"
             android:icon="@drawable/perfil"
@@ -37,5 +43,34 @@
             android:icon="@android:drawable/ic_menu_info_details"
             android:title="@string/politica_privacidad" />
     </group>
+
+    <!--
+        Selector de tema. El <menu> anidado se renderiza como subtítulo ("Tema") y las
+        tres opciones comparten un grupo de selección exclusiva (radio).
+    -->
+    <item
+        android:id="@+id/menuTema"
+        android:title="@string/tema">
+        <menu>
+            <group
+                android:id="@+id/grupoTemaDrawer"
+                android:checkableBehavior="single">
+                <item
+                    android:id="@+id/menuTemaClaro"
+                    android:checkable="true"
+                    android:title="@string/tema_claro" />
+
+                <item
+                    android:id="@+id/menuTemaOscuro"
+                    android:checkable="true"
+                    android:title="@string/tema_oscuro" />
+
+                <item
+                    android:id="@+id/menuTemaSistema"
+                    android:checkable="true"
+                    android:title="@string/tema_sistema" />
+            </group>
+        </menu>
+    </item>
 
 </menu>

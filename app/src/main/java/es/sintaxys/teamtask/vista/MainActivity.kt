@@ -31,6 +31,7 @@ import es.sintaxys.teamtask.service.NotificationScheduler
 import es.sintaxys.teamtask.service.LocalizadorServicios
 import es.sintaxys.teamtask.service.firebase.FirebaseComposition
 import es.sintaxys.teamtask.util.Constants
+import es.sintaxys.teamtask.util.PreferenciasTema
 import es.sintaxys.teamtask.viewmodel.ParejaViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -457,6 +458,7 @@ class MainActivity : AppCompatActivity() {
             override fun onDrawerOpened(drawerView: View) {
                 super.onDrawerOpened(drawerView)
                 refrescarHeaderDrawer()
+                sincronizarCheckTema()
             }
         })
 
@@ -499,6 +501,18 @@ class MainActivity : AppCompatActivity() {
                     abrirPoliticaPrivacidad()
                     true
                 }
+                es.sintaxys.teamtask.R.id.menuTemaClaro -> {
+                    aplicarTema(PreferenciasTema.MODO_CLARO)
+                    true
+                }
+                es.sintaxys.teamtask.R.id.menuTemaOscuro -> {
+                    aplicarTema(PreferenciasTema.MODO_OSCURO)
+                    true
+                }
+                es.sintaxys.teamtask.R.id.menuTemaSistema -> {
+                    aplicarTema(PreferenciasTema.MODO_SISTEMA)
+                    true
+                }
                 else -> false
             }
         }
@@ -513,6 +527,27 @@ class MainActivity : AppCompatActivity() {
                 else -> false
             }
         }
+
+        sincronizarCheckTema()
+    }
+
+    /** Persiste el tema elegido y lo aplica; la Activity se recrea sola con el nuevo modo. */
+    private fun aplicarTema(modo: String) {
+        PreferenciasTema.guardarYAplicar(this, modo)
+        binding.drawerLayout.closeDrawer(Gravity.START)
+    }
+
+    /**
+     * Marca la opción de tema activa según la preferencia guardada. El grupo es de
+     * selección exclusiva, así que marcar una desmarca las otras automáticamente.
+     */
+    private fun sincronizarCheckTema() {
+        val idActivo = when (PreferenciasTema.leerModo(this)) {
+            PreferenciasTema.MODO_CLARO -> es.sintaxys.teamtask.R.id.menuTemaClaro
+            PreferenciasTema.MODO_OSCURO -> es.sintaxys.teamtask.R.id.menuTemaOscuro
+            else -> es.sintaxys.teamtask.R.id.menuTemaSistema
+        }
+        navigationView.menu.findItem(idActivo)?.isChecked = true
     }
 
 private fun observarUsuarioDrawerHeader() {

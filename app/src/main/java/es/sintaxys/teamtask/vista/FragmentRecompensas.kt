@@ -1,6 +1,5 @@
 package es.sintaxys.teamtask.vista
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -89,22 +88,24 @@ class FragmentRecompensas : Fragment() {
 
     private fun cambiarTab(tab: Tab) {
         tabActual = tab
-        val blanco = android.graphics.Color.WHITE
-        val negro  = 0xFF000000.toInt()
+        // Colores adaptativos al tema: texto claro sobre la pestaña activa (esmeralda)
+        // y texto principal sobre la inactiva.
+        val textoActivo   = requireContext().getColor(R.color.on_acento)
+        val textoInactivo = requireContext().getColor(R.color.texto_principal)
 
         // inactivo
         b.btnTabDisponibles.setBackgroundResource(R.drawable.tab_inactivo)
-        b.btnTabDisponibles.setTextColor(negro)
+        b.btnTabDisponibles.setTextColor(textoInactivo)
         b.btnTabPendientes.setBackgroundResource(R.drawable.tab_inactivo)
-        b.btnTabPendientes.setTextColor(negro)
+        b.btnTabPendientes.setTextColor(textoInactivo)
         b.btnTabHistorial.setBackgroundResource(R.drawable.tab_inactivo)
-        b.btnTabHistorial.setTextColor(negro)
+        b.btnTabHistorial.setTextColor(textoInactivo)
 
         // activo
         when (tab) {
-            Tab.DISPONIBLES -> { b.btnTabDisponibles.setBackgroundResource(R.drawable.tab_activo); b.btnTabDisponibles.setTextColor(blanco) }
-            Tab.PENDIENTES  -> { b.btnTabPendientes.setBackgroundResource(R.drawable.tab_activo);  b.btnTabPendientes.setTextColor(blanco) }
-            Tab.HISTORIAL   -> { b.btnTabHistorial.setBackgroundResource(R.drawable.tab_activo);   b.btnTabHistorial.setTextColor(blanco) }
+            Tab.DISPONIBLES -> { b.btnTabDisponibles.setBackgroundResource(R.drawable.tab_activo); b.btnTabDisponibles.setTextColor(textoActivo) }
+            Tab.PENDIENTES  -> { b.btnTabPendientes.setBackgroundResource(R.drawable.tab_activo);  b.btnTabPendientes.setTextColor(textoActivo) }
+            Tab.HISTORIAL   -> { b.btnTabHistorial.setBackgroundResource(R.drawable.tab_activo);   b.btnTabHistorial.setTextColor(textoActivo) }
         }
         cargarDatos()
     }
@@ -257,9 +258,11 @@ class FragmentRecompensas : Fragment() {
             ll.addView(tvProgreso); ll.addView(rowBottom)
             holder.card.removeAllViews(); holder.card.addView(ll)
 
-            // Color fondo: verde suave si puede canjear
+            // Color fondo adaptativo: verde suave si puede canjear, superficie del tema si no
             holder.card.setCardBackgroundColor(
-                if (puedeCanjear) Color.parseColor("#F1F8E9") else Color.WHITE
+                holder.card.context.getColor(
+                    if (puedeCanjear) R.color.canje_disponible_bg else R.color.superficie
+                )
             )
 
             btnCanjear.setOnClickListener { confirmarCanje(r) }
@@ -394,11 +397,16 @@ class FragmentRecompensas : Fragment() {
             }
 
             holder.card.removeAllViews(); holder.card.addView(ll)
-            holder.card.setCardBackgroundColor(when (c.estado) {
-                "aceptado"  -> Color.parseColor("#F1F8E9")
-                "rechazado" -> Color.parseColor("#FFEBEE")
-                else        -> Color.WHITE
-            })
+            // Colores de fondo adaptativos al tema (aceptado/rechazado/pendiente)
+            holder.card.setCardBackgroundColor(
+                holder.card.context.getColor(
+                    when (c.estado) {
+                        "aceptado"  -> R.color.canje_aceptado_bg
+                        "rechazado" -> R.color.canje_rechazado_bg
+                        else        -> R.color.superficie
+                    }
+                )
+            )
         }
 
         override fun getItemCount() = items.size

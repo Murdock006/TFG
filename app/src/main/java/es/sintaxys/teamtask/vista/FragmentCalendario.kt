@@ -264,8 +264,11 @@ class FragmentCalendario : Fragment() {
                 setTint(requireContext().getColor(colorDificultad))
             }
 
-            // Color de fondo por importancia
-            holder.card.setCardBackgroundColor(if (t.esImportante) 0xFFFFFDE7.toInt() else requireContext().getColor(R.color.fondo))
+            // Color de fondo por importancia (token adaptativo: claro en modo claro, ámbar oscuro en modo oscuro)
+            holder.card.setCardBackgroundColor(
+                if (t.esImportante) requireContext().getColor(R.color.importante_bg)
+                else requireContext().getColor(R.color.fondo)
+            )
 
             // Marca visual de emergencia (borde rojo) y recurrencia (borde violeta). Se resetea en cada
             // bind porque el holder se recicla. Si es ambas, el rojo de emergencia tiene prioridad.

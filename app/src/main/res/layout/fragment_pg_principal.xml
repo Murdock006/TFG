@@ -79,7 +79,7 @@
                         android:layout_width="wrap_content"
                         android:textSize="36sp"
                         android:textStyle="bold"
-                        android:textColor="@color/negro"
+                        android:textColor="@color/texto_principal"
                         android:layout_marginTop="@dimen/spacing_sm"
                         android:layout_marginBottom="4dp" />
 

@@ -144,6 +144,10 @@
     <string name="comprar_puntos">Comprar puntos</string>
     <string name="suscripcion">Suscripción</string>
     <string name="proximamente">Próximamente</string>
+    <string name="tema">Tema</string>
+    <string name="tema_claro">Claro</string>
+    <string name="tema_oscuro">Oscuro</string>
+    <string name="tema_sistema">Sistema</string>
     <string name="drawer_pareja_sin_grupo">Sin grupo</string>
     <string name="drawer_pareja_format">%1$s %2$s</string>
     <string name="drawer_racha_format">Racha: %1$d días</string>

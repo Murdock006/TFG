@@ -1,12 +1,46 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.TFG" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+<resources>
+    <!--
+      Tema en modo oscuro.
+
+      Theme.TFG (el tema real declarado en AndroidManifest) hereda de Tema.TFG.Moderno,
+      que ya define toda la paleta por tokens (@color/*). Como los tokens de fondo/texto
+      cambian solos en values-night, aquí solo hay que corregir lo que NO puede depender
+      del token: los iconos de las barras del sistema, que deben ser claros sobre fondo
+      oscuro.
+    -->
+    <style name="Theme.TFG" parent="Tema.TFG.Moderno">
+        <item name="android:statusBarColor">@color/fondo</item>
+        <item name="android:navigationBarColor">@color/fondo</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <!-- Base sin parent Material3 (era un esqueleto incompatible y sin uso).
+         Se conserva el nombre heredando del tema real. -->
+    <style name="Base.Theme.TFG" parent="Tema.TFG.Moderno" />
+
+    <!-- Splash: el fondo ya viene oscuro por @color/fondo; hereda las barras oscuras. -->
+    <style name="Theme.TFG.Splash" parent="Theme.TFG">
+        <item name="android:windowBackground">@drawable/splash_background</item>
     </style>
 
     <style name="ThemeOverlay.TFG.FullscreenContainer" parent="">
-        <item name="fullscreenBackgroundColor">@color/light_blue_900</item>
-        <item name="fullscreenTextColor">@color/light_blue_A400</item>
+        <item name="fullscreenBackgroundColor">@color/primario</item>
+        <item name="fullscreenTextColor">@color/on_acento</item>
+    </style>
+
+    <!--
+      DatePickerDialog explícito (FragmentRegistro). En claro está pensado como
+      "texto oscuro sobre fondo claro"; en oscuro debe invertirse para no quedar
+      texto claro sobre superficie clara.
+    -->
+    <style name="Theme.TFG.DatePickerDialog" parent="ThemeOverlay.MaterialComponents.Dialog">
+        <item name="android:colorBackground">@color/superficie</item>
+        <item name="colorSurface">@color/superficie</item>
+        <item name="colorOnSurface">@color/texto_principal</item>
+        <item name="colorPrimary">@color/primario</item>
+        <item name="colorOnPrimary">@color/on_acento</item>
+        <item name="android:textColorPrimary">@color/texto_principal</item>
+        <item name="android:textColorSecondary">@color/texto_secundario</item>
     </style>
 </resources>

@@ -163,22 +163,24 @@ class FragmentTareasPendientes : Fragment() {
     private var modoAsignadas: Boolean = false
 
     private fun aplicarEstadoBotones(selected: String) {
-        val blanco = android.graphics.Color.WHITE
-        val negro  = 0xFF000000.toInt()
+        // Colores adaptativos al tema: texto claro sobre la pestaña activa (esmeralda)
+        // y texto principal sobre la inactiva.
+        val textoActivo   = requireContext().getColor(R.color.on_acento)
+        val textoInactivo = requireContext().getColor(R.color.texto_principal)
 
-        // inactivo: borde gris, texto negro
+        // inactivo
         binding.btnPendientes.setBackgroundResource(R.drawable.tab_inactivo)
-        binding.btnPendientes.setTextColor(negro)
+        binding.btnPendientes.setTextColor(textoInactivo)
         binding.btnAsignadas.setBackgroundResource(R.drawable.tab_inactivo)
-        binding.btnAsignadas.setTextColor(negro)
+        binding.btnAsignadas.setTextColor(textoInactivo)
         binding.btnHistorial.setBackgroundResource(R.drawable.tab_inactivo)
-        binding.btnHistorial.setTextColor(negro)
+        binding.btnHistorial.setTextColor(textoInactivo)
 
-        // activo: fondo negro, texto blanco
+        // activo
         when (selected) {
-            "pendientes" -> { binding.btnPendientes.setBackgroundResource(R.drawable.tab_activo); binding.btnPendientes.setTextColor(blanco) }
-            "asignadas"  -> { binding.btnAsignadas.setBackgroundResource(R.drawable.tab_activo);  binding.btnAsignadas.setTextColor(blanco) }
-            "historial"  -> { binding.btnHistorial.setBackgroundResource(R.drawable.tab_activo);  binding.btnHistorial.setTextColor(blanco) }
+            "pendientes" -> { binding.btnPendientes.setBackgroundResource(R.drawable.tab_activo); binding.btnPendientes.setTextColor(textoActivo) }
+            "asignadas"  -> { binding.btnAsignadas.setBackgroundResource(R.drawable.tab_activo);  binding.btnAsignadas.setTextColor(textoActivo) }
+            "historial"  -> { binding.btnHistorial.setBackgroundResource(R.drawable.tab_activo);  binding.btnHistorial.setTextColor(textoActivo) }
         }
     }
 

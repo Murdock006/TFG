@@ -50,26 +50,27 @@ object TareaUi {
      * Color de fondo (res id) del chip por estado.
      * Usa los colores semánticos existentes del proyecto:
      * naranja (pendiente de aprobar), rojo (en disputa), verde (confirmada) y
-     * gris neutro para el resto.
+     * el gris neutro dedicado para el resto.
      */
     fun colorEstado(estado: String): Int = when (estado.lowercase()) {
         "pendiente_confirmacion" -> R.color.naranja
         "reclamada", "en_disputa", "disputa" -> R.color.rojo
         "confirmada", "completada" -> R.color.verde
-        else -> R.color.gris
+        else -> R.color.chip_neutral
     }
 
     /**
      * Color del texto del chip.
      *
-     * Los colores semánticos del proyecto para estado (verde `#A7F3D0`,
-     * naranja `#FCD34D`, rojo `#FCA5A5`) son tonos CLAROS, por lo que el texto
-     * oscuro ([R.color.texto_principal]) es el único legible sobre ellos.
-     * El fondo gris neutro ([R.color.gris]) usa texto blanco.
+     * Los colores semánticos de estado (verde `#A7F3D0`, naranja `#FCD34D`,
+     * rojo `#FCA5A5`) son tonos CLAROS en ambos temas, por lo que el texto
+     * oscuro ([R.color.texto_sobre_semantico]) es el único legible sobre ellos.
+     * El fondo neutro ([R.color.chip_neutral]) es oscuro en ambos temas, así que
+     * usa texto blanco.
      */
     fun colorTextoEstado(estado: String): Int = when (estado.lowercase()) {
         "pendiente_confirmacion", "reclamada", "en_disputa", "disputa", "confirmada", "completada" ->
-            R.color.texto_principal
+            R.color.texto_sobre_semantico
         else -> R.color.white
     }
 }

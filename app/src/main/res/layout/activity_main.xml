@@ -18,7 +18,7 @@
             android:id="@+id/topAppBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="@color/white"
+            android:background="@color/superficie"
             android:minHeight="56dp"
             app:titleTextColor="@color/texto_principal"
             app:layout_constraintTop_toTopOf="parent"
@@ -84,7 +84,7 @@
             style="@style/Widget.TFG.BottomNav"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="@color/white"
+            android:background="@color/superficie"
             app:itemBackground="@drawable/nav_item_bg"
             app:menu="@menu/menu"
             app:itemIconTint="@color/nav_item_color"
@@ -103,14 +103,14 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:orientation="vertical"
-        android:background="@color/white">
+        android:background="@color/superficie">
 
         <com.google.android.material.navigation.NavigationView
             android:id="@+id/navigationView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="@color/white"
+            android:background="@color/superficie"
             app:headerLayout="@layout/nav_header_drawer"
             app:itemIconTint="@color/texto_principal"
             app:itemTextColor="@color/texto_principal"
@@ -120,7 +120,7 @@
             android:id="@+id/navigationViewFooter"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/white"
+            android:background="@color/superficie"
             app:itemIconTint="@color/texto_principal"
             app:itemTextColor="@color/texto_principal"
             app:menu="@menu/drawer_menu_footer" />

@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             app:cardCornerRadius="16dp"
             app:cardElevation="5dp"
-            app:cardBackgroundColor="@color/white"
+            app:cardBackgroundColor="@color/superficie"
             app:strokeColor="@color/divisor"
             app:strokeWidth="1dp">
 

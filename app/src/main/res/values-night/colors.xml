@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Paleta oscura. Solo se sobreescriben los colores cuyo VALOR debe cambiar en modo
+  oscuro; el resto se hereda de values/colors.xml. El esmeralda de marca se mantiene
+  como color de relleno (botones/badges con contenido blanco); para texto/badges sobre
+  superficies oscuras se aclara `primario_variant`.
+-->
+<resources>
+    <!-- BRAND -->
+    <!-- `primario` NO se sobreescribe: se usa como relleno (botones "filled",
+         pestaña activa, iconos) con contenido blanco; aclararlo reduciría el
+         contraste del blanco sobre el esmeralda. -->
+    <color name="primario_variant">#34C79A</color>
+    <color name="brand_100">#0A2E22</color>
+    <color name="brand_50">#0D251C</color>
+
+    <!-- NEUTRALES -->
+    <color name="gris">#9CA3AF</color>
+    <color name="gris_claro">#4B5563</color>
+    <color name="neutral_100">#374151</color>
+    <color name="neutral_50">#1F2937</color>
+
+    <!-- FONDOS / SUPERFICIES -->
+    <color name="fondo">#111827</color>
+    <color name="superficie">#1F2937</color>
+    <color name="superficie_variant">#1A2332</color>
+    <color name="tarjetaPrincipal">#1F2937</color>
+
+    <!-- TEXTO -->
+    <color name="texto_principal">#F3F4F6</color>
+    <color name="texto_secundario">#D1D5DB</color>
+    <color name="texto_deshabilitado">#9CA3AF</color>
+
+    <!-- SEMÁNTICOS -->
+    <!-- `verde`/`naranja`/`rojo` se mantienen CLAROS: son el fondo de los chips de
+         estado y el texto oscuro ([color/texto_sobre_semantico]) sigue siendo legible. -->
+    <!-- `error` se aclara para mantener contraste como texto sobre superficie oscura. -->
+    <color name="error">#F87171</color>
+
+    <!-- DIVISORES -->
+    <color name="divisor">#374151</color>
+    <color name="divider">#374151</color>
+
+    <!-- TOKENS ADAPTABLES -->
+    <color name="texto_sobre_semantico">#111827</color>
+    <color name="chip_neutral">#4B5563</color>
+    <color name="nav_item_selected">#F3F4F6</color>
+    <color name="nav_item_unselected">#9CA3AF</color>
+    <color name="importante_bg">#3A3320</color>
+    <color name="canje_disponible_bg">#16331F</color>
+    <color name="canje_aceptado_bg">#16331F</color>
+    <color name="canje_rechazado_bg">#3A1D1D</color>
+    <color name="avatar_miembro_bg">#4B5563</color>
+    <color name="indicador_activo">#33FFFFFF</color>
+
+    <!-- Ripple sutil visible sobre fondos oscuros -->
+    <color name="sombra_sutil">#33FFFFFF</color>
+
+    <!-- Botón de Google (login) -->
+    <color name="google_text">#D1D5DB</color>
+    <color name="google_ripple">#1F2937</color>
+    <color name="google_stroke">#4B5563</color>
+</resources>
