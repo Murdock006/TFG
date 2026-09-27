@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fondo de píldora para el chip de estado de la tarjeta de tarea.
+     El color sólido es blanco y se tinta en tiempo de ejecución con TareaUi.colorEstado(). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/white" />
+    <corners android:radius="@dimen/corner_radius_pill" />
+</shape>

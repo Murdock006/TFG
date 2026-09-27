@@ -60,6 +60,9 @@
     <string name="dificultad_dificil">Difícil</string>
     <string name="meta_tarea_ejemplo">50 pts · Fácil</string>
     <string name="asignado_por_defecto">Asignado a: -</string>
+    <string name="puntos_ejemplo">50 pts</string>
+    <string name="fecha_hora_ejemplo">27/09 · 15:30</string>
+    <string name="estado_ejemplo">Pendiente</string>
 
     <!-- Strings usados en layouts -->
     <string name="logo_desc">Logo de TeamTask</string>

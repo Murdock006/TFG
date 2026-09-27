@@ -33,6 +33,7 @@ import es.sintaxys.teamtask.repositorio.RepositorioNotificaciones
 import es.sintaxys.teamtask.modelo.Notificacion
 import es.sintaxys.teamtask.util.Constants
 import es.sintaxys.teamtask.util.SelectorFechaHora
+import es.sintaxys.teamtask.util.TareaUi
 import com.bumptech.glide.Glide
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
@@ -440,6 +441,8 @@ class FragmentTareas : Fragment() {
             // estamos en la vista detalle (layout inflado manualmente)
             val tvTitulo = view.findViewById<TextView>(R.id.tvDetalleTitulo)
             val tvMeta = view.findViewById<TextView>(R.id.tvDetalleMeta)
+            val tvFechaHora = view.findViewById<TextView>(R.id.tvDetalleFechaHora)
+            val tvEstadoChip = view.findViewById<TextView>(R.id.tvDetalleEstadoChip)
             val tvAsignado = view.findViewById<TextView>(R.id.tvDetalleAsignado)
             val tvDesc = view.findViewById<TextView>(R.id.tvDetalleDescripcion)
             val btnAccion = view.findViewById<Button>(R.id.btnDetalleAccion)
@@ -461,6 +464,14 @@ class FragmentTareas : Fragment() {
                         val puntosMostrados = (tarea.puntos * tarea.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
                         tvMeta.text = "$puntosMostrados pts · $dif${if (tarea.esEmergencia) " · 🚨 Emergencia ×${tarea.multiplicadorPuntos}" else ""}${if (tarea.esRecurrente) " · 🔄 Recurrente" else ""}${if (tarea.estado == "reclamada") " · ${getString(R.string.tarea_en_disputa)}" else ""}"
                         tvDesc.text = tarea.descripcion ?: ""
+
+                        // Fecha/hora y estado con la presentación centralizada de TareaUi.
+                        tvFechaHora.text = TareaUi.formatearFechaHora(tarea.fechaProgramada)
+                        tvEstadoChip.text = TareaUi.etiquetaEstado(tarea.estado)
+                        tvEstadoChip.background = androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.bg_estado_chip)?.apply {
+                            setTint(requireContext().getColor(TareaUi.colorEstado(tarea.estado)))
+                        }
+                        tvEstadoChip.setTextColor(requireContext().getColor(TareaUi.colorTextoEstado(tarea.estado)))
 
                         // Marca visual de emergencia (borde rojo) / recurrencia (borde violeta) en la
                         // tarjeta de detalle. Si es ambas, el borde rojo de emergencia tiene prioridad.
@@ -687,6 +698,9 @@ class FragmentTareas : Fragment() {
             val tvTitulo: TextView = root.findViewById(R.id.tvTituloTarea)
             val tvDificultad: TextView = root.findViewById(R.id.tvDificultad)
             val tvMeta: TextView = root.findViewById(R.id.tvMetaTarea)
+            val tvPuntos: TextView = root.findViewById(R.id.tvPuntosTarea)
+            val tvFechaHora: TextView = root.findViewById(R.id.tvFechaHoraTarea)
+            val tvEstadoChip: TextView = root.findViewById(R.id.tvEstadoChip)
             val tvAsignado: TextView = root.findViewById(R.id.tvAsignado)
             val btnAccion: Button = root.findViewById(R.id.btnAccionTarea)
             val cardRoot: com.google.android.material.card.MaterialCardView = root.findViewById(R.id.cardRoot)
@@ -710,7 +724,35 @@ class FragmentTareas : Fragment() {
             holder.tvDificultad.text = dif
             // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
             val puntosMostrados = (tarea.puntos * tarea.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
-            holder.tvMeta.text = "$puntosMostrados pts${if (tarea.esEmergencia) " 🚨" else ""}${if (tarea.esRecurrente) " 🔄" else ""}"
+            holder.tvPuntos.text = "$puntosMostrados pts"
+
+            // El estado ahora vive en el chip (tvEstadoChip); la meta solo conserva las marcas de
+            // emergencia/recurrencia. Sin marcas se oculta para no dejar una línea vacía.
+            val marcas = buildString {
+                if (tarea.esEmergencia) append("🚨")
+                if (tarea.esRecurrente) { if (isNotEmpty()) append(" "); append("🔄") }
+            }
+            if (marcas.isNotEmpty()) {
+                holder.tvMeta.text = marcas
+                holder.tvMeta.visibility = View.VISIBLE
+            } else {
+                holder.tvMeta.visibility = View.GONE
+            }
+
+            // Fecha programada: ocultar la fila si no hay fecha en vez de mostrar "Sin fecha".
+            if (tarea.fechaProgramada != null) {
+                holder.tvFechaHora.text = TareaUi.formatearFechaHora(tarea.fechaProgramada)
+                holder.tvFechaHora.visibility = View.VISIBLE
+            } else {
+                holder.tvFechaHora.visibility = View.GONE
+            }
+
+            // Chip de estado: etiqueta, fondo y color de texto centralizados en TareaUi.
+            holder.tvEstadoChip.text = TareaUi.etiquetaEstado(tarea.estado)
+            holder.tvEstadoChip.background = androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.bg_estado_chip)?.apply {
+                setTint(androidx.core.content.ContextCompat.getColor(requireContext(), TareaUi.colorEstado(tarea.estado)))
+            }
+            holder.tvEstadoChip.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), TareaUi.colorTextoEstado(tarea.estado)))
 
             // Marca visual de emergencia (borde rojo) y recurrencia (borde violeta). Se resetea en
             // cada bind porque el holder se recicla. Si es ambas, el rojo de emergencia tiene prioridad.
@@ -731,12 +773,9 @@ class FragmentTareas : Fragment() {
             // indicador lateral por dificultad (verde/amarillo/rojo) con el mismo drawable tintado
             pintarIndicadorDificultad(holder.vIndicator, tarea.dificultad)
 
-            holder.cardRoot.setCardBackgroundColor(android.graphics.Color.WHITE)
-            when (tarea.estado) {
-                "completada" -> holder.cardRoot.setCardBackgroundColor(android.graphics.Color.parseColor("#FFF59D"))
-                "confirmada" -> holder.cardRoot.setCardBackgroundColor(android.graphics.Color.parseColor("#C8E6C9"))
-                "reclamada" -> holder.cardRoot.setCardBackgroundColor(android.graphics.Color.parseColor("#FFCDD2"))
-            }
+            // El fondo por estado se eliminó: duplicaba el mensaje del chip (tvEstadoChip) con una
+            // paleta distinta y con colores hardcodeados que no respetaban el tema oscuro. El chip
+            // es ahora la única fuente del estado.
 
             holder.btnAccion.setOnClickListener(null)
             // Solo tareas personalizadas permiten edición (long press eliminado para predefinidas)
@@ -818,6 +857,9 @@ class FragmentTareas : Fragment() {
             val tvTitulo: TextView = root.findViewById(R.id.tvTituloTarea)
             val tvDificultad: TextView = root.findViewById(R.id.tvDificultad)
             val tvMeta: TextView = root.findViewById(R.id.tvMetaTarea)
+            val tvPuntos: TextView = root.findViewById(R.id.tvPuntosTarea)
+            val tvFechaHora: TextView = root.findViewById(R.id.tvFechaHoraTarea)
+            val tvEstadoChip: TextView = root.findViewById(R.id.tvEstadoChip)
             val btnAccion: Button = root.findViewById(R.id.btnAccionTarea)
             val vIndicator: View? = root.findViewById(R.id.vIndicator)
         }
@@ -831,7 +873,13 @@ class FragmentTareas : Fragment() {
             val sug = items[position]
             Log.d(TAG, "SugeridasAdapter bind: ${sug.titulo} at pos $position")
             holder.tvTitulo.text = sug.titulo
-            holder.tvMeta.text = "${sug.puntos} pts"
+            holder.tvPuntos.text = "${sug.puntos} pts"
+            // Las sugeridas son catálogo, no tareas reales: no tienen estado ni fecha. Se ocultan
+            // explícitamente sus views para no dejar placeholders vacíos, y la meta se oculta porque
+            // ya no muestra los puntos (viven en tvPuntosTarea).
+            holder.tvMeta.visibility = View.GONE
+            holder.tvFechaHora.visibility = View.GONE
+            holder.tvEstadoChip.visibility = View.GONE
             holder.btnAccion.visibility = View.VISIBLE
             holder.btnAccion.text = getString(R.string.asignar)
 
@@ -1099,6 +1147,8 @@ class FragmentTareas : Fragment() {
         // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
         val puntosMostrados = (tarea.puntos * tarea.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
         sb.append("Puntos: $puntosMostrados\n")
+        sb.append("Fecha: ${TareaUi.formatearFechaHora(tarea.fechaProgramada)}\n")
+        sb.append("Estado: ${TareaUi.etiquetaEstado(tarea.estado)}\n")
         if (tarea.esEmergencia) sb.append("🚨 Emergencia ×${tarea.multiplicadorPuntos}\n")
         if (tarea.esRecurrente) sb.append("🔄 Recurrente${if (!tarea.tipoRecurrencia.isNullOrBlank()) " (${tarea.tipoRecurrencia})" else ""}\n")
         if (!tarea.descripcion.isNullOrBlank()) sb.append("\n${tarea.descripcion}\n")

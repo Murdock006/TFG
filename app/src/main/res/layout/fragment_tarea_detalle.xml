@@ -52,6 +52,28 @@
                     android:text="@string/meta_placeholder" />
 
                 <TextView
+                    android:id="@+id/tvDetalleFechaHora"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="@color/gris"
+                    android:textSize="13sp"
+                    android:text="" />
+
+                <TextView
+                    android:id="@+id/tvDetalleEstadoChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_estado_chip"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="3dp"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:text="" />
+
+                <TextView
                     android:id="@+id/tvDetalleAsignado"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

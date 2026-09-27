@@ -21,6 +21,7 @@ import es.sintaxys.teamtask.databinding.FragmentCalendarioBinding
 import es.sintaxys.teamtask.modelo.Tarea
 import es.sintaxys.teamtask.service.LocalizadorServicios
 import es.sintaxys.teamtask.service.NotificationScheduler
+import es.sintaxys.teamtask.util.TareaUi
 import es.sintaxys.teamtask.viewmodel.ParejaViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Job
@@ -166,7 +167,7 @@ class FragmentCalendario : Fragment() {
         private var items: List<Tarea> = emptyList()
         fun setItems(list: List<Tarea>) { items = list; notifyDataSetChanged() }
 
-        inner class VH(val card: MaterialCardView, val tvTitulo: TextView, val tvInfo: TextView, val tvHora: TextView, val ivImportante: ImageView) : RecyclerView.ViewHolder(card)
+        inner class VH(val card: MaterialCardView, val tvTitulo: TextView, val tvInfo: TextView, val tvHora: TextView, val ivImportante: ImageView, val vIndicator: View, val tvEstadoChip: TextView) : RecyclerView.ViewHolder(card)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
             val ctx = parent.context
@@ -180,9 +181,19 @@ class FragmentCalendario : Fragment() {
                 setCardBackgroundColor(ctx.getColor(R.color.fondo))
                 strokeWidth = 0
             }
+            // Contenedor horizontal: barra de dificultad (izquierda) + contenido de texto (peso 1).
+            // El padding izquierdo del contenido se reduce para que, sumado a la barra, el texto
+            // quede alineado como antes.
+            val fila = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL }
+            val vIndicator = View(ctx).apply {
+                layoutParams = LinearLayout.LayoutParams(dp(4f).toInt(), ViewGroup.LayoutParams.MATCH_PARENT).also { it.marginEnd = dp(10f).toInt() }
+                minimumHeight = dp(48f).toInt()
+                contentDescription = ctx.getString(R.string.cd_indicador_dificultad)
+            }
             val ll = LinearLayout(ctx).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(dp(32f).toInt(), dp(24f).toInt(), dp(32f).toInt(), dp(24f).toInt())
+                setPadding(dp(20f).toInt(), dp(24f).toInt(), dp(32f).toInt(), dp(24f).toInt())
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             }
             val rowTop = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL }
             val tvTitulo = TextView(ctx).apply {
@@ -202,10 +213,20 @@ class FragmentCalendario : Fragment() {
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, sp(13f)); setTextColor(ctx.getColor(R.color.texto_secundario))
                 layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).also { it.topMargin = dp(4f).toInt() }
             }
+            // Chip de estado: mismo estilo que las tarjetas XML (bg_estado_chip), tintado en el bind.
+            val tvEstadoChip = TextView(ctx).apply {
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, sp(12f))
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setTextColor(ctx.getColor(R.color.white))
+                setBackgroundResource(R.drawable.bg_estado_chip)
+                setPadding(dp(10f).toInt(), dp(3f).toInt(), dp(10f).toInt(), dp(3f).toInt())
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).also { it.topMargin = dp(6f).toInt() }
+            }
             rowTop.addView(tvTitulo); rowTop.addView(ivImportante)
-            ll.addView(rowTop); ll.addView(tvHora); ll.addView(tvInfo)
-            card.addView(ll)
-            return VH(card, tvTitulo, tvInfo, tvHora, ivImportante)
+            ll.addView(rowTop); ll.addView(tvHora); ll.addView(tvInfo); ll.addView(tvEstadoChip)
+            fila.addView(vIndicator); fila.addView(ll)
+            card.addView(fila)
+            return VH(card, tvTitulo, tvInfo, tvHora, ivImportante, vIndicator, tvEstadoChip)
         }
 
         override fun onBindViewHolder(holder: VH, position: Int) {
@@ -216,20 +237,32 @@ class FragmentCalendario : Fragment() {
                 "%02d:%02d".format(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE))
             } ?: ""
             holder.tvHora.text = hora
-            val estadoTexto = when (t.estado) {
-                "pendiente" -> "⏳ Pendiente"
-                "pendiente_confirmacion" -> "🔍 Pendiente confirmación"
-                "confirmada" -> "✅ Confirmada"
-                else -> t.estado
-            }
             val badge = buildString {
                 if (t.esEmergencia) append(" 🚨 Emergencia x${t.multiplicadorPuntos}")
                 if (t.esRecurrente) append(" 🔄 ${t.tipoRecurrencia ?: ""}")
             }
             // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
             val puntosMostrados = (t.puntos * t.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
-            holder.tvInfo.text = "$puntosMostrados pts · $estadoTexto$badge"
+            // tvInfo conserva los puntos y las marcas (emergencia/recurrencia); el estado vive en el chip.
+            holder.tvInfo.text = "$puntosMostrados pts$badge"
             holder.ivImportante.visibility = if (t.esImportante) View.VISIBLE else View.GONE
+
+            // Chip de estado: etiqueta y colores centralizados en TareaUi (mismo patrón que las tarjetas XML).
+            holder.tvEstadoChip.text = TareaUi.etiquetaEstado(t.estado)
+            holder.tvEstadoChip.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                requireContext().getColor(TareaUi.colorEstado(t.estado))
+            )
+            holder.tvEstadoChip.setTextColor(requireContext().getColor(TareaUi.colorTextoEstado(t.estado)))
+
+            // Barra de dificultad: se re-tinta en cada bind porque el holder se recicla.
+            val colorDificultad = when (t.dificultad) {
+                1 -> R.color.verde
+                2 -> R.color.naranja
+                else -> R.color.rojo
+            }
+            holder.vIndicator.background = androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.v_indicador_dificultad)?.apply {
+                setTint(requireContext().getColor(colorDificultad))
+            }
 
             // Color de fondo por importancia
             holder.card.setCardBackgroundColor(if (t.esImportante) 0xFFFFFDE7.toInt() else requireContext().getColor(R.color.fondo))
@@ -253,22 +286,33 @@ class FragmentCalendario : Fragment() {
     }
 
     private fun mostrarOpcionesTarea(tarea: Tarea) {
-        // Gestionar opciones de la tarea. La emergencia (×1.5) se gestiona en el
-        // formulario de creación, no desde el calendario.
+        // Gestionar opciones de la tarea según el rol del usuario actual:
+        //   - Creador: reprogramar, marcar/quitar importante y cambiar recordatorio.
+        //   - Asignado (no creador): solo cambiar recordatorio (es su propia notificación).
+        //   - Tercero (ni creador ni asignado): solo lectura.
+        // Las acciones mutantes requieren estado "pendiente"; exportar está siempre disponible.
+        // La emergencia (×1.5) se gestiona en el formulario de creación, no desde el calendario.
         data class Opcion(val texto: String, val accion: () -> Unit)
         val opciones = mutableListOf<Opcion>()
 
-        // Las acciones que mutan la tarea (reprogramar, prioridad, recordatorio) solo se ofrecen
-        // mientras la tarea está "pendiente". En estados finales (confirmada, completada, etc.) no
-        // se reabre una tarea ya cerrada. Coherente con los guards de FragmentTareas (líneas 561-563).
-        if (tarea.estado == "pendiente") {
+        val uidActual = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
+        val soyCreador = !uidActual.isNullOrBlank() && tarea.creadoPor == uidActual
+        val soyAsignado = !uidActual.isNullOrBlank() && tarea.asignadoA == uidActual
+        // Las acciones que mutan la tarea solo se ofrecen mientras está "pendiente". En estados
+        // finales (confirmada, completada, etc.) no se reabre una tarea ya cerrada.
+        val puedeMutar = tarea.estado == "pendiente"
+
+        if (puedeMutar && soyCreador) {
             opciones.add(Opcion("Reprogramar fecha y hora") { elegirFechaHoraParaTarea(tarea) })
             opciones.add(Opcion(if (tarea.esImportante) "Quitar importante" else "Marcar como importante") {
                 actualizarCampo(tarea.copy(esImportante = !tarea.esImportante))
             })
+        }
+        // El recordatorio es una notificación propia: lo pueden cambiar el creador y el asignado.
+        if (puedeMutar && (soyCreador || soyAsignado)) {
             opciones.add(Opcion("Cambiar recordatorio (${tarea.minutosAntes} min)") { elegirMinutosRecordatorio(tarea) })
         }
-        // Exportar es una acción de solo lectura: disponible en cualquier estado.
+        // Exportar es una acción de solo lectura: disponible para todos, en cualquier estado.
         opciones.add(Opcion("📤 Añadir al calendario") {
             es.sintaxys.teamtask.service.IcsExporter.exportarTarea(requireContext(), tarea)
         })

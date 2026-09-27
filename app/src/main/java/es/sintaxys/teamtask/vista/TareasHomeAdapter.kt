@@ -22,6 +22,7 @@ import es.sintaxys.teamtask.repositorio.RepositorioNotificaciones
 import es.sintaxys.teamtask.service.LocalizadorServicios
 import es.sintaxys.teamtask.viewmodel.ParejaViewModel
 import es.sintaxys.teamtask.viewmodel.TareasViewModel
+import es.sintaxys.teamtask.util.TareaUi
 import com.google.firebase.Timestamp
 import es.sintaxys.teamtask.service.firebase.FirebaseComposition
 import kotlinx.coroutines.CoroutineScope
@@ -80,6 +81,9 @@ class TareasHomeAdapter(
         val tvTitulo: TextView = root.findViewById(R.id.tvTituloTarea)
         val tvDificultad: TextView? = root.findViewById(R.id.tvDificultad)
         val tvMeta: TextView = root.findViewById(R.id.tvMetaTarea)
+        val tvPuntos: TextView = root.findViewById(R.id.tvPuntosTarea)
+        val tvFechaHora: TextView = root.findViewById(R.id.tvFechaHoraTarea)
+        val tvEstadoChip: TextView = root.findViewById(R.id.tvEstadoChip)
         val tvAsignado: TextView = root.findViewById(R.id.tvAsignado)
         val btnAccion: Button = root.findViewById(R.id.btnAccionTarea)
         val vIndicator: View? = root.findViewById(R.id.vIndicator)
@@ -113,22 +117,41 @@ class TareasHomeAdapter(
         holder.btnAccion.isEnabled = false
         holder.tvAsignado.visibility = View.GONE
 
-        val estadoLegible = when (t.estado.lowercase()) {
-            "pendiente" -> "pendiente"
-            "pendiente_confirmacion" -> "pendiente de confirmación"
-            "completada" -> "completada"
-            "confirmada" -> "confirmada"
-            "reclamada" -> "en disputa"
-            "en_disputa", "disputa" -> "en disputa"
-            else -> t.estado
-        }
-
         val difTxt = when (t.dificultad) { 1 -> "Fácil"; 2 -> "Media"; else -> "Difícil" }
         // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
         val puntosMostrados = (t.puntos * t.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
         holder.tvTitulo.text = t.titulo
         holder.tvDificultad?.text = difTxt
-        holder.tvMeta.text = "$puntosMostrados pts${if (t.esEmergencia) " 🚨" else ""}${if (t.esRecurrente) " 🔄" else ""} · ${estadoLegible.replaceFirstChar { it.uppercase() }}"
+        holder.tvPuntos.text = "$puntosMostrados pts"
+
+        // El estado vive en el chip dedicado (tvEstadoChip); la meta solo conserva las marcas
+        // secundarias (emergencia/recurrencia). Sin marcas se oculta para no dejar línea vacía.
+        val marcas = buildString {
+            if (t.esEmergencia) append("🚨")
+            if (t.esRecurrente) { if (isNotEmpty()) append(" "); append("🔄") }
+        }
+        if (marcas.isNotEmpty()) {
+            holder.tvMeta.text = marcas
+            holder.tvMeta.visibility = View.VISIBLE
+        } else {
+            holder.tvMeta.visibility = View.GONE
+        }
+
+        // Fecha programada: la tarjeta es compacta, así que si no hay fecha se oculta la fila en
+        // vez de mostrar un "Sin fecha" en cada tarea personal sin programar.
+        if (t.fechaProgramada != null) {
+            holder.tvFechaHora.text = TareaUi.formatearFechaHora(t.fechaProgramada)
+            holder.tvFechaHora.visibility = View.VISIBLE
+        } else {
+            holder.tvFechaHora.visibility = View.GONE
+        }
+
+        // Chip de estado: etiqueta, fondo y color de texto centralizados en TareaUi.
+        holder.tvEstadoChip.text = TareaUi.etiquetaEstado(t.estado)
+        holder.tvEstadoChip.background = ContextCompat.getDrawable(holder.root.context, R.drawable.bg_estado_chip)?.apply {
+            setTint(ContextCompat.getColor(holder.root.context, TareaUi.colorEstado(t.estado)))
+        }
+        holder.tvEstadoChip.setTextColor(ContextCompat.getColor(holder.root.context, TareaUi.colorTextoEstado(t.estado)))
 
         // Marca visual de emergencia (borde rojo) y recurrencia (borde violeta). Se resetea en cada
         // bind porque el holder se recicla. Si es ambas, el borde rojo de emergencia tiene prioridad.

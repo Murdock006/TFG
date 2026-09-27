@@ -34,6 +34,10 @@
     <dimen name="stroke_thin">1dp</dimen>
     <dimen name="stroke_normal">1.5dp</dimen>
     <dimen name="stroke_thick">2dp</dimen>
+    <!-- Ancho de la barra indicadora de dificultad en item_tarea.xml.
+         Separado de stroke_thick porque stroke_thick también es el borde de
+         las tarjetas de emergencia/recurrente y no debe engrosarse. -->
+    <dimen name="indicator_dificultad_width">4dp</dimen>
 
     <!-- Componentes específicos -->
     <dimen name="button_min_height">48dp</dimen>
