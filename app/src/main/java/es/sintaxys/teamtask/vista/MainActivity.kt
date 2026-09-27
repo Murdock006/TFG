@@ -458,7 +458,6 @@ class MainActivity : AppCompatActivity() {
             override fun onDrawerOpened(drawerView: View) {
                 super.onDrawerOpened(drawerView)
                 refrescarHeaderDrawer()
-                sincronizarCheckTema()
             }
         })
 
@@ -501,16 +500,9 @@ class MainActivity : AppCompatActivity() {
                     abrirPoliticaPrivacidad()
                     true
                 }
-                es.sintaxys.teamtask.R.id.menuTemaClaro -> {
-                    aplicarTema(PreferenciasTema.MODO_CLARO)
-                    true
-                }
-                es.sintaxys.teamtask.R.id.menuTemaOscuro -> {
-                    aplicarTema(PreferenciasTema.MODO_OSCURO)
-                    true
-                }
-                es.sintaxys.teamtask.R.id.menuTemaSistema -> {
-                    aplicarTema(PreferenciasTema.MODO_SISTEMA)
+                es.sintaxys.teamtask.R.id.menuTema -> {
+                    binding.drawerLayout.closeDrawer(Gravity.START)
+                    mostrarDialogoTema()
                     true
                 }
                 else -> false
@@ -527,8 +519,6 @@ class MainActivity : AppCompatActivity() {
                 else -> false
             }
         }
-
-        sincronizarCheckTema()
     }
 
     /** Persiste el tema elegido y lo aplica; la Activity se recrea sola con el nuevo modo. */
@@ -538,16 +528,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Marca la opción de tema activa según la preferencia guardada. El grupo es de
-     * selección exclusiva, así que marcar una desmarca las otras automáticamente.
+     * Abre un diálogo de selección única con los tres modos de tema, marcando el activo
+     * según la preferencia guardada. Al elegir, delega en [aplicarTema].
      */
-    private fun sincronizarCheckTema() {
-        val idActivo = when (PreferenciasTema.leerModo(this)) {
-            PreferenciasTema.MODO_CLARO -> es.sintaxys.teamtask.R.id.menuTemaClaro
-            PreferenciasTema.MODO_OSCURO -> es.sintaxys.teamtask.R.id.menuTemaOscuro
-            else -> es.sintaxys.teamtask.R.id.menuTemaSistema
-        }
-        navigationView.menu.findItem(idActivo)?.isChecked = true
+    private fun mostrarDialogoTema() {
+        val modos = listOf(
+            PreferenciasTema.MODO_CLARO,
+            PreferenciasTema.MODO_OSCURO,
+            PreferenciasTema.MODO_SISTEMA
+        )
+        val etiquetas = arrayOf(
+            getString(es.sintaxys.teamtask.R.string.tema_claro),
+            getString(es.sintaxys.teamtask.R.string.tema_oscuro),
+            getString(es.sintaxys.teamtask.R.string.tema_sistema)
+        )
+        val indiceActivo = modos.indexOf(PreferenciasTema.leerModo(this)).coerceAtLeast(0)
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(getString(es.sintaxys.teamtask.R.string.tema_elegir_titulo))
+            .setSingleChoiceItems(etiquetas, indiceActivo) { dialog, which ->
+                dialog.dismiss()
+                aplicarTema(modos[which])
+            }
+            .setNegativeButton(getString(es.sintaxys.teamtask.R.string.cancelar), null)
+            .show()
     }
 
 private fun observarUsuarioDrawerHeader() {

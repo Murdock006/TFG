@@ -8,7 +8,9 @@ import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.work.*
+import es.sintaxys.teamtask.R
 import java.util.concurrent.TimeUnit
 
 object NotificationScheduler {
@@ -42,9 +44,10 @@ object NotificationScheduler {
             return
         }
         
-        createChannelIfNeeded(context)
+        ensureChannel(context)
         val builder = NotificationCompat.Builder(context, NotificationWorker.CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setColor(ContextCompat.getColor(context, R.color.primario))
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -63,9 +66,10 @@ object NotificationScheduler {
             return
         }
         
-        createChannelIfNeeded(context)
+        ensureChannel(context)
         val builder = NotificationCompat.Builder(context, NotificationWorker.CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setColor(ContextCompat.getColor(context, R.color.primario))
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -85,7 +89,9 @@ object NotificationScheduler {
         }
     }
 
-    private fun createChannelIfNeeded(context: Context) {
+    // Único dueño de la creación del canal: NotificationWorker delega en este método
+    // (mismo CHANNEL_ID "tfg_reminder_channel") para evitar descripciones divergentes.
+    internal fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Recordatorios de TeamTask"
             val descriptionText = "Notificaciones para tareas programadas y asignaciones"

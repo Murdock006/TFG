@@ -1,17 +1,17 @@
 package es.sintaxys.teamtask.service
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
 import androidx.work.ListenableWorker
+import es.sintaxys.teamtask.R
 
 class NotificationWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
 
@@ -34,10 +34,12 @@ class NotificationWorker(appContext: Context, params: WorkerParameters) : Corout
         val message = data.getString(KEY_MESSAGE) ?: "Tienes una tarea pendiente"
         val notificationId = data.getString(KEY_TAREA_ID)?.hashCode() ?: System.currentTimeMillis().toInt()
 
-        createChannelIfNeeded(applicationContext)
+        // Canal creado por el único dueño (NotificationScheduler) para mantener una sola descripción.
+        NotificationScheduler.ensureChannel(applicationContext)
 
         val builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setColor(ContextCompat.getColor(applicationContext, R.color.primario))
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -50,18 +52,6 @@ class NotificationWorker(appContext: Context, params: WorkerParameters) : Corout
         return ListenableWorker.Result.success()
     }
 
-    private fun createChannelIfNeeded(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Recordatorios de TeamTask"
-            val descriptionText = "Notificaciones para tareas programadas"
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel(CHANNEL_ID, name, importance)
-            channel.description = descriptionText
-            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannel(channel)
-        }
-    }
-    
     private fun hasNotificationPermission(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ActivityCompat.checkSelfPermission(

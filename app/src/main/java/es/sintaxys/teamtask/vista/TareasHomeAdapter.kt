@@ -17,14 +17,11 @@ import com.google.android.material.card.MaterialCardView
 import es.sintaxys.teamtask.R
 import es.sintaxys.teamtask.modelo.Tarea
 import es.sintaxys.teamtask.modelo.Usuario
-import es.sintaxys.teamtask.modelo.Notificacion
-import es.sintaxys.teamtask.repositorio.RepositorioNotificaciones
 import es.sintaxys.teamtask.service.LocalizadorServicios
 import es.sintaxys.teamtask.viewmodel.ParejaViewModel
 import es.sintaxys.teamtask.viewmodel.TareasViewModel
 import es.sintaxys.teamtask.util.TareaUi
 import es.sintaxys.teamtask.util.nombreVisible
-import com.google.firebase.Timestamp
 import es.sintaxys.teamtask.service.firebase.FirebaseComposition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -268,28 +265,6 @@ class TareasHomeAdapter(
                                         val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
                                         if (res2.isSuccess) {
                                             android.widget.Toast.makeText(fragment.requireContext(), fragment.getString(R.string.tarea_asignada), android.widget.Toast.LENGTH_SHORT).show()
-                                            // Notificar al asignado vía Firebase para que reciba la notificación en su dispositivo
-                                            android.util.Log.d("TareasHomeAdapter", "Enviando notificación Firebase (lista): tipo=asignacion, destinatario=$elegido, tareaId=${nueva.id}")
-                                            val repoNot = RepositorioNotificaciones()
-                                            val notifResult = repoNot.enviarNotificacion(
-                                                Notificacion(
-                                                    id = "",
-                                                    tipo = "asignacion",
-                                                    contenido = mapOf(
-                                                        "tareaId" to nueva.id,
-                                                        "titulo" to nueva.titulo,
-                                                        "desde" to usuarioId
-                                                    ),
-                                                    destinatario = elegido,
-                                                    visto = false,
-                                                    fecha = Timestamp.now()
-                                                )
-                                            )
-                                            if (notifResult.isSuccess) {
-                                                android.util.Log.d("TareasHomeAdapter", "Notificación enviada OK, id=${notifResult.getOrNull()}")
-                                            } else {
-                                                android.util.Log.e("TareasHomeAdapter", "Error enviando notificación: ${notifResult.exceptionOrNull()?.message}")
-                                            }
                                         } else {
                                             android.widget.Toast.makeText(fragment.requireContext(), res2.exceptionOrNull()?.message ?: "Error", android.widget.Toast.LENGTH_LONG).show()
                                         }

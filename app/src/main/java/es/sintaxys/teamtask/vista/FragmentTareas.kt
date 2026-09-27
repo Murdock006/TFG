@@ -548,15 +548,6 @@ class FragmentTareas : Fragment() {
                                                 val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
                                                 if (res2.isSuccess) {
                                                     Toast.makeText(requireContext(), getString(R.string.tarea_asignada), Toast.LENGTH_SHORT).show()
-                                                    // Notificar al asignado vía Firebase
-                                                    val repoNot = RepositorioNotificaciones()
-                                                    repoNot.enviarNotificacion(
-                                                        Notificacion(
-                                                            id = "", tipo = "asignacion",
-                                                            contenido = mapOf("tareaId" to nueva.id, "titulo" to nueva.titulo, "desde" to usuarioActualId),
-                                                            destinatario = elegido, visto = false, fecha = Timestamp.now()
-                                                        )
-                                                    )
                                                 } else {
                                                     Toast.makeText(requireContext(), res2.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
                                                 }
@@ -839,15 +830,6 @@ class FragmentTareas : Fragment() {
                                     val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
                                     if (res2.isSuccess) {
                                         Toast.makeText(requireContext(), getString(R.string.tarea_asignada), Toast.LENGTH_SHORT).show()
-                                        // Notificar al asignado vía Firebase
-                                        val repoNot = RepositorioNotificaciones()
-                                        repoNot.enviarNotificacion(
-                                            Notificacion(
-                                                id = "", tipo = "asignacion",
-                                                contenido = mapOf("tareaId" to nueva.id, "titulo" to nueva.titulo, "desde" to usuarioId),
-                                                destinatario = elegido, visto = false, fecha = Timestamp.now()
-                                            )
-                                        )
                                     } else {
                                         Toast.makeText(requireContext(), res2.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
                                     }
@@ -1459,28 +1441,6 @@ class FragmentTareas : Fragment() {
                                                 val res2 = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
                                                 if (res2.isSuccess) {
                                                     Toast.makeText(requireContext(), getString(R.string.tarea_asignada), Toast.LENGTH_SHORT).show()
-                                    // Notificar al asignado vía Firebase para que reciba la notificación en su dispositivo
-                                    Log.d(TAG, "Enviando notificación Firebase (reasignación): tipo=asignacion, destinatario=$elegido, tareaId=${nueva.id}")
-                                    val repoNot = RepositorioNotificaciones()
-                                    val notifResult = repoNot.enviarNotificacion(
-                                        Notificacion(
-                                            id = "",
-                                            tipo = "asignacion",
-                                            contenido = mapOf(
-                                                "tareaId" to nueva.id,
-                                                "titulo" to nueva.titulo,
-                                                "desde" to usuarioActualId
-                                            ),
-                                            destinatario = elegido,
-                                            visto = false,
-                                            fecha = Timestamp.now()
-                                        )
-                                    )
-                                    if (notifResult.isSuccess) {
-                                        Log.d(TAG, "Notificación de reasignación enviada OK, id=${notifResult.getOrNull()}")
-                                    } else {
-                                        Log.e(TAG, "Error enviando notificación de reasignación: ${notifResult.exceptionOrNull()?.message}")
-                                    }
                                 } else {
                                     val msg = res2.exceptionOrNull()?.message ?: "Error"
                                     Log.e(TAG, "Error asignar tarea desde detalle: $msg")

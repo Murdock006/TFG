@@ -3,7 +3,7 @@
 
     <!--
         Acciones del drawer. checkableBehavior="none" evita que queden marcadas como
-        estados; solo el selector de tema es checkable.
+        estados; todas las entradas de este grupo son acciones que navegan o abren diálogos.
     -->
     <group
         android:id="@+id/grupoAccionesDrawer"
@@ -42,35 +42,15 @@
             android:id="@+id/menuPoliticaPrivacidad"
             android:icon="@android:drawable/ic_menu_info_details"
             android:title="@string/politica_privacidad" />
+
+        <!--
+            Selector de tema. Al pulsarlo se abre un AlertDialog con las tres opciones
+            (Claro / Oscuro / Sistema); por eso es una acción más del grupo.
+        -->
+        <item
+            android:id="@+id/menuTema"
+            android:icon="@android:drawable/ic_menu_manage"
+            android:title="@string/tema" />
     </group>
-
-    <!--
-        Selector de tema. El <menu> anidado se renderiza como subtítulo ("Tema") y las
-        tres opciones comparten un grupo de selección exclusiva (radio).
-    -->
-    <item
-        android:id="@+id/menuTema"
-        android:title="@string/tema">
-        <menu>
-            <group
-                android:id="@+id/grupoTemaDrawer"
-                android:checkableBehavior="single">
-                <item
-                    android:id="@+id/menuTemaClaro"
-                    android:checkable="true"
-                    android:title="@string/tema_claro" />
-
-                <item
-                    android:id="@+id/menuTemaOscuro"
-                    android:checkable="true"
-                    android:title="@string/tema_oscuro" />
-
-                <item
-                    android:id="@+id/menuTemaSistema"
-                    android:checkable="true"
-                    android:title="@string/tema_sistema" />
-            </group>
-        </menu>
-    </item>
 
 </menu>
