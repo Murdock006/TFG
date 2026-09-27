@@ -604,6 +604,20 @@ class FragmentTareas : Fragment() {
                                 }.setNegativeButton(getString(R.string.cancelar), null).show()
                         }
 
+                        // BUG B: la opción "Responder disputa" solo debe ofrecerse mientras la
+                        // disputa siga sin respuesta de B. responderDisputa() la pasa a
+                        // "en_progreso" y sella respondidoPor (ver RepositorioDisputas), así que
+                        // se consulta la disputa una única vez al abrir el detalle de una tarea
+                        // en disputa (no en cada bind de lista).
+                        val disputaYaRespondida = if (tarea.estado == "reclamada") {
+                            try {
+                                val d = repoDisputas.listarDisputasPorTarea(tarea.id).getOrNull()?.firstOrNull()
+                                d != null && (d.estado == "en_progreso" || !d.respondidoPor.isNullOrBlank())
+                            } catch (_: Exception) {
+                                false
+                            }
+                        } else false
+
                         val uid = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
                         when {
                             !uid.isBlank() && uid == tarea.creadoPor && (tarea.estado == "pendiente_confirmacion" || tarea.estado == "completada") -> {
@@ -621,9 +635,11 @@ class FragmentTareas : Fragment() {
                                 btnAccion.text = getString(R.string.resolver_reclamo)
                                 btnAccion.setOnClickListener { mostrarDialogoResolverReclamo(tarea) }
                             }
-                            // B (asignado): puede responder la disputa abierta por el creador.
-                            // La tarea sigue en "reclamada" hasta que A la resuelva.
-                            !uid.isBlank() && uid == tarea.asignadoA && tarea.estado == "reclamada" -> {
+                            // B (asignado): puede responder la disputa abierta por el creador
+                            // UNA sola vez. Tras responder (disputa en_progreso / respondidoPor
+                            // no nulo) la opción desaparece y solo queda pendiente la resolución
+                            // de A. La tarea sigue en "reclamada" hasta que A la resuelva.
+                            !uid.isBlank() && uid == tarea.asignadoA && tarea.estado == "reclamada" && !disputaYaRespondida -> {
                                 btnAccion.visibility = View.VISIBLE
                                 btnAccion.isEnabled = true
                                 btnAccion.text = getString(R.string.responder_disputa)

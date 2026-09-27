@@ -231,18 +231,24 @@ class FragmentTareasPendientes : Fragment() {
                 tareasDelGrupo.filter { it.creadoPor == uid }
             }
             modoHistorial -> {
-                // Historial: tareas completadas, confirmadas o reclamadas en el grupo
+                // Historial: solo tareas cerradas (completadas o confirmadas) en el grupo.
+                // "reclamada" es un estado vivo (en disputa, pendiente de resolver), por lo que
+                // NO pertenece al historial: se muestra en Pendientes hasta que se resuelva.
                 tareasDelGrupo.filter {
                     (it.creadoPor == uid || it.asignadoA == uid) &&
-                    (it.estado == "completada" || it.estado == "confirmada" || it.estado == "reclamada")
+                    (it.estado == "completada" || it.estado == "confirmada")
                 }
             }
             else -> {
-                // Pendientes: tareas asignadas a mi (pendiente o esperando confirmación), o creadas por mi pendientes de confirmación
+                // Pendientes: tareas vivas asignadas a mi (pendiente, esperando confirmación o en
+                // disputa) o creadas por mi pendientes de confirmación/resolución. Una tarea
+                // "reclamada" sigue en disputa y debe seguir visible para ambas partes.
                 tareasDelGrupo.filter {
                     (it.asignadoA == uid && it.estado == "pendiente") ||
                     (it.asignadoA == uid && it.estado == "pendiente_confirmacion") ||
-                    (it.creadoPor == uid && it.estado == "pendiente_confirmacion")
+                    (it.creadoPor == uid && it.estado == "pendiente_confirmacion") ||
+                    (it.asignadoA == uid && it.estado == "reclamada") ||
+                    (it.creadoPor == uid && it.estado == "reclamada")
                 }
             }
         }
