@@ -253,11 +253,17 @@ class FragmentCalendario : Fragment() {
         data class Opcion(val texto: String, val accion: () -> Unit)
         val opciones = mutableListOf<Opcion>()
 
-        opciones.add(Opcion("Reprogramar fecha y hora") { elegirFechaHoraParaTarea(tarea) })
-        opciones.add(Opcion(if (tarea.esImportante) "Quitar importante" else "Marcar como importante") {
-            actualizarCampo(tarea.copy(esImportante = !tarea.esImportante))
-        })
-        opciones.add(Opcion("Cambiar recordatorio (${tarea.minutosAntes} min)") { elegirMinutosRecordatorio(tarea) })
+        // Las acciones que mutan la tarea (reprogramar, prioridad, recordatorio) solo se ofrecen
+        // mientras la tarea está "pendiente". En estados finales (confirmada, completada, etc.) no
+        // se reabre una tarea ya cerrada. Coherente con los guards de FragmentTareas (líneas 561-563).
+        if (tarea.estado == "pendiente") {
+            opciones.add(Opcion("Reprogramar fecha y hora") { elegirFechaHoraParaTarea(tarea) })
+            opciones.add(Opcion(if (tarea.esImportante) "Quitar importante" else "Marcar como importante") {
+                actualizarCampo(tarea.copy(esImportante = !tarea.esImportante))
+            })
+            opciones.add(Opcion("Cambiar recordatorio (${tarea.minutosAntes} min)") { elegirMinutosRecordatorio(tarea) })
+        }
+        // Exportar es una acción de solo lectura: disponible en cualquier estado.
         opciones.add(Opcion("📤 Añadir al calendario") {
             es.sintaxys.teamtask.service.IcsExporter.exportarTarea(requireContext(), tarea)
         })

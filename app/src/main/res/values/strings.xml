@@ -213,6 +213,20 @@
     <string name="no_autoasignar">No podés autoasignarte tareas</string>
     <string name="disputa_creada">Disputa creada</string>
     <string name="error_subida">Error subida: %1$s</string>
+    <!-- Disputas / reclamos -->
+    <string name="resolver_reclamo">Resolver reclamo</string>
+    <string name="aceptar_reclamo">Aceptar reclamo</string>
+    <string name="rechazar_reclamo">Rechazar reclamo</string>
+    <string name="continuar">Continuar</string>
+    <string name="motivo_reclamo_hint">Motivo del reclamo (opcional)</string>
+    <string name="reclamo_pendiente_msg">El miembro asignado marcó la tarea como completada y se ha abierto un reclamo con evidencia.</string>
+    <string name="motivo_reclamo_titulo">Motivo: %1$s</string>
+    <string name="evidencia_reclamo_titulo">Evidencia adjunta</string>
+    <string name="tarea_en_disputa">En disputa</string>
+    <string name="reclamo_aceptado">Reclamo aceptado: tarea confirmada</string>
+    <string name="reclamo_rechazado">Reclamo rechazado: la tarea vuelve a pendiente</string>
+    <string name="error_resolver_reclamo">Error al resolver el reclamo: %1$s</string>
+    <string name="error_marcar_reclamada">No se pudo registrar el reclamo en la tarea</string>
     <string name="permisos_firestore">Permisos Firestore insuficientes</string>
     <string name="error_asignar">Error asignar: %1$s</string>
     <string name="completa_campos">Completa los campos obligatorios</string>

@@ -71,7 +71,8 @@ class TareasHomeAdapter(
             oldItem.creadoPor == newItem.creadoPor &&
             oldItem.esEmergencia == newItem.esEmergencia &&
             oldItem.multiplicadorPuntos == newItem.multiplicadorPuntos &&
-            oldItem.esRecurrente == newItem.esRecurrente
+            oldItem.esRecurrente == newItem.esRecurrente &&
+            oldItem.fechaProgramada == newItem.fechaProgramada
     }
 
     inner class VH(val root: View) : RecyclerView.ViewHolder(root) {
@@ -117,6 +118,7 @@ class TareasHomeAdapter(
             "pendiente_confirmacion" -> "pendiente de confirmación"
             "completada" -> "completada"
             "confirmada" -> "confirmada"
+            "reclamada" -> "en disputa"
             "en_disputa", "disputa" -> "en disputa"
             else -> t.estado
         }
@@ -294,7 +296,10 @@ class TareasHomeAdapter(
                                         tareasVM.confirmarTarea(t.id, usuarioId)
                                         // El observer del Fragment maneja el resultado y muestra Toast
                                     }
-                                    1 -> android.widget.Toast.makeText(fragment.requireContext(), fragment.getString(R.string.evidencia_reclamar), android.widget.Toast.LENGTH_LONG).show()
+                                    1 -> {
+                                        // Abrir el detalle para adjuntar la evidencia del reclamo.
+                                        onTareaClick(t.id)
+                                    }
                                 }
                             }.setNegativeButton(fragment.getString(R.string.cancelar), null).show()
                     }

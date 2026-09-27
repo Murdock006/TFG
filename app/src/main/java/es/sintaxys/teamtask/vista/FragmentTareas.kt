@@ -33,6 +33,7 @@ import es.sintaxys.teamtask.repositorio.CategoriasRepositorio
 import es.sintaxys.teamtask.repositorio.RepositorioNotificaciones
 import es.sintaxys.teamtask.modelo.Notificacion
 import es.sintaxys.teamtask.util.Constants
+import com.bumptech.glide.Glide
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -47,6 +48,7 @@ class FragmentTareas : Fragment() {
     private val repoDisputas = RepositorioDisputas()
     private var pickImageLauncher: ActivityResultLauncher<String>? = null
     private var pendingTareaParaDisputa: Tarea? = null
+    private var pendingMotivoReclamo: String? = null
     private var usuariosCacheGlobal: List<es.sintaxys.teamtask.modelo.Usuario> = emptyList()
     private var miembrosParaSpinner: MutableList<Pair<String,String>> = mutableListOf()
     private val TAG = "FragmentTareas"
@@ -97,15 +99,30 @@ class FragmentTareas : Fragment() {
                         val subida = repoDisputas.subirFotoDisputa(tarea.id, uri.toString())
                         if (subida.isSuccess) {
                             val url = subida.getOrNull()
-                            val disputa = Disputa(id = "", tareaId = tarea.id, iniciador = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: "", estado = "abierta", pruebas = if (url != null) listOf(url) else emptyList(), fechaCreacion = com.google.firebase.Timestamp.now())
+                            val reclamante = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
+                            val disputa = Disputa(id = "", tareaId = tarea.id, iniciador = reclamante, estado = "abierta", pruebas = if (url != null) listOf(url) else emptyList(), fechaCreacion = com.google.firebase.Timestamp.now())
                             repoDisputas.abrirDisputa(disputa)
-                            Toast.makeText(requireContext(), getString(R.string.disputa_creada), Toast.LENGTH_SHORT).show()
+                            // La tarea pasa a "reclamada" para que el creador pueda ver y resolver la disputa.
+                            val actualizada = tarea.copy(
+                                estado = "reclamada",
+                                fechaReclamada = com.google.firebase.Timestamp.now(),
+                                reclamadoPor = reclamante,
+                                motivoReclamo = pendingMotivoReclamo
+                            )
+                            val resUpd = LocalizadorServicios.repositorioTarea.actualizarTarea(actualizada)
+                            if (resUpd.isSuccess) {
+                                Toast.makeText(requireContext(), getString(R.string.disputa_creada), Toast.LENGTH_SHORT).show()
+                                volverAInicio()
+                            } else {
+                                Toast.makeText(requireContext(), getString(R.string.error_marcar_reclamada), Toast.LENGTH_LONG).show()
+                            }
                         }
                     } catch (e: Exception) {
                         Toast.makeText(requireContext(), getString(R.string.error_subida, e.message), Toast.LENGTH_SHORT).show()
                     }
                 }
                 pendingTareaParaDisputa = null
+                pendingMotivoReclamo = null
             }
         }
 
@@ -449,7 +466,7 @@ class FragmentTareas : Fragment() {
                             val dif = when (tarea.dificultad) {1->"Fácil";2->"Media";else->"Difícil"}
                         // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
                         val puntosMostrados = (tarea.puntos * tarea.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
-                        tvMeta.text = "$puntosMostrados pts · $dif${if (tarea.esEmergencia) " · 🚨 Emergencia ×${tarea.multiplicadorPuntos}" else ""}${if (tarea.esRecurrente) " · 🔄 Recurrente" else ""}"
+                        tvMeta.text = "$puntosMostrados pts · $dif${if (tarea.esEmergencia) " · 🚨 Emergencia ×${tarea.multiplicadorPuntos}" else ""}${if (tarea.esRecurrente) " · 🔄 Recurrente" else ""}${if (tarea.estado == "reclamada") " · ${getString(R.string.tarea_en_disputa)}" else ""}"
                         tvDesc.text = tarea.descripcion ?: ""
 
                         // Marca visual de emergencia (borde rojo) / recurrencia (borde violeta) en la
@@ -558,7 +575,7 @@ class FragmentTareas : Fragment() {
                             val uid2 = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
                             val esPersonalizada = tarea.categoria.equals("personalizado", true) || tarea.categoria.equals("personalizada", true)
                             val opciones = when {
-                                tarea.estado == "completada" && uid2 == tarea.creadoPor -> arrayOf(getString(R.string.confirmar), getString(R.string.reclamar))
+                                (tarea.estado == "pendiente_confirmacion" || tarea.estado == "completada") && uid2 == tarea.creadoPor -> arrayOf(getString(R.string.confirmar), getString(R.string.reclamar))
                                 tarea.estado == "pendiente" && esPersonalizada && uid2 == tarea.creadoPor -> arrayOf(getString(R.string.editar), getString(R.string.eliminar))
                                 tarea.estado == "pendiente" && uid2 == tarea.creadoPor -> arrayOf(getString(R.string.eliminar))
                                 else -> emptyArray()
@@ -577,14 +594,14 @@ class FragmentTareas : Fragment() {
                                             tareasVM.confirmarTarea(tarea.id, tarea.creadoPor ?: "")
                                             // El observer maneja el resultado y re-habilita el botón
                                         }
-                                        getString(R.string.reclamar) -> { pendingTareaParaDisputa = tarea; pickImageLauncher?.launch("image/*") }
+                                        getString(R.string.reclamar) -> solicitarReclamo(tarea)
                                     }
                                 }.setNegativeButton(getString(R.string.cancelar), null).show()
                         }
 
                         val uid = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
                         when {
-                            !uid.isBlank() && uid == tarea.creadoPor && tarea.estado == "completada" -> {
+                            !uid.isBlank() && uid == tarea.creadoPor && (tarea.estado == "pendiente_confirmacion" || tarea.estado == "completada") -> {
                                 btnAccion.text = getString(R.string.confirmar)
                                 btnAccion.setOnClickListener {
                                     btnAccion.isEnabled = false
@@ -592,6 +609,12 @@ class FragmentTareas : Fragment() {
                                     tareasVM.confirmarTarea(tarea.id, tarea.creadoPor ?: "")
                                     // El observer maneja el resultado y muestra Toast
                                 }
+                            }
+                            !uid.isBlank() && uid == tarea.creadoPor && tarea.estado == "reclamada" -> {
+                                btnAccion.visibility = View.VISIBLE
+                                btnAccion.isEnabled = true
+                                btnAccion.text = getString(R.string.resolver_reclamo)
+                                btnAccion.setOnClickListener { mostrarDialogoResolverReclamo(tarea) }
                             }
                             !uid.isBlank() && uid == tarea.asignadoA && tarea.estado == "pendiente" -> {
                                 btnAccion.text = getString(R.string.completar_btn)
@@ -890,6 +913,91 @@ class FragmentTareas : Fragment() {
         }
 
         override fun getItemCount(): Int = items.size
+    }
+
+    /** Paso previo al adjuntar evidencia: recoge un motivo opcional y abre el selector de imagen. */
+    private fun solicitarReclamo(tarea: Tarea) {
+        val entrada = android.widget.EditText(requireContext()).apply {
+            hint = getString(R.string.motivo_reclamo_hint)
+            setPadding(48, 24, 48, 24)
+        }
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.reclamar))
+            .setView(entrada)
+            .setPositiveButton(getString(R.string.continuar)) { _, _ ->
+                pendingMotivoReclamo = entrada.text.toString().trim().ifBlank { null }
+                pendingTareaParaDisputa = tarea
+                pickImageLauncher?.launch("image/*")
+            }
+            .setNegativeButton(getString(R.string.cancelar), null)
+            .show()
+    }
+
+    /** Muestra la evidencia del reclamo y permite aceptarlo (confirma y transfiere) o rechazarlo. */
+    private fun mostrarDialogoResolverReclamo(tarea: Tarea) {
+        lifecycleScope.launch {
+            val disputa = try {
+                repoDisputas.listarDisputasPorTarea(tarea.id).getOrNull()?.firstOrNull()
+            } catch (_: Exception) {
+                null
+            }
+            val contenido = android.widget.LinearLayout(requireContext()).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                setPadding(48, 24, 48, 24)
+            }
+            val tvMsg = TextView(requireContext()).apply {
+                text = buildString {
+                    append(getString(R.string.reclamo_pendiente_msg))
+                    if (!tarea.motivoReclamo.isNullOrBlank()) {
+                        append("\n\n")
+                        append(getString(R.string.motivo_reclamo_titulo, tarea.motivoReclamo))
+                    }
+                }
+            }
+            contenido.addView(tvMsg)
+
+            val urlEvidencia = disputa?.pruebas?.firstOrNull()
+            if (!urlEvidencia.isNullOrBlank()) {
+                val iv = android.widget.ImageView(requireContext()).apply {
+                    adjustViewBounds = true
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    contentDescription = getString(R.string.evidencia_reclamo_titulo)
+                }
+                Glide.with(this@FragmentTareas).load(urlEvidencia).into(iv)
+                contenido.addView(iv)
+            }
+
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.resolver_reclamo))
+                .setView(contenido)
+                .setPositiveButton(getString(R.string.aceptar_reclamo)) { _, _ -> aplicarResolucionReclamo(tarea.id, true) }
+                .setNegativeButton(getString(R.string.rechazar_reclamo)) { _, _ -> aplicarResolucionReclamo(tarea.id, false) }
+                .setNeutralButton(getString(R.string.cancelar), null)
+                .show()
+        }
+    }
+
+    private fun aplicarResolucionReclamo(tareaId: String, aceptado: Boolean) {
+        lifecycleScope.launch {
+            val res = LocalizadorServicios.repositorioTarea.resolverReclamo(tareaId, aceptado)
+            if (res.isSuccess) {
+                Toast.makeText(
+                    requireContext(),
+                    getString(if (aceptado) R.string.reclamo_aceptado else R.string.reclamo_rechazado),
+                    Toast.LENGTH_SHORT
+                ).show()
+                volverAInicio()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.error_resolver_reclamo, res.exceptionOrNull()?.message ?: ""),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     }
 
     private fun mostrarDialogoEditar(tarea: Tarea) {

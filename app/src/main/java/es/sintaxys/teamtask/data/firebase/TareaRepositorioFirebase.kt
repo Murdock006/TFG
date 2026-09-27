@@ -493,6 +493,13 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
 
                 null
             }.await()
+
+            // La tarea quedó "confirmada" sin pasar por confirmación (no requiere confirmación):
+            // si es recurrente, crear aquí la siguiente instancia con el mismo helper que usa
+            // confirmarTarea. El camino requiereConfirmacion=true NO llega hasta aquí (sale antes),
+            // por lo que nunca se crea dos veces.
+            crearSiguienteInstanciaRecurrente(tarea)
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -571,31 +578,7 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
             }
 
             // --- Crear siguiente tarea si es recurrente (fuera de la transacción) ---
-            if (tarea.esRecurrente && !tarea.tipoRecurrencia.isNullOrBlank()) {
-                try {
-                    val siguienteFecha = calcularSiguienteFecha(tarea.fechaProgramada, tarea.tipoRecurrencia!!)
-                    // Rotar miembro si aplica
-                    val siguienteAsignado = if (tarea.rotarMiembros && !tarea.creadoPor.isNullOrBlank() && tarea.asignadoA != tarea.creadoPor) {
-                        tarea.creadoPor
-                    } else if (tarea.rotarMiembros) {
-                        tarea.asignadoA
-                    } else {
-                        tarea.asignadoA
-                    }
-                    val nuevaTarea = tarea.copy(
-                        id = "",
-                        estado = "pendiente",
-                        fechaCreada = Timestamp.now(),
-                        fechaProgramada = siguienteFecha,
-                        asignadoA = siguienteAsignado,
-                        multiplicadorPuntos = 1.0,
-                        esEmergencia = false
-                    )
-                    crearTarea(nuevaTarea)
-                } catch (e: Exception) {
-                    android.util.Log.w("TareaRepositorioFirebase", "Error creando tarea recurrente (tareaId=$tareaId): ${e.message}")
-                }
-            }
+            crearSiguienteInstanciaRecurrente(tarea)
 
             // --- Programar recordatorio si tiene fecha y minutos ---
             try {
@@ -618,6 +601,43 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Crea la siguiente instancia de una tarea recurrente cuando la tarea original acaba de
+     * quedar en estado "confirmada".
+     *
+     * Punto único de creación (evita duplicados): cada tarea lo invoca exactamente una vez y solo
+     * por el camino que le corresponde según `requiereConfirmacion`:
+     *  - requiereConfirmacion = true  -> solo `confirmarTarea` al confirmar.
+     *  - requiereConfirmacion = false -> solo `marcarCompletada`, que confirma sin pasar por confirmación.
+     * Los dos caminos son mutuamente excluyentes: una tarea no puede quedar "confirmada" por ambos.
+     */
+    private suspend fun crearSiguienteInstanciaRecurrente(tarea: Tarea) {
+        if (!tarea.esRecurrente || tarea.tipoRecurrencia.isNullOrBlank()) return
+        try {
+            val siguienteFecha = calcularSiguienteFecha(tarea.fechaProgramada, tarea.tipoRecurrencia!!)
+            // Rotar miembro si aplica
+            val siguienteAsignado = if (tarea.rotarMiembros && !tarea.creadoPor.isNullOrBlank() && tarea.asignadoA != tarea.creadoPor) {
+                tarea.creadoPor
+            } else if (tarea.rotarMiembros) {
+                tarea.asignadoA
+            } else {
+                tarea.asignadoA
+            }
+            val nuevaTarea = tarea.copy(
+                id = "",
+                estado = "pendiente",
+                fechaCreada = Timestamp.now(),
+                fechaProgramada = siguienteFecha,
+                asignadoA = siguienteAsignado,
+                multiplicadorPuntos = 1.0,
+                esEmergencia = false
+            )
+            crearTarea(nuevaTarea)
+        } catch (e: Exception) {
+            android.util.Log.w("TareaRepositorioFirebase", "Error creando tarea recurrente (tareaId=${tarea.id}): ${e.message}")
         }
     }
 

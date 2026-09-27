@@ -24,6 +24,16 @@ class RepositorioDisputas(
         }
     }
 
+    suspend fun listarDisputasPorTarea(tareaId: String): Result<List<Disputa>> {
+        return try {
+            val snap = firestore.collection(coleccionDisputas).whereEqualTo("tareaId", tareaId).get().await()
+            val lista = snap.documents.mapNotNull { it.toObject(Disputa::class.java)?.copy(id = it.id) }
+            Result.success(lista)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun listarDisputasPorUsuario(usuarioUid: String): Result<List<Disputa>> {
         return try {
             val snap = firestore.collection(coleccionDisputas).whereEqualTo("iniciador", usuarioUid).get().await()
