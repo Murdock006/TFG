@@ -56,6 +56,8 @@
     <string name="abrir">Abrir</string>
     <string name="titulo_tarea_ejemplo">Título</string>
     <string name="dificultad_facil">Fácil</string>
+    <string name="dificultad_media">Media</string>
+    <string name="dificultad_dificil">Difícil</string>
     <string name="meta_tarea_ejemplo">50 pts · Fácil</string>
     <string name="asignado_por_defecto">Asignado a: -</string>
 
@@ -85,6 +87,8 @@
     <string name="titulo_hint">Título</string>
     <string name="puntos_hint">Puntos</string>
     <string name="fecha_hoy">Fecha: hoy</string>
+    <string name="sin_fecha">Sin fecha</string>
+    <string name="fecha_programada">Fecha programada</string>
     <string name="elegir">Elegir</string>
     <string name="crear">Crear</string>
 
@@ -248,6 +252,8 @@
     <string name="sugerencias_title">Sugerencias: %1$s</string>
     <string name="recordatorio_title">Recordatorio</string>
     <string name="recordatorio_msg">Recordatorio: %1$s min antes</string>
+    <string name="recordatorio_tarea_title">Tarea: %1$s</string>
+    <string name="recordatorio_tarea_msg">Tarea programada para %1$s</string>
     <string name="reprogramada_msg">Reprogramada: %1$s</string>
     <string name="sin_sesion">Sin sesión</string>
     <string name="canje_solicitado">¡Canje solicitado! -%1$d pts 🎁 recompensa. El otro miembro debe aceptarlo.</string>
@@ -306,4 +312,5 @@
     <string name="cd_logo">Logo de la aplicación</string>
     <string name="cd_avatar_usuario">Avatar del usuario</string>
     <string name="cd_avatar_miembro">Avatar del miembro</string>
+    <string name="cd_cambiar_icono_grupo">Toca para cambiar el icono del grupo</string>
 </resources>

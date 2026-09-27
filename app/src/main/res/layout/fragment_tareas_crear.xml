@@ -152,7 +152,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/fecha_hoy"
+                        android:text="@string/sin_fecha"
                         android:padding="@dimen/spacing_sm"
                         android:textColor="@color/texto_principal"
                         android:background="@drawable/bg_input_campo" />

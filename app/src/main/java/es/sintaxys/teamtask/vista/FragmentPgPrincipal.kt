@@ -23,9 +23,12 @@ import es.sintaxys.teamtask.viewmodel.VistaModeloPrincipal
 import es.sintaxys.teamtask.viewmodel.ParejaViewModel
 import es.sintaxys.teamtask.viewmodel.TareasViewModel
 import es.sintaxys.teamtask.service.LocalizadorServicios
+import es.sintaxys.teamtask.service.NotificationScheduler
 import es.sintaxys.teamtask.modelo.Tarea
 import es.sintaxys.teamtask.modelo.Usuario
 import es.sintaxys.teamtask.modelo.Notificacion
+import es.sintaxys.teamtask.util.Constants
+import es.sintaxys.teamtask.util.SelectorFechaHora
 import es.sintaxys.teamtask.repositorio.CategoriasRepositorio
 import es.sintaxys.teamtask.repositorio.RepositorioNotificaciones
 import com.google.firebase.Timestamp
@@ -311,36 +314,46 @@ class FragmentPgPrincipal : Fragment() {
                                             Toast.makeText(requireContext(), getString(es.sintaxys.teamtask.R.string.no_autoasignar), Toast.LENGTH_LONG).show()
                                             return@launch
                                         }
-                                        val tarea = Tarea(titulo = sel.titulo, descripcion = sel.descripcion, categoria = categoriaId, dificultad = if (sel.dificultad.uppercase()=="FACIL") 1 else if (sel.dificultad.uppercase()=="MEDIA") 2 else 3, puntos = sel.puntos, creadoPor = LocalizadorServicios.repositorioAuth.usuarioActual()?.id, asignadoA = elegidoUid, grupoId = parejaVM.grupo.value?.id)
-                                        val res = LocalizadorServicios.repositorioTarea.crearTarea(tarea)
-                                        if (res.isSuccess) {
-                                            android.util.Log.d("FragmentPgPrincipal", "Tarea asignada desde home: id=${res.getOrNull()?.id}, destinatario=$elegidoUid")
-                                            Toast.makeText(requireContext(), getString(es.sintaxys.teamtask.R.string.tarea_asignada_ok, opcionesMiembros[mIdx].first), Toast.LENGTH_SHORT).show()
-                                            // Notificar al asignado vía Firebase
-                                            if (!elegidoUid.isNullOrBlank()) {
-                                                android.util.Log.d("FragmentPgPrincipal", "Enviando notificación Firebase (home): tipo=asignacion, destinatario=$elegidoUid, tareaId=${res.getOrNull()?.id}")
-                                                val repoNot = RepositorioNotificaciones()
-                                                val notifResult = repoNot.enviarNotificacion(
-                                                    Notificacion(
-                                                        id = "",
-                                                        tipo = "asignacion",
-                                                        contenido = mapOf(
-                                                            "tareaId" to (res.getOrNull()?.id ?: ""),
-                                                            "titulo" to tarea.titulo,
-                                                            "desde" to (uidActual ?: "")
-                                                        ),
-                                                        destinatario = elegidoUid,
-                                                        visto = false,
-                                                        fecha = Timestamp.now()
-                                                    )
-                                                )
-                                                if (notifResult.isSuccess) {
-                                                    android.util.Log.d("FragmentPgPrincipal", "Notificación enviada OK, id=${notifResult.getOrNull()}")
-                                                } else {
-                                                    android.util.Log.e("FragmentPgPrincipal", "Error enviando notificación: ${notifResult.exceptionOrNull()?.message}")
+                                        // Fecha/hora OBLIGATORIA: si el usuario cancela el picker, no se crea la tarea.
+                                        SelectorFechaHora.elegir(requireContext()) { fechaElegida ->
+                                            viewLifecycleOwner.lifecycleScope.launch {
+                                            val tarea = Tarea(titulo = sel.titulo, descripcion = sel.descripcion, categoria = categoriaId, dificultad = if (sel.dificultad.uppercase()=="FACIL") 1 else if (sel.dificultad.uppercase()=="MEDIA") 2 else 3, puntos = sel.puntos, creadoPor = LocalizadorServicios.repositorioAuth.usuarioActual()?.id, asignadoA = elegidoUid, grupoId = parejaVM.grupo.value?.id, fechaProgramada = fechaElegida)
+                                            val res = LocalizadorServicios.repositorioTarea.crearTarea(tarea)
+                                            if (res.isSuccess) {
+                                                val creada = res.getOrNull()
+                                                android.util.Log.d("FragmentPgPrincipal", "Tarea asignada desde home: id=${creada?.id}, destinatario=$elegidoUid")
+                                                if (creada != null && creada.fechaProgramada != null) {
+                                                    val trigger = creada.fechaProgramada!!.toDate().time - creada.minutosAntes * Constants.SECONDS_PER_MINUTE * Constants.MILLIS_PER_SECOND
+                                                    NotificationScheduler.scheduleReminder(requireContext(), creada.id, getString(es.sintaxys.teamtask.R.string.recordatorio_tarea_title, creada.titulo), getString(es.sintaxys.teamtask.R.string.recordatorio_tarea_msg, SelectorFechaHora.formatear(creada.fechaProgramada!!)), trigger)
                                                 }
+                                                Toast.makeText(requireContext(), getString(es.sintaxys.teamtask.R.string.tarea_asignada_ok, opcionesMiembros[mIdx].first), Toast.LENGTH_SHORT).show()
+                                                // Notificar al asignado vía Firebase
+                                                if (!elegidoUid.isNullOrBlank()) {
+                                                    android.util.Log.d("FragmentPgPrincipal", "Enviando notificación Firebase (home): tipo=asignacion, destinatario=$elegidoUid, tareaId=${creada?.id}")
+                                                    val repoNot = RepositorioNotificaciones()
+                                                    val notifResult = repoNot.enviarNotificacion(
+                                                        Notificacion(
+                                                            id = "",
+                                                            tipo = "asignacion",
+                                                            contenido = mapOf(
+                                                                "tareaId" to (creada?.id ?: ""),
+                                                                "titulo" to tarea.titulo,
+                                                                "desde" to (uidActual ?: "")
+                                                            ),
+                                                            destinatario = elegidoUid,
+                                                            visto = false,
+                                                            fecha = Timestamp.now()
+                                                        )
+                                                    )
+                                                    if (notifResult.isSuccess) {
+                                                        android.util.Log.d("FragmentPgPrincipal", "Notificación enviada OK, id=${notifResult.getOrNull()}")
+                                                    } else {
+                                                        android.util.Log.e("FragmentPgPrincipal", "Error enviando notificación: ${notifResult.exceptionOrNull()?.message}")
+                                                    }
+                                                }
+                                            } else Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
                                             }
-                                        } else Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }
                                 .setNegativeButton(getString(es.sintaxys.teamtask.R.string.cancelar), null).show()

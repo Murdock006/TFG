@@ -71,4 +71,40 @@
         android:background="@drawable/bg_input_campo"
         android:padding="@dimen/spacing_xs" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/fecha_programada"
+        android:textSize="12sp"
+        android:textColor="@color/gris"
+        android:layout_marginTop="@dimen/spacing_md"
+        android:layout_marginBottom="@dimen/spacing_xs" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvFechaEditar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/sin_fecha"
+            android:padding="@dimen/spacing_sm"
+            android:textColor="@color/texto_principal"
+            android:background="@drawable/bg_input_campo" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnElegirFechaEditar"
+            style="@style/Widget.TFG.Boton.Contorno"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:text="@string/elegir"
+            android:textAllCaps="false" />
+
+    </LinearLayout>
+
 </LinearLayout>

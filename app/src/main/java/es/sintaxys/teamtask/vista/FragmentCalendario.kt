@@ -3,6 +3,7 @@ package es.sintaxys.teamtask.vista
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -168,34 +169,38 @@ class FragmentCalendario : Fragment() {
         inner class VH(val card: MaterialCardView, val tvTitulo: TextView, val tvInfo: TextView, val tvHora: TextView, val ivImportante: ImageView) : RecyclerView.ViewHolder(card)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-            val card = MaterialCardView(parent.context).apply {
-                layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).also { (it as RecyclerView.LayoutParams).setMargins(0,0,0,12) }
-                radius = 12f
-                cardElevation = 4f
-                setCardBackgroundColor(parent.context.getColor(R.color.fondo))
+            val ctx = parent.context
+            val dm = ctx.resources.displayMetrics
+            fun dp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v, dm)
+            fun sp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, v, dm)
+            val card = MaterialCardView(ctx).apply {
+                layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).also { (it as RecyclerView.LayoutParams).setMargins(0, 0, 0, dp(12f).toInt()) }
+                radius = dp(12f)
+                cardElevation = dp(4f)
+                setCardBackgroundColor(ctx.getColor(R.color.fondo))
                 strokeWidth = 0
             }
-            val ll = LinearLayout(parent.context).apply {
+            val ll = LinearLayout(ctx).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(32, 24, 32, 24)
+                setPadding(dp(32f).toInt(), dp(24f).toInt(), dp(32f).toInt(), dp(24f).toInt())
             }
-            val rowTop = LinearLayout(parent.context).apply { orientation = LinearLayout.HORIZONTAL }
-            val tvTitulo = TextView(parent.context).apply {
-                textSize = 15f; setTextColor(parent.context.getColor(R.color.texto_principal))
+            val rowTop = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL }
+            val tvTitulo = TextView(ctx).apply {
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, sp(15f)); setTextColor(ctx.getColor(R.color.texto_principal))
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             }
-            val ivImportante = ImageView(parent.context).apply {
+            val ivImportante = ImageView(ctx).apply {
                 setImageResource(android.R.drawable.btn_star_big_on)
                 visibility = View.GONE
-                layoutParams = LinearLayout.LayoutParams(48, 48)
+                layoutParams = LinearLayout.LayoutParams(dp(48f).toInt(), dp(48f).toInt())
             }
-            val tvHora = TextView(parent.context).apply {
-                textSize = 12f; setTextColor(parent.context.getColor(R.color.texto_secundario))
+            val tvHora = TextView(ctx).apply {
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, sp(12f)); setTextColor(ctx.getColor(R.color.texto_secundario))
             }
-            val tvInfo = TextView(parent.context).apply {
-                textSize = 13f; setTextColor(parent.context.getColor(R.color.texto_secundario))
-                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).also { it.topMargin = 4 }
+            val tvInfo = TextView(ctx).apply {
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, sp(13f)); setTextColor(ctx.getColor(R.color.texto_secundario))
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).also { it.topMargin = dp(4f).toInt() }
             }
             rowTop.addView(tvTitulo); rowTop.addView(ivImportante)
             ll.addView(rowTop); ll.addView(tvHora); ll.addView(tvInfo)

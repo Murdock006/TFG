@@ -394,8 +394,12 @@
                         android:text="❤️"
                         android:textAppearance="@style/TextAppearance.TFG.Titulo"
                         android:layout_marginEnd="@dimen/spacing_sm"
+                        android:drawableEnd="@android:drawable/ic_menu_edit"
+                        android:drawablePadding="@dimen/spacing_xs"
+                        android:drawableTint="@color/gris"
                         android:clickable="true"
                         android:focusable="true"
+                        android:contentDescription="@string/cd_cambiar_icono_grupo"
                         android:background="?attr/selectableItemBackgroundBorderless" />
 
                     <TextView

@@ -44,6 +44,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
                 android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
                 android:textColor="@color/texto_principal"
                 android:text="@string/hoy" />
@@ -64,9 +66,14 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnElegirDia"
                 style="@style/Widget.TFG.Boton.Contorno"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:layout_marginStart="@dimen/spacing_sm"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
                 android:text="📅"
                 android:textAllCaps="false"
                 android:contentDescription="@string/cd_elegir_dia" />
@@ -74,9 +81,14 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnExportarCalendario"
                 style="@style/Widget.TFG.Boton.Contorno"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:layout_marginStart="@dimen/spacing_sm"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
                 android:text="@string/exportar"
                 android:textAllCaps="false"
                 android:contentDescription="@string/cd_exportar_calendario" />

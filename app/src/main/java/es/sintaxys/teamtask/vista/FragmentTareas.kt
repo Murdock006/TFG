@@ -1,6 +1,5 @@
 package es.sintaxys.teamtask.vista
 
-import android.app.DatePickerDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -33,6 +32,7 @@ import es.sintaxys.teamtask.repositorio.CategoriasRepositorio
 import es.sintaxys.teamtask.repositorio.RepositorioNotificaciones
 import es.sintaxys.teamtask.modelo.Notificacion
 import es.sintaxys.teamtask.util.Constants
+import es.sintaxys.teamtask.util.SelectorFechaHora
 import com.bumptech.glide.Glide
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
@@ -331,15 +331,10 @@ class FragmentTareas : Fragment() {
             var esRecurrenteLocal = false
 
             b.btnElegirFecha.setOnClickListener {
-                val hoy = java.util.Calendar.getInstance()
-                DatePickerDialog(requireContext(), { _, year, month, day ->
-                    android.app.TimePickerDialog(requireContext(), { _, h, min ->
-                        val cal = java.util.Calendar.getInstance()
-                        cal.set(year, month, day, h, min, 0)
-                        fechaProgramadaTs = com.google.firebase.Timestamp(cal.time)
-                        b.tvFechaProgramada.text = "📅 ${day}/${month+1}/${year}  ⏰ ${"%02d".format(h)}:${"%02d".format(min)}"
-                    }, hoy.get(java.util.Calendar.HOUR_OF_DAY), hoy.get(java.util.Calendar.MINUTE), true).show()
-                }, hoy.get(java.util.Calendar.YEAR), hoy.get(java.util.Calendar.MONTH), hoy.get(java.util.Calendar.DAY_OF_MONTH)).show()
+                SelectorFechaHora.elegir(requireContext(), fechaProgramadaTs) { ts ->
+                    fechaProgramadaTs = ts
+                    b.tvFechaProgramada.text = SelectorFechaHora.formatear(ts)
+                }
             }
 
             // Opciones extra: recurrencia, emergencia, importante.
@@ -412,10 +407,7 @@ class FragmentTareas : Fragment() {
                     val res = LocalizadorServicios.repositorioTarea.crearTarea(tarea)
                     if (res.isSuccess) {
                         val creado = res.getOrNull()
-                        if (creado != null && creado.fechaProgramada != null) {
-                            val trigger = creado.fechaProgramada!!.toDate().time - 30 * es.sintaxys.teamtask.util.Constants.SECONDS_PER_MINUTE * es.sintaxys.teamtask.util.Constants.MILLIS_PER_SECOND
-                            NotificationScheduler.scheduleReminder(requireContext(), creado.id, "Tarea: ${creado.titulo}", "Tarea programada para ${b.tvFechaProgramada.text}", trigger)
-                        }
+                        if (creado != null) programarRecordatorio(creado)
                         Toast.makeText(requireContext(), getString(R.string.tarea_creada), Toast.LENGTH_SHORT).show()
                         // Reiniciar las opciones del formulario tras un envío correcto.
                         esEmergenciaLocal = false
@@ -423,6 +415,7 @@ class FragmentTareas : Fragment() {
                         tipoRecurrenciaLocal = null
                         esRecurrenteLocal = false
                         fechaProgramadaTs = null
+                        b.tvFechaProgramada.text = getString(R.string.sin_fecha)
                         // Notificar al asignado vía Firebase
                         if (!asignadoUid.isNullOrBlank() && creado != null) {
                             Log.d(TAG, "Enviando notificación Firebase (formulario): tipo=asignacion, destinatario=$asignadoUid, tareaId=${creado.id}")
@@ -657,6 +650,34 @@ class FragmentTareas : Fragment() {
         }
     }
 
+    // Agenda el recordatorio local de una tarea programada (minutosAntes antes de su fecha).
+    // Si la tarea no tiene fecha programada no hace nada.
+    private fun programarRecordatorio(tarea: Tarea) {
+        val fecha = tarea.fechaProgramada ?: return
+        val trigger = fecha.toDate().time - tarea.minutosAntes * Constants.SECONDS_PER_MINUTE * Constants.MILLIS_PER_SECOND
+        NotificationScheduler.scheduleReminder(
+            requireContext(),
+            tarea.id,
+            getString(R.string.recordatorio_tarea_title, tarea.titulo),
+            getString(R.string.recordatorio_tarea_msg, SelectorFechaHora.formatear(fecha)),
+            trigger
+        )
+    }
+
+    // Colorea el indicador lateral según la dificultad usando el mismo drawable tintado que
+    // TareasHomeAdapter (verde = fácil, naranja = media, rojo = difícil).
+    private fun pintarIndicadorDificultad(vIndicator: View?, dificultad: Int) {
+        val colorRes = when (dificultad) {
+            1 -> R.color.verde
+            2 -> R.color.naranja
+            else -> R.color.rojo
+        }
+        val ctx = requireContext()
+        vIndicator?.background = androidx.core.content.ContextCompat.getDrawable(ctx, R.drawable.v_indicador_dificultad)?.apply {
+            setTint(androidx.core.content.ContextCompat.getColor(ctx, colorRes))
+        }
+    }
+
     // Adapter simple
     private inner class TareasAdapter : RecyclerView.Adapter<TareasAdapter.VH>() {
         private var items: List<Tarea> = emptyList()
@@ -664,6 +685,7 @@ class FragmentTareas : Fragment() {
 
         inner class VH(val root: View) : RecyclerView.ViewHolder(root) {
             val tvTitulo: TextView = root.findViewById(R.id.tvTituloTarea)
+            val tvDificultad: TextView = root.findViewById(R.id.tvDificultad)
             val tvMeta: TextView = root.findViewById(R.id.tvMetaTarea)
             val tvAsignado: TextView = root.findViewById(R.id.tvAsignado)
             val btnAccion: Button = root.findViewById(R.id.btnAccionTarea)
@@ -680,10 +702,15 @@ class FragmentTareas : Fragment() {
             val tarea = items[position]
             val usuarioId = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
             holder.tvTitulo.text = tarea.titulo
-            val dif = when (tarea.dificultad) {1->"Fácil";2->"Media";else->"Difícil"}
+            val dif = when (tarea.dificultad) {
+                1 -> getString(R.string.dificultad_facil)
+                2 -> getString(R.string.dificultad_media)
+                else -> getString(R.string.dificultad_dificil)
+            }
+            holder.tvDificultad.text = dif
             // En emergencia se muestra el valor efectivo (puntos × multiplicador), no el base.
             val puntosMostrados = (tarea.puntos * tarea.multiplicadorPuntos.coerceAtLeast(1.0)).toInt()
-            holder.tvMeta.text = "$puntosMostrados pts${if (tarea.esEmergencia) " 🚨" else ""}${if (tarea.esRecurrente) " 🔄" else ""} · $dif"
+            holder.tvMeta.text = "$puntosMostrados pts${if (tarea.esEmergencia) " 🚨" else ""}${if (tarea.esRecurrente) " 🔄" else ""}"
 
             // Marca visual de emergencia (borde rojo) y recurrencia (borde violeta). Se resetea en
             // cada bind porque el holder se recicla. Si es ambas, el rojo de emergencia tiene prioridad.
@@ -701,12 +728,8 @@ class FragmentTareas : Fragment() {
             // No mostrar asignación en la tarjeta de lista (se gestiona en detalle)
             holder.tvAsignado.visibility = View.GONE
 
-            // indicador lateral por dificultad (verde/amarillo/rojo)
-            when (tarea.dificultad) {
-                1 -> holder.vIndicator?.setBackgroundColor(android.graphics.Color.parseColor("#A5D6A7"))
-                2 -> holder.vIndicator?.setBackgroundColor(android.graphics.Color.parseColor("#FFF59D"))
-                else -> holder.vIndicator?.setBackgroundColor(android.graphics.Color.parseColor("#FFCDD2"))
-            }
+            // indicador lateral por dificultad (verde/amarillo/rojo) con el mismo drawable tintado
+            pintarIndicadorDificultad(holder.vIndicator, tarea.dificultad)
 
             holder.cardRoot.setCardBackgroundColor(android.graphics.Color.WHITE)
             when (tarea.estado) {
@@ -793,6 +816,7 @@ class FragmentTareas : Fragment() {
     private inner class SugeridasAdapter(private val items: List<es.sintaxys.teamtask.modelo.TareaSugerida>, private val categoriaId: String) : RecyclerView.Adapter<SugeridasAdapter.SV>() {
         inner class SV(val root: View) : RecyclerView.ViewHolder(root) {
             val tvTitulo: TextView = root.findViewById(R.id.tvTituloTarea)
+            val tvDificultad: TextView = root.findViewById(R.id.tvDificultad)
             val tvMeta: TextView = root.findViewById(R.id.tvMetaTarea)
             val btnAccion: Button = root.findViewById(R.id.btnAccionTarea)
             val vIndicator: View? = root.findViewById(R.id.vIndicator)
@@ -807,16 +831,24 @@ class FragmentTareas : Fragment() {
             val sug = items[position]
             Log.d(TAG, "SugeridasAdapter bind: ${sug.titulo} at pos $position")
             holder.tvTitulo.text = sug.titulo
-            holder.tvMeta.text = "${sug.puntos} pts · ${sug.dificultad}"
+            holder.tvMeta.text = "${sug.puntos} pts"
             holder.btnAccion.visibility = View.VISIBLE
             holder.btnAccion.text = getString(R.string.asignar)
 
-            // indicador lateral por dificultad
-            when (sug.dificultad.lowercase()) {
-                "fácil", "facil" -> holder.vIndicator?.setBackgroundColor(android.graphics.Color.parseColor("#A5D6A7"))
-                "media" -> holder.vIndicator?.setBackgroundColor(android.graphics.Color.parseColor("#FFF59D"))
-                else -> holder.vIndicator?.setBackgroundColor(android.graphics.Color.parseColor("#FFCDD2"))
+            // La dificultad de las sugerencias viene en mayúsculas (FACIL/MEDIA/DIFICIL):
+            // se normaliza a una etiqueta legible y a un nivel numérico para el indicador.
+            val dificultadIndicador = when (sug.dificultad.lowercase()) {
+                "fácil", "facil" -> 1
+                "media" -> 2
+                else -> 3
             }
+            holder.tvDificultad.text = when (dificultadIndicador) {
+                1 -> getString(R.string.dificultad_facil)
+                2 -> getString(R.string.dificultad_media)
+                else -> getString(R.string.dificultad_dificil)
+            }
+            // indicador lateral por dificultad (verde/amarillo/rojo)
+            pintarIndicadorDificultad(holder.vIndicator, dificultadIndicador)
 
             holder.btnAccion.setOnClickListener {
                 // abrir selector de miembro para crear una nueva instancia de tarea
@@ -845,65 +877,68 @@ class FragmentTareas : Fragment() {
 
                     val nombres = opciones.map { it.first }.toTypedArray()
                     androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle(getString(R.string.selecciona_miembro)).setItems(nombres) { _, idx ->
-                        // Tras elegir miembro, ofrecer emergencia (×1.5) también para tareas estándar.
-                        val etiquetaEmergencia = arrayOf(getString(R.string.emergencia_opcion))
-                        val seleccionEmergencia = booleanArrayOf(false)
-                        var esEmergencia = false
-                        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                            .setTitle(getString(R.string.opciones_extra_title))
-                            .setMultiChoiceItems(etiquetaEmergencia, seleccionEmergencia) { _, _, checked -> esEmergencia = checked }
-                            .setPositiveButton(getString(R.string.crear)) { _, _ ->
-                                lifecycleScope.launch {
-                            val elegidoUid = opciones[idx].second.ifBlank { null }
-                            val creador = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
-                            if (!creador.isNullOrBlank() && !elegidoUid.isNullOrBlank() && elegidoUid == creador) {
-                                Toast.makeText(requireContext(), getString(R.string.no_autoasignar), Toast.LENGTH_LONG).show()
-                                return@launch
-                            }
-                            val dificultadInt = when (sug.dificultad.lowercase()) { "fácil", "facil" -> 1; "media" -> 2; else -> 3 }
-                            // Las tareas preestablecidas se asignan para hoy si no se elige fecha
-                            val hoy = com.google.firebase.Timestamp.now()
-                            val multiplicador = if (esEmergencia) Constants.MULTIPLICADOR_EMERGENCIA else 1.0
-                            val tarea = Tarea(titulo = sug.titulo, descripcion = sug.descripcion, categoria = categoriaId, dificultad = dificultadInt, puntos = sug.puntos, creadoPor = creador, asignadoA = elegidoUid, grupoId = parejaVM.grupo.value?.id, fechaProgramada = hoy, esEmergencia = esEmergencia, multiplicadorPuntos = multiplicador)
-                            Log.d(TAG, "Creando tarea desde sugerida: titulo=${tarea.titulo} asignadoA=${tarea.asignadoA}")
-                            val res = LocalizadorServicios.repositorioTarea.crearTarea(tarea)
-                            if (res.isSuccess) {
-                                Log.d(TAG, "Tarea creada OK: ${res.getOrNull()?.id}")
-                                Toast.makeText(requireContext(), getString(R.string.tarea_asignada_ok, opciones[idx].first), Toast.LENGTH_SHORT).show()
-                                // Notificar al asignado vía Firebase para que reciba la notificación en su dispositivo
-                                if (!elegidoUid.isNullOrBlank()) {
-                                    Log.d(TAG, "Enviando notificación Firebase (sugerida): tipo=asignacion, destinatario=$elegidoUid, tareaId=${res.getOrNull()}")
-                                    val repoNot = RepositorioNotificaciones()
-                                    val notifResult = repoNot.enviarNotificacion(
-                                        Notificacion(
-                                            id = "",
-                                            tipo = "asignacion",
-                                            contenido = mapOf(
-                                                "tareaId" to (res.getOrNull()?.id ?: ""),
-                                                "titulo" to tarea.titulo,
-                                                "desde" to (creador ?: "")
-                                            ),
-                                            destinatario = elegidoUid,
-                                            visto = false,
-                                            fecha = Timestamp.now()
-                                        )
-                                    )
-                                    if (notifResult.isSuccess) {
-                                        Log.d(TAG, "Notificación de sugerida enviada OK, id=${notifResult.getOrNull()}")
-                                    } else {
-                                        Log.e(TAG, "Error enviando notificación de sugerida: ${notifResult.exceptionOrNull()?.message}")
+                        val elegidoUid = opciones[idx].second.ifBlank { null }
+                        val creador = LocalizadorServicios.repositorioAuth.usuarioActual()?.id
+                        if (!creador.isNullOrBlank() && !elegidoUid.isNullOrBlank() && elegidoUid == creador) {
+                            Toast.makeText(requireContext(), getString(R.string.no_autoasignar), Toast.LENGTH_LONG).show()
+                            return@setItems
+                        }
+                        // Fecha/hora OBLIGATORIA: si el usuario cancela el picker, no se crea la tarea.
+                        SelectorFechaHora.elegir(requireContext()) { fechaElegida ->
+                            // Tras elegir fecha/hora, ofrecer emergencia (×1.5) también para tareas estándar.
+                            val etiquetaEmergencia = arrayOf(getString(R.string.emergencia_opcion))
+                            val seleccionEmergencia = booleanArrayOf(false)
+                            var esEmergencia = false
+                            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                                .setTitle(getString(R.string.opciones_extra_title))
+                                .setMultiChoiceItems(etiquetaEmergencia, seleccionEmergencia) { _, _, checked -> esEmergencia = checked }
+                                .setPositiveButton(getString(R.string.crear)) { _, _ ->
+                                    lifecycleScope.launch {
+                                        val dificultadInt = when (sug.dificultad.lowercase()) { "fácil", "facil" -> 1; "media" -> 2; else -> 3 }
+                                        val multiplicador = if (esEmergencia) Constants.MULTIPLICADOR_EMERGENCIA else 1.0
+                                        val tarea = Tarea(titulo = sug.titulo, descripcion = sug.descripcion, categoria = categoriaId, dificultad = dificultadInt, puntos = sug.puntos, creadoPor = creador, asignadoA = elegidoUid, grupoId = parejaVM.grupo.value?.id, fechaProgramada = fechaElegida, esEmergencia = esEmergencia, multiplicadorPuntos = multiplicador)
+                                        Log.d(TAG, "Creando tarea desde sugerida: titulo=${tarea.titulo} asignadoA=${tarea.asignadoA}")
+                                        val res = LocalizadorServicios.repositorioTarea.crearTarea(tarea)
+                                        if (res.isSuccess) {
+                                            val creada = res.getOrNull()
+                                            Log.d(TAG, "Tarea creada OK: ${creada?.id}")
+                                            if (creada != null) programarRecordatorio(creada)
+                                            Toast.makeText(requireContext(), getString(R.string.tarea_asignada_ok, opciones[idx].first), Toast.LENGTH_SHORT).show()
+                                            // Notificar al asignado vía Firebase para que reciba la notificación en su dispositivo
+                                            if (!elegidoUid.isNullOrBlank()) {
+                                                Log.d(TAG, "Enviando notificación Firebase (sugerida): tipo=asignacion, destinatario=$elegidoUid, tareaId=${creada?.id}")
+                                                val repoNot = RepositorioNotificaciones()
+                                                val notifResult = repoNot.enviarNotificacion(
+                                                    Notificacion(
+                                                        id = "",
+                                                        tipo = "asignacion",
+                                                        contenido = mapOf(
+                                                            "tareaId" to (creada?.id ?: ""),
+                                                            "titulo" to tarea.titulo,
+                                                            "desde" to (creador ?: "")
+                                                        ),
+                                                        destinatario = elegidoUid,
+                                                        visto = false,
+                                                        fecha = Timestamp.now()
+                                                    )
+                                                )
+                                                if (notifResult.isSuccess) {
+                                                    Log.d(TAG, "Notificación de sugerida enviada OK, id=${notifResult.getOrNull()}")
+                                                } else {
+                                                    Log.e(TAG, "Error enviando notificación de sugerida: ${notifResult.exceptionOrNull()?.message}")
+                                                }
+                                            }
+                                            // opcional: si quieres volver atrás para ver la lista real, descomenta:
+                                            // findNavController().popBackStack()
+                                        } else {
+                                            Log.e(TAG, "Error crear tarea: ${res.exceptionOrNull()?.message}")
+                                            Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
+                                        }
                                     }
                                 }
-                                // opcional: si quieres volver atrás para ver la lista real, descomenta:
-                                // findNavController().popBackStack()
-                            } else {
-                                Log.e(TAG, "Error crear tarea: ${res.exceptionOrNull()?.message}")
-                                Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
-                            }
+                                .setNegativeButton(getString(R.string.cancelar), null)
+                                .show()
                         }
-                            }
-                            .setNegativeButton(getString(R.string.cancelar), null)
-                            .show()
                     }.setNegativeButton(getString(R.string.cancelar), null).show()
                 }
             }
@@ -1007,8 +1042,18 @@ class FragmentTareas : Fragment() {
         val tilPuntos = v.findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.tilPuntosEditar)
         val tvPuntosFijos = v.findViewById<TextView>(R.id.tvPuntosFijosEditar)
         val spDificultad = v.findViewById<android.widget.Spinner>(R.id.spDificultadEditar)
+        val tvFechaEditar = v.findViewById<TextView>(R.id.tvFechaEditar)
+        val btnElegirFechaEditar = v.findViewById<Button>(R.id.btnElegirFechaEditar)
         etTitulo.setText(tarea.titulo)
         etPuntos.setText(tarea.puntos.toString())
+        var fechaEditada: com.google.firebase.Timestamp? = tarea.fechaProgramada
+        tvFechaEditar.text = fechaEditada?.let { SelectorFechaHora.formatear(it) } ?: getString(R.string.sin_fecha)
+        btnElegirFechaEditar.setOnClickListener {
+            SelectorFechaHora.elegir(requireContext(), fechaEditada) { ts ->
+                fechaEditada = ts
+                tvFechaEditar.text = SelectorFechaHora.formatear(ts)
+            }
+        }
         val esPersonalizada = tarea.categoria.equals("personalizada", true) || tarea.categoria.equals("personalizado", true)
         if (esPersonalizada) {
             tilPuntos.visibility = View.GONE
@@ -1030,9 +1075,18 @@ class FragmentTareas : Fragment() {
                 val nuevosPts = if (esPersonalizada) Constants.PUNTOS_FIJOS_PERSONALIZADA else (etPuntos.text.toString().toIntOrNull() ?: tarea.puntos)
                 val nuevaDif = when(spDificultad.selectedItemPosition) {0->1;1->2;else->3}
                 lifecycleScope.launch {
-                    val nueva = tarea.copy(titulo = nuevoTitulo, puntos = nuevosPts, dificultad = nuevaDif)
-                    LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
-                    Toast.makeText(requireContext(), getString(R.string.tarea_editada), Toast.LENGTH_SHORT).show()
+                    val nueva = tarea.copy(titulo = nuevoTitulo, puntos = nuevosPts, dificultad = nuevaDif, fechaProgramada = fechaEditada)
+                    val res = LocalizadorServicios.repositorioTarea.actualizarTarea(nueva)
+                    if (res.isSuccess) {
+                        val cambioFecha = tarea.fechaProgramada != fechaEditada
+                        if (cambioFecha) {
+                            if (fechaEditada != null) programarRecordatorio(nueva)
+                            else NotificationScheduler.cancelReminder(requireContext(), nueva.id)
+                        }
+                        Toast.makeText(requireContext(), getString(R.string.tarea_editada), Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_LONG).show()
+                    }
                 }
             }.setNegativeButton(getString(R.string.cancelar), null).show()
     }
