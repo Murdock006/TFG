@@ -50,6 +50,11 @@ class FragmentTareas : Fragment() {
     private var pickImageLauncher: ActivityResultLauncher<String>? = null
     private var pendingTareaParaDisputa: Tarea? = null
     private var pendingMotivoReclamo: String? = null
+    private var pendingAccionDisputa: AccionDisputa? = null
+
+    /** Acción que ejecutará el selector de imagen una vez elegido (o descartado) el archivo. */
+    private enum class AccionDisputa { ABRIR, RESPONDER }
+
     private var usuariosCacheGlobal: List<es.sintaxys.teamtask.modelo.Usuario> = emptyList()
     private var miembrosParaSpinner: MutableList<Pair<String,String>> = mutableListOf()
     private val TAG = "FragmentTareas"
@@ -93,37 +98,33 @@ class FragmentTareas : Fragment() {
 
         // launcher para seleccionar imagen (evidencias)
         pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            // El estado pendiente se captura y se limpia ANTES de suspender para que una nueva
+            // selección no reutilice datos obsoletos.
+            val tarea = pendingTareaParaDisputa
+            val accion = pendingAccionDisputa
+            val motivo = pendingMotivoReclamo
+            pendingTareaParaDisputa = null
+            pendingAccionDisputa = null
+            pendingMotivoReclamo = null
             lifecycleScope.launch {
-                val tarea = pendingTareaParaDisputa ?: return@launch
+                if (tarea == null || accion == null) return@launch
+                // La foto es opcional (task-domain/spec.md: la UI puede abrir la disputa con
+                // pruebas=emptyList() si la subida falla o no se elige imagen). Antes, un fallo de
+                // subida dejaba el flujo en silencio: no se creaba nada ni se avisaba.
+                var url: String? = null
                 if (uri != null) {
-                    try {
-                        val subida = repoDisputas.subirFotoDisputa(tarea.id, uri.toString())
-                        if (subida.isSuccess) {
-                            val url = subida.getOrNull()
-                            val reclamante = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
-                            val disputa = Disputa(id = "", tareaId = tarea.id, iniciador = reclamante, estado = "abierta", pruebas = if (url != null) listOf(url) else emptyList(), fechaCreacion = com.google.firebase.Timestamp.now())
-                            repoDisputas.abrirDisputa(disputa)
-                            // La tarea pasa a "reclamada" para que el creador pueda ver y resolver la disputa.
-                            val actualizada = tarea.copy(
-                                estado = "reclamada",
-                                fechaReclamada = com.google.firebase.Timestamp.now(),
-                                reclamadoPor = reclamante,
-                                motivoReclamo = pendingMotivoReclamo
-                            )
-                            val resUpd = LocalizadorServicios.repositorioTarea.actualizarTarea(actualizada)
-                            if (resUpd.isSuccess) {
-                                Toast.makeText(requireContext(), getString(R.string.disputa_creada), Toast.LENGTH_SHORT).show()
-                                volverAInicio()
-                            } else {
-                                Toast.makeText(requireContext(), getString(R.string.error_marcar_reclamada), Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Toast.makeText(requireContext(), getString(R.string.error_subida, e.message), Toast.LENGTH_SHORT).show()
+                    val subida = repoDisputas.subirFotoDisputa(tarea.id, uri.toString(), requireContext().contentResolver)
+                    if (subida.isSuccess) {
+                        url = subida.getOrNull()
+                    } else {
+                        Log.w(TAG, "Subida de evidencia falló: ${subida.exceptionOrNull()?.message}")
+                        Toast.makeText(requireContext(), getString(R.string.evidencia_no_subida), Toast.LENGTH_LONG).show()
                     }
                 }
-                pendingTareaParaDisputa = null
-                pendingMotivoReclamo = null
+                when (accion) {
+                    AccionDisputa.ABRIR -> abrirDisputaDeTarea(tarea, motivo, url)
+                    AccionDisputa.RESPONDER -> responderDisputaDeTarea(tarea, motivo, url)
+                }
             }
         }
 
@@ -620,6 +621,14 @@ class FragmentTareas : Fragment() {
                                 btnAccion.text = getString(R.string.resolver_reclamo)
                                 btnAccion.setOnClickListener { mostrarDialogoResolverReclamo(tarea) }
                             }
+                            // B (asignado): puede responder la disputa abierta por el creador.
+                            // La tarea sigue en "reclamada" hasta que A la resuelva.
+                            !uid.isBlank() && uid == tarea.asignadoA && tarea.estado == "reclamada" -> {
+                                btnAccion.visibility = View.VISIBLE
+                                btnAccion.isEnabled = true
+                                btnAccion.text = getString(R.string.responder_disputa)
+                                btnAccion.setOnClickListener { solicitarRespuestaDisputa(tarea) }
+                            }
                             !uid.isBlank() && uid == tarea.asignadoA && tarea.estado == "pendiente" -> {
                                 btnAccion.text = getString(R.string.completar_btn)
                                 btnAccion.setOnClickListener {
@@ -1010,10 +1019,152 @@ class FragmentTareas : Fragment() {
             .setPositiveButton(getString(R.string.continuar)) { _, _ ->
                 pendingMotivoReclamo = entrada.text.toString().trim().ifBlank { null }
                 pendingTareaParaDisputa = tarea
+                pendingAccionDisputa = AccionDisputa.ABRIR
                 pickImageLauncher?.launch("image/*")
             }
             .setNegativeButton(getString(R.string.cancelar), null)
             .show()
+    }
+
+    /**
+     * Entrada de B (asignado): muestra el reclamo de A (motivo + evidencia) y le permite
+     * responder con su propia versión y foto. La resolución sigue siendo de A.
+     */
+    private fun solicitarRespuestaDisputa(tarea: Tarea) {
+        lifecycleScope.launch {
+            val disputa = try {
+                repoDisputas.listarDisputasPorTarea(tarea.id).getOrNull()?.firstOrNull()
+            } catch (_: Exception) {
+                null
+            }
+            val contenido = android.widget.LinearLayout(requireContext()).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                setPadding(48, 24, 48, 24)
+            }
+            val tvMsg = TextView(requireContext()).apply {
+                text = buildString {
+                    append(getString(R.string.reclamo_abierto_msg))
+                    if (!tarea.motivoReclamo.isNullOrBlank()) {
+                        append("\n\n")
+                        append(getString(R.string.motivo_reclamo_titulo, tarea.motivoReclamo))
+                    }
+                }
+            }
+            contenido.addView(tvMsg)
+
+            val urlEvidencia = disputa?.pruebas?.firstOrNull()
+            if (!urlEvidencia.isNullOrBlank()) {
+                val iv = android.widget.ImageView(requireContext()).apply {
+                    adjustViewBounds = true
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    contentDescription = getString(R.string.evidencia_reclamo_titulo)
+                }
+                Glide.with(this@FragmentTareas).load(urlEvidencia).into(iv)
+                contenido.addView(iv)
+            }
+
+            val entrada = android.widget.EditText(requireContext()).apply {
+                hint = getString(R.string.motivo_respuesta_hint)
+                setPadding(0, 24, 0, 0)
+            }
+            contenido.addView(entrada)
+
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.responder_disputa_titulo))
+                .setView(contenido)
+                .setPositiveButton(getString(R.string.continuar)) { _, _ ->
+                    pendingMotivoReclamo = entrada.text.toString().trim().ifBlank { null }
+                    pendingTareaParaDisputa = tarea
+                    pendingAccionDisputa = AccionDisputa.RESPONDER
+                    pickImageLauncher?.launch("image/*")
+                }
+                .setNegativeButton(getString(R.string.cancelar), null)
+                .show()
+        }
+    }
+
+    /** A abre la disputa: crea el documento, pasa la tarea a "reclamada" y notifica a B. */
+    private suspend fun abrirDisputaDeTarea(tarea: Tarea, motivo: String?, url: String?) {
+        val reclamante = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
+        val disputa = Disputa(
+            id = "",
+            tareaId = tarea.id,
+            iniciador = reclamante,
+            estado = "abierta",
+            pruebas = url?.let { listOf(it) } ?: emptyList(),
+            fechaCreacion = Timestamp.now()
+        )
+        val resDisputa = repoDisputas.abrirDisputa(disputa)
+        if (resDisputa.isFailure) {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.error_abrir_disputa, resDisputa.exceptionOrNull()?.message ?: ""),
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+        // La tarea pasa a "reclamada" para que el asignado pueda responder y el creador resolver.
+        val actualizada = tarea.copy(
+            estado = "reclamada",
+            fechaReclamada = Timestamp.now(),
+            reclamadoPor = reclamante,
+            motivoReclamo = motivo
+        )
+        val resUpd = LocalizadorServicios.repositorioTarea.actualizarTarea(actualizada)
+        if (resUpd.isFailure) {
+            Toast.makeText(requireContext(), getString(R.string.error_marcar_reclamada), Toast.LENGTH_LONG).show()
+            return
+        }
+        notificarDisputa("disputa_abierta", tarea.asignadoA, tarea, reclamante)
+        Toast.makeText(requireContext(), getString(R.string.disputa_creada), Toast.LENGTH_SHORT).show()
+        volverAInicio()
+    }
+
+    /** B responde la disputa con su versión; A queda habilitado para resolver. */
+    private suspend fun responderDisputaDeTarea(tarea: Tarea, motivo: String?, url: String?) {
+        val respondidoPor = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
+        val res = repoDisputas.responderDisputa(
+            tareaId = tarea.id,
+            respondidoPor = respondidoPor,
+            motivo = motivo,
+            pruebas = url?.let { listOf(it) } ?: emptyList()
+        )
+        if (res.isFailure) {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.error_responder_disputa, res.exceptionOrNull()?.message ?: ""),
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+        notificarDisputa("disputa_respondida", tarea.creadoPor, tarea, respondidoPor)
+        Toast.makeText(requireContext(), getString(R.string.disputa_respondida), Toast.LENGTH_SHORT).show()
+        volverAInicio()
+    }
+
+    /**
+     * Notifica al otro miembro una acción del flujo de disputas. Fuera de transacción y con
+     * fallos ignorados a propósito: la disputa ya quedó registrada en Firestore.
+     */
+    private suspend fun notificarDisputa(tipo: String, destinatario: String?, tarea: Tarea, desde: String) {
+        if (destinatario.isNullOrBlank()) return
+        try {
+            RepositorioNotificaciones().enviarNotificacion(
+                Notificacion(
+                    id = "",
+                    tipo = tipo,
+                    contenido = mapOf("tareaId" to tarea.id, "titulo" to tarea.titulo, "desde" to desde),
+                    destinatario = destinatario,
+                    visto = false,
+                    fecha = Timestamp.now()
+                )
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudo enviar notificación de disputa ($tipo): ${e.message}")
+        }
     }
 
     /** Muestra la evidencia del reclamo y permite aceptarlo (confirma y transfiere) o rechazarlo. */
@@ -1051,6 +1202,29 @@ class FragmentTareas : Fragment() {
                 }
                 Glide.with(this@FragmentTareas).load(urlEvidencia).into(iv)
                 contenido.addView(iv)
+            }
+
+            // Respuesta del asignado (si ya respondió): su motivo y su evidencia.
+            val motivoRespuesta = disputa?.motivoRespuesta
+            if (!motivoRespuesta.isNullOrBlank()) {
+                val tvRespuesta = TextView(requireContext()).apply {
+                    setPadding(0, 24, 0, 0)
+                    text = getString(R.string.motivo_respuesta_titulo, motivoRespuesta)
+                }
+                contenido.addView(tvRespuesta)
+            }
+            val urlRespuesta = disputa?.pruebasRespuesta?.firstOrNull()
+            if (!urlRespuesta.isNullOrBlank()) {
+                val ivRespuesta = android.widget.ImageView(requireContext()).apply {
+                    adjustViewBounds = true
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    contentDescription = getString(R.string.evidencia_respuesta_titulo)
+                }
+                Glide.with(this@FragmentTareas).load(urlRespuesta).into(ivRespuesta)
+                contenido.addView(ivRespuesta)
             }
 
             androidx.appcompat.app.AlertDialog.Builder(requireContext())

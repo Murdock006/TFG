@@ -163,7 +163,7 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 q3.documents.mapNotNull { docToTarea(it) }.forEach { mapa[it.id] = it }
             }
 
-            Result.success(mapa.values.toList())
+            Result.success(mapa.values.toList().sortedByDescending { it.fechaCreada?.seconds ?: 0L })
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -207,7 +207,9 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
             idsPorFuente[fuente] = docs.map { it.id }.toSet()
             val vigentes = idsPorFuente.values.flatten().toSet()
             combinado.keys.removeAll { it !in vigentes }
-            trySend(combinado.values.toList())
+            // Orden cliente-side por fechaCreada DESC (más nuevas primero) en el punto de emisión:
+            // así cada snapshot parcial reemite la unión ya ordenada, no solo el merge final.
+            trySend(combinado.values.toList().sortedByDescending { it.fechaCreada?.seconds ?: 0L })
         }
 
         // [UNVERIFIED] Se asume que los callbacks de addSnapshotListener están confinados al hilo
@@ -254,7 +256,8 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
                 // Eliminar los que ya no están en el snapshot
                 val idsActuales = snap?.documents?.map { it.id }?.toSet() ?: emptySet()
                 combinado.keys.removeAll { it !in idsActuales }
-                trySend(combinado.values.toList())
+                // Orden cliente-side por fechaCreada DESC (más nuevas primero) en cada emisión.
+                trySend(combinado.values.toList().sortedByDescending { it.fechaCreada?.seconds ?: 0L })
             }
         awaitClose { sub.remove() }
     }

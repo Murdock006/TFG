@@ -233,6 +233,17 @@
     <string name="reclamo_rechazado">Reclamo rechazado: la tarea vuelve a pendiente</string>
     <string name="error_resolver_reclamo">Error al resolver el reclamo: %1$s</string>
     <string name="error_marcar_reclamada">No se pudo registrar el reclamo en la tarea</string>
+    <string name="evidencia_no_subida">No se pudo subir la evidencia; se continuará sin foto</string>
+    <string name="error_abrir_disputa">No se pudo abrir la disputa: %1$s</string>
+    <!-- Respuesta del asignado (flujo bidireccional) -->
+    <string name="responder_disputa">Responder disputa</string>
+    <string name="responder_disputa_titulo">Responder al reclamo</string>
+    <string name="reclamo_abierto_msg">Se ha abierto un reclamo sobre esta tarea. Puedes responder con tu propia evidencia; el creador decidirá cómo resolverlo.</string>
+    <string name="motivo_respuesta_hint">Tu versión de los hechos (opcional)</string>
+    <string name="motivo_respuesta_titulo">Respuesta: %1$s</string>
+    <string name="evidencia_respuesta_titulo">Evidencia de la respuesta</string>
+    <string name="disputa_respondida">Respuesta enviada</string>
+    <string name="error_responder_disputa">No se pudo enviar la respuesta: %1$s</string>
     <string name="permisos_firestore">Permisos Firestore insuficientes</string>
     <string name="error_asignar">Error asignar: %1$s</string>
     <string name="completa_campos">Completa los campos obligatorios</string>
