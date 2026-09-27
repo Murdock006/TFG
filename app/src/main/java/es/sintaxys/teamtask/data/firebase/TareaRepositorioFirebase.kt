@@ -398,26 +398,75 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
     }
 
     override suspend fun resolverReclamo(tareaId: String, aceptado: Boolean): Result<Tarea> {
-        // Simple implementation: toggle estado
         return try {
             val docRef = firestore.collection(coleccion).document(tareaId)
             val snap = docRef.get().await()
             val tarea = docToTarea(snap) ?: return Result.failure(Exception("Tarea no encontrada"))
-            val nueva = if (aceptado) tarea.copy(estado = "confirmada", fechaReclamada = null, reclamadoPor = null, motivoReclamo = null) else tarea.copy(estado = "pendiente", fechaReclamada = null, reclamadoPor = null, motivoReclamo = null)
-            val map = mapOf("estado" to nueva.estado, "fechaReclamada" to nueva.fechaReclamada, "reclamadoPor" to nueva.reclamadoPor, "motivoReclamo" to nueva.motivoReclamo)
-            docRef.update(map).await()
-
-            // si aceptado, también transferir
-            if (aceptado) {
-                try {
-                    if (!nueva.asignadoA.isNullOrBlank() && !nueva.creadoPor.isNullOrBlank()) {
-                        es.sintaxys.teamtask.service.LocalizadorServicios.repositorioAuth.sumarPuntosConBonificacion(nueva.asignadoA!!, nueva.puntos)
-                        es.sintaxys.teamtask.service.LocalizadorServicios.repositorioAuth.liberarPuntos(nueva.creadoPor!!, nueva.puntos)
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.e("TareaRepositorioFirebase", "Error en transferencia de puntos al resolver reclamo (tareaId=$tareaId)", e)
-                }
+            if (tarea.estado != "reclamada") {
+                return Result.failure(Exception("La tarea no está en disputa"))
             }
+
+            if (!aceptado) {
+                // Rechazado: vuelve a pendiente; la reserva del creador queda intacta.
+                val map = mapOf(
+                    "estado" to "pendiente",
+                    "fechaReclamada" to null,
+                    "reclamadoPor" to null,
+                    "motivoReclamo" to null
+                )
+                docRef.update(map).await()
+                return Result.success(tarea.copy(estado = "pendiente", fechaReclamada = null, reclamadoPor = null, motivoReclamo = null))
+            }
+
+            // Aceptado: misma liquidación que confirmarTarea — acredita al ejecutor y
+            // consume la reserva del creador (NO devuelve la reserva).
+            val ejecutorRef = tarea.asignadoA?.takeIf { it.isNotBlank() }?.let { firestore.collection("usuarios").document(it) }
+            val creadorRef = tarea.creadoPor?.takeIf { it.isNotBlank() }?.let { firestore.collection("usuarios").document(it) }
+
+            val nueva = firestore.runTransaction { t ->
+                val snapTx = t.get(docRef)
+                val tareaTx = docToTarea(snapTx) ?: throw Exception("Tarea inválida en transacción")
+                if (tareaTx.estado != "reclamada") throw Exception("La tarea no está en disputa")
+
+                val ejecSnap = ejecutorRef?.let { t.get(it) }
+                val creadorSnap = creadorRef?.let { t.get(it) }
+
+                val rachaActual = (ejecSnap?.getLong("rachaDias") ?: 0L).toInt()
+                val bonificacionRacha = if (rachaActual > 0 && rachaActual % Constants.STREAK_BONUS_THRESHOLD == 0) Constants.REWARD_PERCENTAGE else 0.0
+                val multiplicador = tareaTx.multiplicadorPuntos.coerceAtLeast(1.0)
+                val puntosBase = (tareaTx.puntos * multiplicador).toInt()
+                val puntosFinales = (puntosBase * (1.0 + bonificacionRacha)).toInt()
+                val incrementoRecompensa = (puntosFinales * Constants.REWARD_PERCENTAGE).toInt().coerceAtLeast(1)
+
+                t.update(docRef, mapOf(
+                    "estado" to "confirmada",
+                    "fechaReclamada" to null,
+                    "reclamadoPor" to null,
+                    "motivoReclamo" to null
+                ))
+
+                if (ejecutorRef != null && ejecSnap != null) {
+                    if (!ejecSnap.exists()) {
+                        t.set(ejecutorRef, mapOf("puntos" to puntosFinales, "rachaDias" to rachaActual + 1, "puntosRecompensa" to incrementoRecompensa))
+                    } else {
+                        val puntosActuales = (ejecSnap.getLong("puntos") ?: 0L).toInt()
+                        val recompensaActual = (ejecSnap.getLong("puntosRecompensa") ?: 0L).toInt()
+                        t.update(ejecutorRef, mapOf(
+                            "puntos" to puntosActuales + puntosFinales,
+                            "rachaDias" to rachaActual + 1,
+                            "puntosRecompensa" to recompensaActual + incrementoRecompensa
+                        ))
+                    }
+                }
+
+                // Consumir la reserva del creador (sin devolverla).
+                if (creadorRef != null && creadorSnap != null) {
+                    val reservados = (creadorSnap.getLong("puntosReservados") ?: 0L).toInt()
+                    t.update(creadorRef, "puntosReservados", (reservados - tareaTx.puntos).coerceAtLeast(0))
+                }
+
+                tareaTx.copy(estado = "confirmada", fechaReclamada = null, reclamadoPor = null, motivoReclamo = null)
+            }.await()
 
             Result.success(nueva)
         } catch (e: Exception) {
