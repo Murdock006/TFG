@@ -15,7 +15,7 @@ import es.sintaxys.teamtask.service.firebase.FirebaseComposition
 object LocalizadorServicios {
     val repositorioAuth: AuthRepositorio by lazy {
         FirebaseComposition.requireContext()
-        AuthRepositorioFirebase(FirebaseComposition.auth(), FirebaseComposition.firestore(), FirebaseComposition.storage())
+        AuthRepositorioFirebase(FirebaseComposition.auth(), FirebaseComposition.firestore())
     }
 
     val repositorioGrupo: GrupoRepositorio by lazy {

@@ -1,5 +1,6 @@
 package es.sintaxys.teamtask.vista
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -31,10 +32,10 @@ import es.sintaxys.teamtask.viewmodel.TareasViewModel
 import es.sintaxys.teamtask.repositorio.CategoriasRepositorio
 import es.sintaxys.teamtask.repositorio.RepositorioNotificaciones
 import es.sintaxys.teamtask.modelo.Notificacion
+import es.sintaxys.teamtask.util.AvatarImagen
 import es.sintaxys.teamtask.util.Constants
 import es.sintaxys.teamtask.util.SelectorFechaHora
 import es.sintaxys.teamtask.util.TareaUi
-import com.bumptech.glide.Glide
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -109,21 +110,21 @@ class FragmentTareas : Fragment() {
             lifecycleScope.launch {
                 if (tarea == null || accion == null) return@launch
                 // La foto es opcional (task-domain/spec.md: la UI puede abrir la disputa con
-                // pruebas=emptyList() si la subida falla o no se elige imagen). Antes, un fallo de
-                // subida dejaba el flujo en silencio: no se creaba nada ni se avisaba.
-                var url: String? = null
+                // pruebas=emptyList() si el procesado falla o no se elige imagen). Antes, un fallo
+                // dejaba el flujo en silencio: no se creaba nada ni se avisaba.
+                var evidenciaBase64: String? = null
                 if (uri != null) {
-                    val subida = repoDisputas.subirFotoDisputa(tarea.id, uri.toString(), requireContext().contentResolver)
-                    if (subida.isSuccess) {
-                        url = subida.getOrNull()
+                    val procesada = repoDisputas.procesarEvidenciaDisputa(uri.toString(), requireContext().contentResolver)
+                    if (procesada.isSuccess) {
+                        evidenciaBase64 = procesada.getOrNull()
                     } else {
-                        Log.w(TAG, "Subida de evidencia falló: ${subida.exceptionOrNull()?.message}")
+                        Log.w(TAG, "Procesamiento de evidencia falló: ${procesada.exceptionOrNull()?.message}")
                         Toast.makeText(requireContext(), getString(R.string.evidencia_no_subida), Toast.LENGTH_LONG).show()
                     }
                 }
                 when (accion) {
-                    AccionDisputa.ABRIR -> abrirDisputaDeTarea(tarea, motivo, url)
-                    AccionDisputa.RESPONDER -> responderDisputaDeTarea(tarea, motivo, url)
+                    AccionDisputa.ABRIR -> abrirDisputaDeTarea(tarea, motivo, evidenciaBase64)
+                    AccionDisputa.RESPONDER -> responderDisputaDeTarea(tarea, motivo, evidenciaBase64)
                 }
             }
         }
@@ -1068,8 +1069,10 @@ class FragmentTareas : Fragment() {
             }
             contenido.addView(tvMsg)
 
-            val urlEvidencia = disputa?.pruebas?.firstOrNull()
-            if (!urlEvidencia.isNullOrBlank()) {
+            // La evidencia viaja como base64 dentro del documento de la disputa: se decodifica a
+            // un Bitmap para mostrarla (Glide solo cargaría URLs, que ya no existen).
+            val bitmapEvidencia = decodificarEvidenciaBase64(disputa?.pruebas?.firstOrNull())
+            if (bitmapEvidencia != null) {
                 val iv = android.widget.ImageView(requireContext()).apply {
                     adjustViewBounds = true
                     layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -1077,8 +1080,8 @@ class FragmentTareas : Fragment() {
                         android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
                     )
                     contentDescription = getString(R.string.evidencia_reclamo_titulo)
+                    setImageBitmap(bitmapEvidencia)
                 }
-                Glide.with(this@FragmentTareas).load(urlEvidencia).into(iv)
                 contenido.addView(iv)
             }
 
@@ -1103,14 +1106,14 @@ class FragmentTareas : Fragment() {
     }
 
     /** A abre la disputa: crea el documento, pasa la tarea a "reclamada" y notifica a B. */
-    private suspend fun abrirDisputaDeTarea(tarea: Tarea, motivo: String?, url: String?) {
+    private suspend fun abrirDisputaDeTarea(tarea: Tarea, motivo: String?, evidenciaBase64: String?) {
         val reclamante = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
         val disputa = Disputa(
             id = "",
             tareaId = tarea.id,
             iniciador = reclamante,
             estado = "abierta",
-            pruebas = url?.let { listOf(it) } ?: emptyList(),
+            pruebas = evidenciaBase64?.let { listOf(it) } ?: emptyList(),
             fechaCreacion = Timestamp.now()
         )
         val resDisputa = repoDisputas.abrirDisputa(disputa)
@@ -1140,13 +1143,13 @@ class FragmentTareas : Fragment() {
     }
 
     /** B responde la disputa con su versión; A queda habilitado para resolver. */
-    private suspend fun responderDisputaDeTarea(tarea: Tarea, motivo: String?, url: String?) {
+    private suspend fun responderDisputaDeTarea(tarea: Tarea, motivo: String?, evidenciaBase64: String?) {
         val respondidoPor = LocalizadorServicios.repositorioAuth.usuarioActual()?.id ?: ""
         val res = repoDisputas.responderDisputa(
             tareaId = tarea.id,
             respondidoPor = respondidoPor,
             motivo = motivo,
-            pruebas = url?.let { listOf(it) } ?: emptyList()
+            pruebas = evidenciaBase64?.let { listOf(it) } ?: emptyList()
         )
         if (res.isFailure) {
             Toast.makeText(
@@ -1183,6 +1186,16 @@ class FragmentTareas : Fragment() {
         }
     }
 
+    /**
+     * Decodifica la evidencia guardada como base64 (JPEG) en el documento de la disputa.
+     * Devuelve `null` cuando no hay evidencia o el base64 es inválido.
+     */
+    private fun decodificarEvidenciaBase64(base64: String?): Bitmap? {
+        if (base64.isNullOrBlank()) return null
+        val bytes = AvatarImagen.decodificarBase64(base64) ?: return null
+        return AvatarImagen.decodificarJpeg(bytes)
+    }
+
     /** Muestra la evidencia del reclamo y permite aceptarlo (confirma y transfiere) o rechazarlo. */
     private fun mostrarDialogoResolverReclamo(tarea: Tarea) {
         lifecycleScope.launch {
@@ -1206,8 +1219,9 @@ class FragmentTareas : Fragment() {
             }
             contenido.addView(tvMsg)
 
-            val urlEvidencia = disputa?.pruebas?.firstOrNull()
-            if (!urlEvidencia.isNullOrBlank()) {
+            // Evidencia del reclamo (base64 -> Bitmap).
+            val bitmapEvidencia = decodificarEvidenciaBase64(disputa?.pruebas?.firstOrNull())
+            if (bitmapEvidencia != null) {
                 val iv = android.widget.ImageView(requireContext()).apply {
                     adjustViewBounds = true
                     layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -1215,8 +1229,8 @@ class FragmentTareas : Fragment() {
                         android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
                     )
                     contentDescription = getString(R.string.evidencia_reclamo_titulo)
+                    setImageBitmap(bitmapEvidencia)
                 }
-                Glide.with(this@FragmentTareas).load(urlEvidencia).into(iv)
                 contenido.addView(iv)
             }
 
@@ -1229,8 +1243,8 @@ class FragmentTareas : Fragment() {
                 }
                 contenido.addView(tvRespuesta)
             }
-            val urlRespuesta = disputa?.pruebasRespuesta?.firstOrNull()
-            if (!urlRespuesta.isNullOrBlank()) {
+            val bitmapRespuesta = decodificarEvidenciaBase64(disputa?.pruebasRespuesta?.firstOrNull())
+            if (bitmapRespuesta != null) {
                 val ivRespuesta = android.widget.ImageView(requireContext()).apply {
                     adjustViewBounds = true
                     layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -1238,8 +1252,8 @@ class FragmentTareas : Fragment() {
                         android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
                     )
                     contentDescription = getString(R.string.evidencia_respuesta_titulo)
+                    setImageBitmap(bitmapRespuesta)
                 }
-                Glide.with(this@FragmentTareas).load(urlRespuesta).into(ivRespuesta)
                 contenido.addView(ivRespuesta)
             }
 

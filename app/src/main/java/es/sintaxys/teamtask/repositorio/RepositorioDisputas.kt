@@ -4,26 +4,25 @@ import android.content.ContentResolver
 import es.sintaxys.teamtask.modelo.Disputa
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageMetadata
 import kotlinx.coroutines.tasks.await
 import es.sintaxys.teamtask.service.firebase.FirebaseComposition
 import es.sintaxys.teamtask.util.AvatarImagen
-import java.util.*
 
 class RepositorioDisputas(
-    private val firestore: FirebaseFirestore = FirebaseComposition.firestore(),
-    private val storage: FirebaseStorage = FirebaseComposition.storage()
+    private val firestore: FirebaseFirestore = FirebaseComposition.firestore()
 ) {
 
     private val coleccionDisputas = "disputas"
 
     private companion object {
-        // Contrato de storage.rules: solo image/jpeg y < 5 MB. Se comprime antes de subir para
-        // cumplirlo siempre, con más resolución que un avatar porque aquí la imagen es evidencia.
-        const val CONTENT_TYPE_JPEG = "image/jpeg"
-        const val LADO_LARGO_EVIDENCIA_PX = 1280
-        const val CALIDAD_EVIDENCIA_JPEG = 80
+        // La evidencia vive como base64 dentro del documento de `disputas` (Firestore, 1 MB por
+        // documento), no en Firebase Storage. Un documento guarda DOS fotos (la de quien reclama
+        // y la de quien responde), así que cada base64 debe ser holgado: un JPEG 800px q70 pesa
+        // ~150-250 KB. Se limita cada foto a MAX_BASE64_EVIDENCIA_CHARS caracteres para que las
+        // dos sumen <= 800 000 y el resto del documento entre dentro del límite de 1 MB.
+        const val LADO_LARGO_EVIDENCIA_PX = 800
+        const val CALIDAD_EVIDENCIA_JPEG = 70
+        const val MAX_BASE64_EVIDENCIA_CHARS = 400_000
     }
 
     suspend fun abrirDisputa(disputa: Disputa): Result<String> {
@@ -55,24 +54,34 @@ class RepositorioDisputas(
         }
     }
 
-    suspend fun subirFotoDisputa(tareaId: String, localUriString: String, resolver: ContentResolver): Result<String> {
+    /**
+     * Comprime la imagen elegida y devuelve su contenido como JPEG en base64, listo para
+     * guardarlo dentro del documento de `disputas` en Firestore. No usa Firebase Storage.
+     *
+     * @return base64 de la evidencia, o fallo si no se puede procesar o si excede
+     * [MAX_BASE64_EVIDENCIA_CHARS] (se rechaza para no romper el documento de la disputa).
+     */
+    suspend fun procesarEvidenciaDisputa(localUriString: String, resolver: ContentResolver): Result<String> {
         return try {
             val localUri = android.net.Uri.parse(localUriString)
-            // Se reconvierte cualquier imagen a JPEG antes de subir: storage.rules solo acepta
-            // `image/jpeg` < 5 MB, así que subir el archivo original (PNG/HEIC/>5 MB) daría
-            // PERMISSION_DENIED. Se reutiliza la conversión a JPEG de AvatarImagen con una
-            // resolución mayor que la de avatar, ya que aquí la imagen es evidencia.
+            // Se reconvierte cualquier imagen a JPEG (PNG/HEIC incluidas) y se reduce antes de
+            // codificarla: la evidencia es un string base64 dentro del documento de Firestore.
             val bytes = AvatarImagen.comprimirJpeg(
                 resolver,
                 localUri,
                 ladoLargo = LADO_LARGO_EVIDENCIA_PX,
                 calidad = CALIDAD_EVIDENCIA_JPEG
-            ) ?: return Result.failure(Exception("No se pudo procesar la imagen"))
-            val ref = storage.reference.child("disputas/$tareaId/${UUID.randomUUID()}.jpg")
-            val metadata = StorageMetadata.Builder().setContentType(CONTENT_TYPE_JPEG).build()
-            ref.putBytes(bytes, metadata).await()
-            val url = ref.downloadUrl.await().toString()
-            Result.success(url)
+            ) ?: return Result.failure(Exception("No se pudo procesar la imagen seleccionada"))
+            val base64 = AvatarImagen.codificarBase64(bytes)
+            if (base64.length > MAX_BASE64_EVIDENCIA_CHARS) {
+                return Result.failure(
+                    Exception(
+                        "La imagen es demasiado grande para adjuntarla como evidencia " +
+                            "(máximo: $MAX_BASE64_EVIDENCIA_CHARS caracteres codificados)."
+                    )
+                )
+            }
+            Result.success(base64)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -13,8 +13,6 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.WriteBatch
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
@@ -26,8 +24,7 @@ import kotlinx.coroutines.flow.callbackFlow
 // Implementación Firebase para AuthRepositorio
 class AuthRepositorioFirebase(
     private val auth: FirebaseAuth = FirebaseComposition.auth(),
-    private val firestore: com.google.firebase.firestore.FirebaseFirestore = FirebaseComposition.firestore(),
-    private val storage: FirebaseStorage = FirebaseComposition.storage()
+    private val firestore: com.google.firebase.firestore.FirebaseFirestore = FirebaseComposition.firestore()
 ) : AuthRepositorio {
 
     private companion object {
@@ -336,18 +333,11 @@ class AuthRepositorioFirebase(
             borrarDocumentosPorCampo("canjes", "usuarioUid", uid)
         }
 
-        // 9) Disputas: primero la evidencia de Storage, después el documento de la disputa.
+        // 9) Disputas: la evidencia vive como base64 dentro del propio documento de la disputa,
+        // así que borrar el documento elimina también las fotos. No hay nada que borrar en Storage.
         pasos += ejecutarPaso("disputas", "disputas y evidencias") {
             val disputas = firestore.collection("disputas").whereEqualTo("iniciador", uid).get().await()
             for (doc in disputas.documents) {
-                val pruebas = doc.get("pruebas") as? List<*>
-                pruebas?.mapNotNull { it as? String }?.forEach { url ->
-                    try {
-                        storage.getReferenceFromUrl(url).delete().await()
-                    } catch (e: StorageException) {
-                        if (e.errorCode != StorageException.ERROR_OBJECT_NOT_FOUND) throw e
-                    }
-                }
                 doc.reference.delete().await()
             }
         }
