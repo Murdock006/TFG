@@ -1,9 +1,22 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.navigation.safeargs)
     id("com.google.gms.google-services")
 }
+
+// Release signing credentials are read from local.properties (gitignored) with
+// environment variable fallback, so no secrets are hardcoded in version control.
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("local.properties")
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+}
+
+fun signingProperty(key: String): String? =
+    keystoreProperties.getProperty(key) ?: System.getenv(key)
 
 android {
     namespace = "es.sintaxys.teamtask"
@@ -32,6 +45,18 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val storePath = signingProperty("RELEASE_STORE_FILE")
+            if (storePath != null) {
+                storeFile = rootProject.file(storePath)
+                storePassword = signingProperty("RELEASE_STORE_PASSWORD")
+                keyAlias = signingProperty("RELEASE_KEY_ALIAS")
+                keyPassword = signingProperty("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         // IDs de TEST de AdMob para desarrollo local.
         // Se define antes de "emulator" para que este herede los mismos valores via initWith(debug).
@@ -50,6 +75,7 @@ android {
         }
         release {
             isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
             buildConfigField("String", "FIREBASE_MODE", "\"RELEASE\"")
             buildConfigField("String", "FIREBASE_HOST", "\"\"")
             buildConfigField("String", "FIREBASE_PROJECT_ID", "\"teamtask-3a855\"")
