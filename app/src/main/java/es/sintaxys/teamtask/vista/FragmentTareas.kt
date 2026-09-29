@@ -1238,6 +1238,16 @@ class FragmentTareas : Fragment() {
         lifecycleScope.launch {
             val res = LocalizadorServicios.repositorioTarea.resolverReclamo(tareaId, aceptado)
             if (res.isSuccess) {
+                // Cierre de la disputa (best-effort): la tarea ya quedó resuelta, así que un fallo
+                // aquí solo se loguea y no bloquea el flujo de éxito del usuario.
+                try {
+                    val cierre = repoDisputas.cerrarDisputa(tareaId)
+                    if (cierre.isFailure) {
+                        android.util.Log.w("FragmentTareas", "No se pudo cerrar la disputa de la tarea $tareaId: ${cierre.exceptionOrNull()?.message}")
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("FragmentTareas", "Error cerrando la disputa de la tarea $tareaId: ${e.message}")
+                }
                 Toast.makeText(
                     requireContext(),
                     getString(if (aceptado) R.string.reclamo_aceptado else R.string.reclamo_rechazado),

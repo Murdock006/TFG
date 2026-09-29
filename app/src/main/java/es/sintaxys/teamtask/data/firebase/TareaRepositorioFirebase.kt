@@ -400,6 +400,39 @@ class TareaRepositorioFirebase(private val firestore: FirebaseFirestore = Fireba
         }
     }
 
+    // Actualizaciones POR CAMPO: escriben solo el campo indicado con `update`, sin reescribir el
+    // documento completo. Evita pisar cambios concurrentes de otros usuarios (no se serializa un
+    // objeto en memoria potencialmente desactualizado).
+    override suspend fun actualizarRecordatorio(tareaId: String, minutosAntes: Int): Result<Unit> {
+        return try {
+            firestore.collection(coleccion).document(tareaId)
+                .update(mapOf("minutosAntes" to minutosAntes)).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun actualizarImportante(tareaId: String, esImportante: Boolean): Result<Unit> {
+        return try {
+            firestore.collection(coleccion).document(tareaId)
+                .update(mapOf("esImportante" to esImportante)).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun reprogramarTarea(tareaId: String, fechaProgramada: Timestamp?): Result<Unit> {
+        return try {
+            firestore.collection(coleccion).document(tareaId)
+                .update(mapOf("fechaProgramada" to fechaProgramada)).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun resolverReclamo(tareaId: String, aceptado: Boolean): Result<Tarea> {
         return try {
             val docRef = firestore.collection(coleccion).document(tareaId)

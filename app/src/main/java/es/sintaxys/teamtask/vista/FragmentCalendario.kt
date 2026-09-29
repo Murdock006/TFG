@@ -308,7 +308,7 @@ class FragmentCalendario : Fragment() {
         if (puedeMutar && soyCreador) {
             opciones.add(Opcion("Reprogramar fecha y hora") { elegirFechaHoraParaTarea(tarea) })
             opciones.add(Opcion(if (tarea.esImportante) "Quitar importante" else "Marcar como importante") {
-                actualizarCampo(tarea.copy(esImportante = !tarea.esImportante))
+                actualizarCampo { LocalizadorServicios.repositorioTarea.actualizarImportante(tarea.id, !tarea.esImportante) }
             })
         }
         // El recordatorio es una notificación propia: lo pueden cambiar el creador y el asignado.
@@ -332,8 +332,7 @@ class FragmentCalendario : Fragment() {
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setTitle("Recordatorio")
             .setItems(opciones) { _, idx ->
-                val nueva = tarea.copy(minutosAntes = valores[idx])
-                actualizarCampo(nueva)
+                actualizarCampo { LocalizadorServicios.repositorioTarea.actualizarRecordatorio(tarea.id, valores[idx]) }
                 // programar recordatorio si hay fecha
                 tarea.fechaProgramada?.let { ts ->
                     val trigger = ts.toDate().time - (valores[idx] * 60 * 1000L)
@@ -358,8 +357,7 @@ class FragmentCalendario : Fragment() {
             { _, y, m, d ->
                 TimePickerDialog(requireContext(), { _, h, min ->
                     val cal = Calendar.getInstance().apply { set(y, m, d, h, min, 0) }
-                    val nueva = tarea.copy(fechaProgramada = Timestamp(cal.time))
-                    actualizarCampo(nueva)
+                    actualizarCampo { LocalizadorServicios.repositorioTarea.reprogramarTarea(tarea.id, Timestamp(cal.time)) }
                     // programar recordatorio
                     val trigger = cal.time.time - (tarea.minutosAntes * 60 * 1000L)
                     if (trigger > System.currentTimeMillis()) {
@@ -378,9 +376,9 @@ class FragmentCalendario : Fragment() {
         ).show()
     }
 
-    private fun actualizarCampo(tarea: Tarea) {
+    private fun actualizarCampo(accion: suspend () -> Result<Unit>) {
         viewLifecycleOwner.lifecycleScope.launch {
-            val res = LocalizadorServicios.repositorioTarea.actualizarTarea(tarea)
+            val res = accion()
             if (res.isFailure) Toast.makeText(requireContext(), res.exceptionOrNull()?.message ?: "Error", Toast.LENGTH_SHORT).show()
         }
     }

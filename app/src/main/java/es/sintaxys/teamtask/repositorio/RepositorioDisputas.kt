@@ -37,7 +37,10 @@ class RepositorioDisputas(
     suspend fun listarDisputasPorTarea(tareaId: String): Result<List<Disputa>> {
         return try {
             val snap = firestore.collection(coleccionDisputas).whereEqualTo("tareaId", tareaId).get().await()
+            // Orden cliente-side por fechaCreacion DESC: la primera es la disputa vigente (la última
+            // creada). No se usa orderBy de Firestore para no exigir un índice compuesto.
             val lista = snap.documents.mapNotNull { it.toObject(Disputa::class.java)?.copy(id = it.id) }
+                .sortedByDescending { it.fechaCreacion?.seconds ?: 0L }
             Result.success(lista)
         } catch (e: Exception) {
             Result.failure(e)
@@ -99,7 +102,12 @@ class RepositorioDisputas(
     ): Result<String> {
         return try {
             val snap = firestore.collection(coleccionDisputas).whereEqualTo("tareaId", tareaId).get().await()
-            val doc = snap.documents.firstOrNull()
+            // Se opera sobre la disputa vigente: la ÚLTIMA por fechaCreacion (no la primera que
+            // devuelva Firestore, que puede ser una disputa vieja ya resuelta). Se conserva el id
+            // del documento para el update.
+            val vigente = snap.documents
+                .mapNotNull { doc -> doc.toObject(Disputa::class.java)?.copy(id = doc.id)?.let { doc.id to it } }
+                .maxByOrNull { it.second.fechaCreacion?.seconds ?: 0L }
                 ?: return Result.failure(Exception("No hay disputa registrada para esta tarea"))
             val cambios = mutableMapOf<String, Any?>(
                 "estado" to "en_progreso",
@@ -108,8 +116,28 @@ class RepositorioDisputas(
                 "pruebasRespuesta" to pruebas,
                 "fechaRespuesta" to Timestamp.now()
             )
-            firestore.collection(coleccionDisputas).document(doc.id).update(cambios).await()
-            Result.success(doc.id)
+            firestore.collection(coleccionDisputas).document(vigente.first).update(cambios).await()
+            Result.success(vigente.first)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Cierra la disputa VIGENTE de una tarea (la última por fechaCreacion) marcando su estado como
+     * `cerrada`. Se invoca al resolver un reclamo para que la disputa no quede abierta.
+     *
+     * Best-effort: quien la llama no debe abortar si esto falla, porque la tarea ya quedó resuelta.
+     */
+    suspend fun cerrarDisputa(tareaId: String): Result<Unit> {
+        return try {
+            val snap = firestore.collection(coleccionDisputas).whereEqualTo("tareaId", tareaId).get().await()
+            val vigente = snap.documents
+                .mapNotNull { doc -> doc.toObject(Disputa::class.java)?.copy(id = doc.id) }
+                .maxByOrNull { it.fechaCreacion?.seconds ?: 0L }
+                ?: return Result.failure(Exception("No hay disputa registrada para esta tarea"))
+            firestore.collection(coleccionDisputas).document(vigente.id).update(mapOf("estado" to "cerrada")).await()
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
