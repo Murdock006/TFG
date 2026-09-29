@@ -345,4 +345,8 @@
     <string name="cd_avatar_usuario">Avatar del usuario</string>
     <string name="cd_avatar_miembro">Avatar del miembro</string>
     <string name="cd_cambiar_icono_grupo">Toca para cambiar el icono del grupo</string>
+
+    <!-- Logo textual de la pantalla de inicio (nombre de marca, no se traduce). -->
+    <string name="logo_team" translatable="false">Team</string>
+    <string name="logo_task" translatable="false">Task</string>
 </resources>

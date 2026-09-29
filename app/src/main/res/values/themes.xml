@@ -2,11 +2,14 @@
     <style name="Base.Theme.TFG" parent="Tema.TFG.Moderno" />
     <style name="Theme.TFG" parent="Tema.TFG.Moderno" />
 
-    <!-- Splash Screen theme -->
-    <style name="Theme.TFG.Splash" parent="Tema.TFG.Moderno">
+    <!-- Splash Screen theme: hereda de Theme.TFG para que las barras del sistema y los
+         iconos claros/oscuros queden explicitos tambien en la pantalla de arranque. -->
+    <style name="Theme.TFG.Splash" parent="Theme.TFG">
         <item name="android:windowBackground">@drawable/splash_background</item>
         <item name="android:statusBarColor">@color/fondo</item>
         <item name="android:navigationBarColor">@color/fondo</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 
     <style name="ThemeOverlay.TFG.FullscreenContainer" parent="">

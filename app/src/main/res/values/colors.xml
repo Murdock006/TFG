@@ -62,6 +62,8 @@
     <!-- TOKENS ADAPTABLES AL TEMA (se sobreescriben en values-night) -->
     <!-- Texto sobre chips semánticos claros: debe seguir siendo oscuro en ambos temas -->
     <color name="texto_sobre_semantico">#111827</color>
+    <!-- "Task" en el logo textual de inicio: rojo de marca (values-night lo aclara). -->
+    <color name="logo_accent">#D32F2F</color>
     <!-- Fondo del chip de estado neutro (sin color semántico) -->
     <color name="chip_neutral">#6B7280</color>
     <!-- Ítem seleccionado / no seleccionado de la barra de navegación inferior -->

@@ -43,6 +43,8 @@
 
     <!-- TOKENS ADAPTABLES -->
     <color name="texto_sobre_semantico">#111827</color>
+    <!-- "Task" del logo textual: se aclara para mantener contraste sobre el fondo oscuro. -->
+    <color name="logo_accent">#F87171</color>
     <color name="chip_neutral">#4B5563</color>
     <color name="nav_item_selected">#F3F4F6</color>
     <color name="nav_item_unselected">#9CA3AF</color>

@@ -5,6 +5,11 @@
         <!-- Brand colors -->
         <item name="colorPrimary">@color/primario</item>
         <item name="colorPrimaryVariant">@color/primario_variant</item>
+        <!-- colorPrimaryDark sigue siendo la fuente del color de la status bar en API 35+:
+             android:statusBarColor quedo deprecado/ignorado ahi. Si no se define, Material
+             usa su morado por defecto (#3700B3). Lo alineamos con @color/fondo, el mismo
+             color que el tema ya pide para ambas barras. -->
+        <item name="colorPrimaryDark">@color/fondo</item>
         <item name="colorOnPrimary">@color/on_acento</item>
         <item name="colorSecondary">@color/primario</item>
         <item name="colorSecondaryVariant">@color/primario_variant</item>

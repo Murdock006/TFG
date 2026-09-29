@@ -19,9 +19,14 @@
          Se conserva el nombre heredando del tema real. -->
     <style name="Base.Theme.TFG" parent="Tema.TFG.Moderno" />
 
-    <!-- Splash: el fondo ya viene oscuro por @color/fondo; hereda las barras oscuras. -->
+    <!-- Splash: el fondo ya viene oscuro por @color/fondo; hereda las barras oscuras.
+         Se dejan explicitas las barras y los iconos claros para no depender solo de la herencia. -->
     <style name="Theme.TFG.Splash" parent="Theme.TFG">
         <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:statusBarColor">@color/fondo</item>
+        <item name="android:navigationBarColor">@color/fondo</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 
     <style name="ThemeOverlay.TFG.FullscreenContainer" parent="">

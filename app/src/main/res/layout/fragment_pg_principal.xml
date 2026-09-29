@@ -26,15 +26,36 @@
                 android:paddingEnd="@dimen/spacing_xl"
                 android:paddingBottom="80dp">
 
-        <!-- Título con más espacio -->
-        <ImageView
-            android:id="@+id/titulo"
+        <!-- Logo "TeamTask" como texto real (antes @drawable/titulo): "Team" toma el color
+             de texto del tema y "Task" el rojo de marca, para que sea legible en claro y oscuro. -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="70dp"
             android:layout_gravity="center"
-            android:contentDescription="@string/app_name"
-            android:src="@drawable/titulo"
-            android:layout_marginBottom="@dimen/spacing_sm" />
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:layout_marginBottom="@dimen/spacing_sm">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/logo_team"
+                android:textColor="@color/texto_principal"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.02"
+                android:includeFontPadding="false" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/logo_task"
+                android:textColor="@color/logo_accent"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.02"
+                android:includeFontPadding="false" />
+        </LinearLayout>
 
         <!-- Tarjeta de puntos del usuario -->
         <com.google.android.material.card.MaterialCardView
