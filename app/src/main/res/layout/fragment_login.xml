@@ -14,7 +14,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:contentDescription="@string/cd_logo"
-        android:src="@drawable/teamtask"
+        android:src="@drawable/splash_image"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
         app:layout_constraintTop_toTopOf="parent"

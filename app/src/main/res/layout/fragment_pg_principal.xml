@@ -30,7 +30,7 @@
              de texto del tema y "Task" el rojo de marca, para que sea legible en claro y oscuro. -->
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="70dp"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
             android:orientation="horizontal"
@@ -41,7 +41,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/logo_team"
                 android:textColor="@color/texto_principal"
-                android:textSize="40sp"
+                android:textSize="56sp"
                 android:textStyle="bold"
                 android:letterSpacing="-0.02"
                 android:includeFontPadding="false" />
@@ -51,7 +51,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/logo_task"
                 android:textColor="@color/logo_accent"
-                android:textSize="40sp"
+                android:textSize="56sp"
                 android:textStyle="bold"
                 android:letterSpacing="-0.02"
                 android:includeFontPadding="false" />
