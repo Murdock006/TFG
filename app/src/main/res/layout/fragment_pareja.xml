@@ -27,6 +27,8 @@
         <!-- Tarjeta gráfico circular de tareas -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.TFG.Tarjeta"
+            app:cardCornerRadius="@dimen/corner_radius_lg"
+            app:cardElevation="@dimen/elevation_pressed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_md">
@@ -167,6 +169,8 @@
         <!-- Tarjeta puntos -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.TFG.Tarjeta"
+            app:cardCornerRadius="@dimen/corner_radius_lg"
+            app:cardElevation="@dimen/elevation_pressed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_md">
@@ -237,6 +241,8 @@
         <!-- Tarjeta crear / unirse al grupo -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.TFG.Tarjeta"
+            app:cardCornerRadius="@dimen/corner_radius_lg"
+            app:cardElevation="@dimen/elevation_pressed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_md">
@@ -309,6 +315,11 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 app:icon="@android:drawable/ic_menu_save"
+                                app:iconGravity="textStart"
+                                app:iconPadding="@dimen/spacing_sm"
+                                app:iconTint="@color/texto_principal"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
                                 android:text="@string/copiar"
                                 android:textAllCaps="false"
                                 android:layout_marginEnd="@dimen/spacing_xs" />
@@ -320,6 +331,11 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 app:icon="@android:drawable/ic_menu_share"
+                                app:iconGravity="textStart"
+                                app:iconPadding="@dimen/spacing_sm"
+                                app:iconTint="@color/texto_principal"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
                                 android:text="@string/compartir"
                                 android:textAllCaps="false"
                                 android:layout_marginStart="@dimen/spacing_xs" />
@@ -370,6 +386,8 @@
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardInfoGrupo"
             style="@style/Widget.TFG.Tarjeta"
+            app:cardCornerRadius="@dimen/corner_radius_lg"
+            app:cardElevation="@dimen/elevation_pressed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_md"

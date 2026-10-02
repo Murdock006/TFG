@@ -27,6 +27,8 @@
         <!-- Sección Avatar -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.TFG.Tarjeta"
+            app:cardCornerRadius="@dimen/corner_radius_lg"
+            app:cardElevation="@dimen/elevation_pressed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_lg">
@@ -77,6 +79,8 @@
 
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.TFG.Tarjeta"
+            app:cardCornerRadius="@dimen/corner_radius_lg"
+            app:cardElevation="@dimen/elevation_pressed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 

@@ -9,7 +9,7 @@
     app:cardElevation="@dimen/elevation_pressed"
     app:cardBackgroundColor="@color/superficie"
     app:strokeColor="@color/divisor"
-    app:strokeWidth="0dp">
+    app:strokeWidth="@dimen/stroke_thin">
 
     <LinearLayout
         android:layout_width="match_parent"

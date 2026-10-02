@@ -15,32 +15,32 @@
 
         <item
             android:id="@+id/menuCambiarContrasena"
-            android:icon="@android:drawable/ic_menu_edit"
+            android:icon="@drawable/ic_drawer_password"
             android:title="@string/cambiar_contrasena" />
 
         <item
             android:id="@+id/menuAyuda"
-            android:icon="@android:drawable/ic_menu_help"
+            android:icon="@drawable/ic_drawer_help"
             android:title="@string/ayuda" />
 
         <item
             android:id="@+id/menuContactarSoporte"
-            android:icon="@android:drawable/ic_dialog_email"
+            android:icon="@drawable/ic_drawer_support"
             android:title="@string/contactar_soporte" />
 
         <item
             android:id="@+id/menuComprarPuntos"
-            android:icon="@android:drawable/ic_menu_add"
+            android:icon="@drawable/ic_drawer_buy"
             android:title="@string/comprar_puntos" />
 
         <item
             android:id="@+id/menuSuscripcion"
-            android:icon="@android:drawable/ic_menu_myplaces"
+            android:icon="@drawable/ic_drawer_subscription"
             android:title="@string/suscripcion" />
 
         <item
             android:id="@+id/menuPoliticaPrivacidad"
-            android:icon="@android:drawable/ic_menu_info_details"
+            android:icon="@drawable/ic_drawer_privacy"
             android:title="@string/politica_privacidad" />
 
         <!--
@@ -49,7 +49,7 @@
         -->
         <item
             android:id="@+id/menuTema"
-            android:icon="@android:drawable/ic_menu_manage"
+            android:icon="@drawable/ic_drawer_theme"
             android:title="@string/tema" />
     </group>
 

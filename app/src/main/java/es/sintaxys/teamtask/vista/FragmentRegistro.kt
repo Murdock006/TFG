@@ -57,9 +57,6 @@ class FragmentRegistro : Fragment() {
         binding.etFechaNacimiento.setOnClickListener {
             mostrarDatePicker()
         }
-        binding.etFechaNacimiento.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) mostrarDatePicker()
-        }
 
         binding.btnRegistrar.setOnClickListener {
             val nombre = binding.etNombre.text.toString().trim()
@@ -95,7 +92,10 @@ class FragmentRegistro : Fragment() {
     }
 
     private fun mostrarDatePicker() {
+        // Fecha inicial por defecto: hace 25 años (edad adulta típica), no la fecha de hoy.
         val cal = Calendar.getInstance()
+        cal.add(Calendar.YEAR, -25)
+
         val dialog = DatePickerDialog(
             requireContext(),
             es.sintaxys.teamtask.R.style.Theme_TFG_DatePickerDialog,
@@ -107,6 +107,13 @@ class FragmentRegistro : Fragment() {
             cal.get(Calendar.MONTH),
             cal.get(Calendar.DAY_OF_MONTH)
         )
+
+        // Rango válido: mínimo hace 120 años, máximo hoy (no se puede nacer en el futuro).
+        val calMin = Calendar.getInstance()
+        calMin.add(Calendar.YEAR, -120)
+        dialog.datePicker.minDate = calMin.timeInMillis
+        dialog.datePicker.maxDate = System.currentTimeMillis()
+
         dialog.show()
     }
 

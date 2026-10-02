@@ -14,7 +14,7 @@
         android:layout_marginEnd="@dimen/spacing_lg"
         android:layout_marginTop="@dimen/spacing_xl"
         android:layout_marginBottom="@dimen/spacing_sm"
-        app:cardCornerRadius="@dimen/corner_radius_xl"
+        app:cardCornerRadius="@dimen/corner_radius_lg"
         app:cardElevation="@dimen/elevation_pressed"
         app:cardBackgroundColor="@color/superficie"
         app:strokeColor="@color/divisor"

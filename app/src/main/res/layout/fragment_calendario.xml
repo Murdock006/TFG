@@ -10,6 +10,8 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardNavegacion"
         style="@style/Widget.TFG.Tarjeta"
+        app:cardCornerRadius="@dimen/corner_radius_lg"
+        app:cardElevation="@dimen/elevation_pressed"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/spacing_lg"
@@ -99,6 +101,8 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardResumen"
         style="@style/Widget.TFG.Tarjeta"
+        app:cardCornerRadius="@dimen/corner_radius_lg"
+        app:cardElevation="@dimen/elevation_pressed"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/spacing_lg"
