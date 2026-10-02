@@ -5,8 +5,9 @@
     android:layout_height="match_parent"
     android:background="@color/fondo">
 
-    <!-- Cabecera: título arriba, puntos debajo -->
-    <com.google.android.material.card.MaterialCardView
+    <!-- Cabecera héroe: título + puntos sobre el degradado esmeralda, coherente con Inicio.
+         El texto va en on_acento para garantizar contraste sobre el degradado en claro y oscuro. -->
+    <LinearLayout
         android:id="@+id/llCabeceraRecompensas"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -14,49 +15,40 @@
         android:layout_marginEnd="@dimen/spacing_lg"
         android:layout_marginTop="@dimen/spacing_xl"
         android:layout_marginBottom="@dimen/spacing_sm"
-        app:cardCornerRadius="@dimen/corner_radius_lg"
-        app:cardElevation="@dimen/elevation_pressed"
-        app:cardBackgroundColor="@color/superficie"
-        app:strokeColor="@color/divisor"
-        app:strokeWidth="@dimen/stroke_thin"
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_lg"
+        android:background="@drawable/bg_hero_puntos"
+        android:elevation="@dimen/elevation_hero"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/tvTituloRecompensas"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/spacing_lg"
-            android:background="@color/superficie">
+            android:text="@string/recompensas_title"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_acento"
+            android:textAppearance="@style/TextAppearance.TFG.Headline" />
 
-            <TextView
-                android:id="@+id/tvTituloRecompensas"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/recompensas_title"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:textColor="@color/texto_principal"
-                android:textAppearance="@style/TextAppearance.TFG.Headline" />
-
-            <TextView
-                android:id="@+id/tvMisPuntos"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_sm"
-                android:text="— pts"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="@color/texto_principal"
-                android:background="@drawable/bg_badge_puntos"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp"
-                android:textAppearance="@style/TextAppearance.TFG.Label" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+        <TextView
+            android:id="@+id/tvMisPuntos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="— pts"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/texto_principal"
+            android:background="@drawable/bg_badge_puntos"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:textAppearance="@style/TextAppearance.TFG.Label" />
+    </LinearLayout>
 
     <!-- Tabs: Disponibles / Pendientes / Historial -->
     <com.google.android.material.card.MaterialCardView
@@ -65,12 +57,10 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/spacing_lg"
         android:layout_marginEnd="@dimen/spacing_lg"
-        android:layout_marginBottom="4dp"
+        android:layout_marginBottom="@dimen/spacing_sm"
         app:cardCornerRadius="@dimen/corner_radius_lg"
-        app:cardElevation="@dimen/elevation_pressed"
+        app:cardElevation="@dimen/elevation_card"
         app:cardBackgroundColor="@color/superficie"
-        app:strokeColor="@color/divisor"
-        app:strokeWidth="@dimen/stroke_thin"
         app:layout_constraintTop_toBottomOf="@id/llCabeceraRecompensas"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -228,6 +218,8 @@
         android:layout_marginEnd="@dimen/spacing_lg"
         android:layout_marginBottom="52dp"
         android:contentDescription="@string/cd_crear_recompensa"
+        app:backgroundTint="@color/primario"
+        app:tint="@color/on_acento"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@android:drawable/ic_input_add" />

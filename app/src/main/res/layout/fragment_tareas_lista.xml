@@ -7,18 +7,16 @@
     android:paddingTop="@dimen/spacing_xl"
     android:background="@color/fondo">
 
-    <!-- Cabecera -->
+    <!-- Cabecera: tarjeta suave (radio 16dp, elevación 3dp, sin borde) con barrita de acento -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/spacing_lg"
         android:layout_marginEnd="@dimen/spacing_lg"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="@dimen/spacing_md"
         app:cardCornerRadius="@dimen/corner_radius_lg"
-        app:cardElevation="@dimen/elevation_pressed"
-        app:cardBackgroundColor="@color/superficie"
-        app:strokeColor="@color/divisor"
-        app:strokeWidth="@dimen/stroke_thin">
+        app:cardElevation="@dimen/elevation_card"
+        app:cardBackgroundColor="@color/superficie">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -26,6 +24,12 @@
             android:orientation="horizontal"
             android:padding="@dimen/spacing_lg"
             android:gravity="center_vertical">
+
+            <View
+                android:layout_width="@dimen/stroke_thick"
+                android:layout_height="24dp"
+                android:layout_marginEnd="@dimen/spacing_md"
+                android:background="@drawable/bg_accent_bar" />
 
             <TextView
                 android:id="@+id/tvTituloTareas"

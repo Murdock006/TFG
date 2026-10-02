@@ -10,53 +10,71 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingTop="20dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:paddingTop="@dimen/spacing_xl"
+        android:paddingStart="@dimen/spacing_lg"
+        android:paddingEnd="@dimen/spacing_lg"
         android:paddingBottom="72dp">
 
-        <TextView
-            android:id="@+id/tv_perfil_titulo"
+        <!-- Título con barrita de acento (coherente con los headers de Inicio) -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/perfil"
-            android:textAppearance="@style/TextAppearance.TFG.Headline"
-            android:textColor="@color/texto_principal"
-            android:layout_marginBottom="@dimen/spacing_lg" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="@dimen/spacing_lg">
 
-        <!-- Sección Avatar -->
+            <View
+                android:layout_width="@dimen/stroke_thick"
+                android:layout_height="24dp"
+                android:layout_marginEnd="@dimen/spacing_sm"
+                android:background="@drawable/bg_accent_bar" />
+
+            <TextView
+                android:id="@+id/tv_perfil_titulo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/perfil"
+                android:textAppearance="@style/TextAppearance.TFG.Headline"
+                android:textColor="@color/texto_principal" />
+        </LinearLayout>
+
+        <!-- Sección Avatar: tarjeta con radio 16dp, elevación de contenido y sin borde duro -->
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.TFG.Tarjeta"
-            app:cardCornerRadius="@dimen/corner_radius_lg"
-            app:cardElevation="@dimen/elevation_pressed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_lg">
+            android:layout_marginBottom="@dimen/spacing_lg"
+            app:cardBackgroundColor="@color/superficie"
+            app:cardCornerRadius="@dimen/corner_radius_lg"
+            app:cardElevation="@dimen/elevation_card"
+            app:cardUseCompatPadding="true"
+            app:contentPadding="0dp"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@color/superficie_variant"
-                android:gravity="center">
+                android:gravity="center"
+                android:padding="@dimen/spacing_lg">
 
+                <!-- Avatar con anillo esmeralda; el padding interno deja visible el anillo -->
                 <ImageView
                     android:id="@+id/ivAvatarPerfil"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
+                    android:layout_width="136dp"
+                    android:layout_height="136dp"
+                    android:padding="@dimen/spacing_xs"
                     android:scaleType="centerCrop"
                     android:contentDescription="@string/cd_avatar_usuario"
-                    android:background="@drawable/bg_drawer_avatar"
+                    android:background="@drawable/bg_avatar_ring"
                     android:src="@drawable/perfil" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSeleccionarAvatar"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginTop="@dimen/spacing_md"
-                    android:text="@string/cambiar_avatar"
-                    android:textAllCaps="false"
-                    android:backgroundTint="@color/acento" />
+                    style="@style/Widget.TFG.Boton.Tonal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/button_min_height"
+                    android:layout_marginTop="@dimen/spacing_lg"
+                    android:text="@string/cambiar_avatar" />
 
                 <ProgressBar
                     android:id="@+id/pbCargandoAvatar"
@@ -77,18 +95,22 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Tarjeta de información: radio 16dp, elevación 3dp, sin borde duro -->
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.TFG.Tarjeta"
-            app:cardCornerRadius="@dimen/corner_radius_lg"
-            app:cardElevation="@dimen/elevation_pressed"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/superficie"
+            app:cardCornerRadius="@dimen/corner_radius_lg"
+            app:cardElevation="@dimen/elevation_card"
+            app:cardUseCompatPadding="true"
+            app:contentPadding="0dp"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@color/superficie_variant">
+                android:padding="@dimen/spacing_lg">
 
                 <TextView
                     android:id="@+id/tv_perfil_info"
@@ -97,20 +119,20 @@
                     android:text="@string/info_perfil"
                     android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
                     android:textColor="@color/texto_principal"
-                    android:lineSpacingExtra="4dp" />
+                    android:lineSpacingExtra="6dp" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCambiarNombre"
+                    style="@style/Widget.TFG.Boton.Tonal"
                     android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginTop="@dimen/spacing_md"
-                    android:text="@string/cambiar_nombre"
-                    android:textAllCaps="false"
-                    android:backgroundTint="@color/acento" />
+                    android:layout_height="@dimen/button_min_height"
+                    android:layout_marginTop="@dimen/spacing_lg"
+                    android:text="@string/cambiar_nombre" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Acción destructiva: contorno y texto en rojo de error -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnEliminarCuenta"
             style="@style/Widget.TFG.Boton.Contorno"
@@ -119,7 +141,7 @@
             android:layout_marginTop="@dimen/spacing_lg"
             android:text="@string/eliminar_cuenta"
             android:textColor="@color/error"
-            android:textAllCaps="false" />
+            app:strokeColor="@color/error" />
 
     </LinearLayout>
 

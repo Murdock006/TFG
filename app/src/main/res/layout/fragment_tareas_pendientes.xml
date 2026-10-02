@@ -6,29 +6,43 @@
     android:orientation="vertical"
     android:background="@color/fondo">
 
-    <!-- Cabecera con título -->
-    <TextView
-        android:id="@+id/tvTituloPendientes"
+    <!-- Cabecera con título y barrita de acento esmeralda -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tareas"
-        android:textAppearance="@style/TextAppearance.TFG.Headline"
-        android:textColor="@color/texto_principal"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:paddingStart="@dimen/spacing_lg"
         android:paddingEnd="@dimen/spacing_lg"
         android:paddingTop="@dimen/spacing_xl"
-        android:paddingBottom="@dimen/spacing_md" />
+        android:paddingBottom="@dimen/spacing_md">
 
-    <!-- Tabs de sección -->
+        <View
+            android:layout_width="@dimen/stroke_thick"
+            android:layout_height="24dp"
+            android:layout_marginEnd="@dimen/spacing_md"
+            android:background="@drawable/bg_accent_bar" />
+
+        <TextView
+            android:id="@+id/tvTituloPendientes"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Tareas"
+            android:textAppearance="@style/TextAppearance.TFG.Headline"
+            android:textColor="@color/texto_principal" />
+    </LinearLayout>
+
+    <!-- Tabs de sección: contenedor suave (radio 16dp, elevación 3dp, sin borde) -->
     <com.google.android.material.card.MaterialCardView
-        style="@style/Widget.TFG.Tarjeta"
-        app:cardCornerRadius="@dimen/corner_radius_lg"
-        app:cardElevation="@dimen/elevation_pressed"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/spacing_lg"
         android:layout_marginEnd="@dimen/spacing_lg"
-        android:layout_marginBottom="@dimen/spacing_sm">
+        android:layout_marginBottom="@dimen/spacing_sm"
+        app:cardCornerRadius="@dimen/corner_radius_lg"
+        app:cardElevation="@dimen/elevation_card"
+        app:cardBackgroundColor="@color/superficie">
 
         <LinearLayout
             android:id="@+id/layoutBotonesTabs"
@@ -97,6 +111,7 @@
             android:src="@android:drawable/ic_menu_info_details"
             android:contentDescription="@string/no_hay_grupo_activo"
             android:alpha="0.4"
+            app:tint="@color/gris"
             android:layout_marginBottom="@dimen/spacing_lg" />
 
         <TextView
