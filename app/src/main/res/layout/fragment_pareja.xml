@@ -166,6 +166,214 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Tarjeta resumen de tareas -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.TFG.Tarjeta"
+            app:cardCornerRadius="@dimen/corner_radius_lg"
+            app:cardElevation="@dimen/elevation_pressed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_md">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/estadisticas_resumen"
+                    android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
+                    android:textColor="@color/texto_principal"
+                    android:layout_marginBottom="@dimen/spacing_md" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvResumenTotal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textAppearance="@style/TextAppearance.TFG.Titulo"
+                            android:textColor="@color/texto_principal" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/resumen_total"
+                            android:textAppearance="@style/TextAppearance.TFG.Label"
+                            android:textColor="@color/texto_secundario" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvResumenCompletadas"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textAppearance="@style/TextAppearance.TFG.Titulo"
+                            android:textColor="@color/verde" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/completadas"
+                            android:textAppearance="@style/TextAppearance.TFG.Label"
+                            android:textColor="@color/texto_secundario" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="@dimen/spacing_md">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvResumenPendientes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textAppearance="@style/TextAppearance.TFG.Titulo"
+                            android:textColor="@color/naranja" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/resumen_pendientes"
+                            android:textAppearance="@style/TextAppearance.TFG.Label"
+                            android:textColor="@color/texto_secundario" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvResumenPuntos"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textAppearance="@style/TextAppearance.TFG.Titulo"
+                            android:textColor="@color/primario_variant" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/resumen_puntos_grupo"
+                            android:textAppearance="@style/TextAppearance.TFG.Label"
+                            android:textColor="@color/texto_secundario" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvResumenTasa"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
+                    android:textColor="@color/primario_variant" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Tarjeta comparativa por miembro -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.TFG.Tarjeta"
+            app:cardCornerRadius="@dimen/corner_radius_lg"
+            app:cardElevation="@dimen/elevation_pressed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_md">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/comparativa_miembros"
+                    android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
+                    android:textColor="@color/texto_principal"
+                    android:layout_marginBottom="@dimen/spacing_md" />
+
+                <com.github.mikephil.charting.charts.HorizontalBarChart
+                    android:id="@+id/barChartMiembros"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp" />
+
+                <LinearLayout
+                    android:id="@+id/llComparativaMiembros"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="@dimen/spacing_md" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Tarjeta tareas por categoría -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.TFG.Tarjeta"
+            app:cardCornerRadius="@dimen/corner_radius_lg"
+            app:cardElevation="@dimen/elevation_pressed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_md">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tareas_por_categoria"
+                    android:textAppearance="@style/TextAppearance.TFG.SubTitulo"
+                    android:textColor="@color/texto_principal"
+                    android:layout_marginBottom="@dimen/spacing_md" />
+
+                <com.github.mikephil.charting.charts.HorizontalBarChart
+                    android:id="@+id/barChartCategorias"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp" />
+
+                <TextView
+                    android:id="@+id/tvSinCategorias"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sin_tareas_categoria"
+                    android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
+                    android:textColor="@color/texto_secundario"
+                    android:gravity="center"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Tarjeta puntos -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.TFG.Tarjeta"
@@ -301,45 +509,42 @@
                             android:text="Código: -"
                             android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
                             android:textColor="@color/texto_principal"
-                            android:layout_marginBottom="@dimen/spacing_sm" />
+                            android:layout_marginBottom="@dimen/spacing_md" />
 
-                        <LinearLayout
+                        <!-- QR de la invitacion. Oculto hasta que exista un codigo. -->
+                        <ImageView
+                            android:id="@+id/ivQrInvitacion"
+                            android:layout_width="180dp"
+                            android:layout_height="180dp"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_marginBottom="@dimen/spacing_md"
+                            android:contentDescription="@string/cd_qr_invitacion"
+                            android:scaleType="fitCenter"
+                            android:visibility="gone" />
+
+                        <!-- Apilados en vertical (match_parent) para garantizar que el
+                             texto nunca se parta ni se trunque. Estilo de contorno
+                             real: MaterialButton ignora android:background. -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnCopiarCodigo"
+                            style="@style/Widget.TFG.Boton.ContornoMaterial"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal">
+                            android:layout_marginBottom="@dimen/spacing_sm"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@string/copiar"
+                            app:icon="@drawable/ic_content_copy" />
 
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btnCopiarCodigo"
-                                style="@style/Widget.TFG.Boton.Contorno"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                app:icon="@android:drawable/ic_menu_save"
-                                app:iconGravity="textStart"
-                                app:iconPadding="@dimen/spacing_sm"
-                                app:iconTint="@color/texto_principal"
-                                android:insetTop="0dp"
-                                android:insetBottom="0dp"
-                                android:text="@string/copiar"
-                                android:textAllCaps="false"
-                                android:layout_marginEnd="@dimen/spacing_xs" />
-
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btnCompartirCodigo"
-                                style="@style/Widget.TFG.Boton.Contorno"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                app:icon="@android:drawable/ic_menu_share"
-                                app:iconGravity="textStart"
-                                app:iconPadding="@dimen/spacing_sm"
-                                app:iconTint="@color/texto_principal"
-                                android:insetTop="0dp"
-                                android:insetBottom="0dp"
-                                android:text="@string/compartir"
-                                android:textAllCaps="false"
-                                android:layout_marginStart="@dimen/spacing_xs" />
-                        </LinearLayout>
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnCompartirCodigo"
+                            style="@style/Widget.TFG.Boton.ContornoMaterial"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@string/compartir"
+                            app:icon="@drawable/ic_share" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 

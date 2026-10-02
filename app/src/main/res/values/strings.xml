@@ -185,9 +185,24 @@
     <string name="completadas">Completadas</string>
     <string name="mis_pendientes">Mis pendientes</string>
     <string name="de_otros">De otros</string>
+    <!-- Estadísticas avanzadas de la pantalla Pareja -->
+    <string name="estadisticas_resumen">Resumen de tareas</string>
+    <string name="resumen_total">Total</string>
+    <string name="resumen_pendientes">Pendientes</string>
+    <string name="resumen_puntos_grupo">Puntos del grupo</string>
+    <string name="resumen_tasa_completado">Tasa de completado: %1$d%%</string>
+    <string name="comparativa_miembros">Comparativa por miembro</string>
+    <string name="tareas_por_categoria">Tareas por categoría</string>
+    <string name="miembro_completadas_format">%1$d completadas</string>
+    <string name="miembro_detalle_format">%1$d pts · recompensa %2$d · racha %3$d días</string>
+    <string name="ranking_primero_desc">Primer puesto</string>
+    <string name="sin_tareas_categoria">Sin tareas categorizadas todavía</string>
     <string name="gestion_grupo">Gestión del grupo</string>
     <string name="copiar">Copiar</string>
     <string name="compartir">Compartir</string>
+    <string name="cd_qr_invitacion">Código QR de la invitación. Toca para compartirlo</string>
+    <string name="compartir_qr">Compartir QR</string>
+    <string name="compartir_qr_mensaje">Únete a mi grupo en TeamTask: %1$s</string>
     <string name="salir_grupo">Salir del grupo</string>
     <string name="nombre_grupo">Nombre del grupo</string>
     <string name="cargando_dependencias">Cargando dependencias...</string>
