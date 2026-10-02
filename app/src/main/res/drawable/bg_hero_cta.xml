@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Botón "ver anuncio" integrado en el hero: píldora con borde blanco
+     (on_acento) sobre el degradado. El ripple usa colorControlHighlight del
+     tema para mantener feedback táctil sin hardcodear colores. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorControlHighlight">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/on_acento" />
+            <corners android:radius="@dimen/corner_radius_sm" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="@dimen/stroke_thin"
+                android:color="@color/on_acento" />
+            <corners android:radius="@dimen/corner_radius_sm" />
+        </shape>
+    </item>
+</ripple>

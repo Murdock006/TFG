@@ -57,112 +57,120 @@
                 android:includeFontPadding="false" />
         </LinearLayout>
 
-        <!-- Tarjeta de puntos del usuario -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- Tarjeta de puntos del usuario: hero protagonista con degradado esmeralda.
+             El fondo y la elevación vienen del sistema de tokens; los textos van en
+             blanco (on_acento) porque el degradado siempre es esmeralda oscuro. -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_lg"
-            app:cardCornerRadius="@dimen/corner_radius_lg"
-            app:cardElevation="@dimen/elevation_pressed"
-            app:cardBackgroundColor="@color/superficie"
-            app:strokeColor="@color/divisor"
-            app:strokeWidth="@dimen/stroke_thin">
+            android:orientation="horizontal"
+            android:padding="@dimen/spacing_lg"
+            android:background="@drawable/bg_hero_puntos"
+            android:elevation="@dimen/elevation_hero"
+            android:gravity="center_vertical">
 
+            <!-- Lado izquierdo: puntos -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="@dimen/spacing_lg"
-                android:background="@color/superficie"
-                android:gravity="center_vertical">
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-                <!-- Lado izquierdo: puntos -->
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:text="@string/tus_puntos"
+                    android:textStyle="bold"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:layout_width="wrap_content"
+                    android:textColor="@color/on_acento"
+                    android:alpha="0.85"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.05"
+                    android:textAppearance="@style/TextAppearance.TFG.Label" />
 
-                    <TextView
-                        android:text="@string/tus_puntos"
-                        android:textStyle="bold"
-                        android:layout_height="wrap_content"
-                        android:layout_width="wrap_content"
-                        android:textColor="@color/gris"
-                        android:textSize="11sp"
-                        android:letterSpacing="0.05"
-                        android:textAppearance="@style/TextAppearance.TFG.Label" />
+                <TextView
+                    android:id="@+id/puntosUsuario"
+                    android:text="@string/cargando"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:textSize="42sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/on_acento"
+                    android:includeFontPadding="false"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:layout_marginBottom="4dp" />
 
-                    <TextView
-                        android:id="@+id/puntosUsuario"
-                        android:text="@string/cargando"
-                        android:layout_height="wrap_content"
-                        android:layout_width="wrap_content"
-                        android:textSize="36sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/texto_principal"
-                        android:layout_marginTop="@dimen/spacing_sm"
-                        android:layout_marginBottom="4dp" />
-
-                    <TextView
-                        android:id="@+id/puntosReservados"
-                        android:text="@string/reservados_format"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="10sp"
-                        android:textColor="@color/gris"
-                        android:layout_marginTop="4dp"
-                        android:textAppearance="@style/TextAppearance.TFG.Label" />
-                </LinearLayout>
-
-                <!-- Lado derecho: ver anuncio recompensado (clickable) -->
-                <LinearLayout
-                    android:id="@+id/btnVerAnuncio"
+                <TextView
+                    android:id="@+id/puntosReservados"
+                    android:text="@string/reservados_format"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:gravity="center_horizontal"
-                    android:paddingStart="@dimen/spacing_lg"
-                    android:padding="@dimen/spacing_sm"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:src="@android:drawable/ic_media_play"
-                        android:contentDescription="@string/cd_btn_ver_anuncio"
-                        app:tint="@color/gris" />
-
-                    <TextView
-                        android:id="@+id/tvVerAnuncio"
-                        android:text="@string/ver_anuncio_recompensa"
-                        android:textSize="10sp"
-                        android:layout_height="wrap_content"
-                        android:layout_width="100dp"
-                        android:textColor="@color/gris"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.05"
-                        android:gravity="center"
-                        android:layout_marginTop="6dp"
-                        android:textAppearance="@style/TextAppearance.TFG.Label" />
-                </LinearLayout>
+                    android:textSize="10sp"
+                    android:textColor="@color/on_acento"
+                    android:alpha="0.85"
+                    android:layout_marginTop="4dp"
+                    android:textAppearance="@style/TextAppearance.TFG.Label" />
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+
+            <!-- Lado derecho: ver anuncio recompensado (clickable) -->
+            <LinearLayout
+                android:id="@+id/btnVerAnuncio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:padding="@dimen/spacing_md"
+                android:background="@drawable/bg_hero_cta"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@android:drawable/ic_media_play"
+                    android:contentDescription="@string/cd_btn_ver_anuncio"
+                    app:tint="@color/on_acento" />
+
+                <TextView
+                    android:id="@+id/tvVerAnuncio"
+                    android:text="@string/ver_anuncio_recompensa"
+                    android:textSize="10sp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="100dp"
+                    android:textColor="@color/on_acento"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.05"
+                    android:gravity="center"
+                    android:layout_marginTop="6dp"
+                    android:textAppearance="@style/TextAppearance.TFG.Label" />
+            </LinearLayout>
+        </LinearLayout>
 
         <!-- Sección miembros del grupo -->
-        <TextView
-            android:id="@+id/tituloMiembros"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/tu_companero"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:textColor="@color/texto_principal"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:layout_marginTop="@dimen/spacing_xl"
-            android:layout_marginBottom="@dimen/spacing_sm"
-            android:textAppearance="@style/TextAppearance.TFG.SubTitulo" />
+            android:layout_marginBottom="@dimen/spacing_sm">
+
+            <View
+                android:layout_width="@dimen/stroke_thick"
+                android:layout_height="16dp"
+                android:layout_marginEnd="@dimen/spacing_sm"
+                android:background="@drawable/bg_accent_bar" />
+
+            <TextView
+                android:id="@+id/tituloMiembros"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tu_companero"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="@color/texto_principal"
+                android:textAppearance="@style/TextAppearance.TFG.SubTitulo" />
+        </LinearLayout>
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -247,18 +255,31 @@
         </LinearLayout>
 
         <!-- Título Asignar Tareas con más espacio -->
-        <TextView
-            android:id="@+id/tituloAsignar"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/asignar_tareas"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="@color/texto_principal"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:layout_marginTop="@dimen/spacing_3xl"
-            android:layout_marginBottom="4dp"
-            android:letterSpacing="0.02"
-            android:textAppearance="@style/TextAppearance.TFG.Titulo" />
+            android:layout_marginBottom="4dp">
+
+            <View
+                android:layout_width="@dimen/stroke_thick"
+                android:layout_height="20dp"
+                android:layout_marginEnd="@dimen/spacing_sm"
+                android:background="@drawable/bg_accent_bar" />
+
+            <TextView
+                android:id="@+id/tituloAsignar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/asignar_tareas"
+                android:textStyle="bold"
+                android:textSize="20sp"
+                android:textColor="@color/texto_principal"
+                android:letterSpacing="0.02"
+                android:textAppearance="@style/TextAppearance.TFG.Titulo" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
@@ -276,10 +297,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_lg"
             app:cardCornerRadius="@dimen/corner_radius_lg"
-            app:cardElevation="@dimen/elevation_pressed"
-            app:cardBackgroundColor="@color/superficie"
-            app:strokeColor="@color/divisor"
-            app:strokeWidth="@dimen/stroke_thin">
+            app:cardElevation="@dimen/elevation_card"
+            app:cardBackgroundColor="@color/superficie">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -298,14 +317,14 @@
                         android:id="@+id/categoriaCocina"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="44dp"
-                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:layout_height="48dp"
+                        style="@style/Widget.TFG.Boton.Tonal"
                         android:text="@string/categoria_cocina" />
 
                     <Button
                         android:id="@+id/btnAsignarCocina"
                         android:layout_width="wrap_content"
-                        android:layout_height="44dp"
+                        android:layout_height="48dp"
                         style="@style/Widget.TFG.Boton.Texto"
                         android:text="@string/asignar"
                         android:layout_marginStart="@dimen/spacing_sm"
@@ -324,14 +343,14 @@
                         android:id="@+id/categoriaRopa"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="44dp"
-                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:layout_height="48dp"
+                        style="@style/Widget.TFG.Boton.Tonal"
                         android:text="@string/categoria_ropa" />
 
                     <Button
                         android:id="@+id/btnAsignarRopa"
                         android:layout_width="wrap_content"
-                        android:layout_height="44dp"
+                        android:layout_height="48dp"
                         style="@style/Widget.TFG.Boton.Texto"
                         android:text="@string/asignar"
                         android:layout_marginStart="@dimen/spacing_sm"
@@ -350,14 +369,14 @@
                         android:id="@+id/categoriaLimpieza"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="44dp"
-                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:layout_height="48dp"
+                        style="@style/Widget.TFG.Boton.Tonal"
                         android:text="@string/categoria_limpieza" />
 
                     <Button
                         android:id="@+id/btnAsignarLimpieza"
                         android:layout_width="wrap_content"
-                        android:layout_height="44dp"
+                        android:layout_height="48dp"
                         style="@style/Widget.TFG.Boton.Texto"
                         android:text="@string/asignar"
                         android:layout_marginStart="@dimen/spacing_sm"
@@ -376,14 +395,14 @@
                         android:id="@+id/categoriaMascotas"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="44dp"
-                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:layout_height="48dp"
+                        style="@style/Widget.TFG.Boton.Tonal"
                         android:text="@string/categoria_mascotas" />
 
                     <Button
                         android:id="@+id/btnAsignarMascotas"
                         android:layout_width="wrap_content"
-                        android:layout_height="44dp"
+                        android:layout_height="48dp"
                         style="@style/Widget.TFG.Boton.Texto"
                         android:text="@string/asignar"
                         android:layout_marginStart="@dimen/spacing_sm"
@@ -402,14 +421,14 @@
                         android:id="@+id/categoriaRecados"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="44dp"
-                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:layout_height="48dp"
+                        style="@style/Widget.TFG.Boton.Tonal"
                         android:text="@string/categoria_recados" />
 
                     <Button
                         android:id="@+id/btnAsignarRecados"
                         android:layout_width="wrap_content"
-                        android:layout_height="44dp"
+                        android:layout_height="48dp"
                         style="@style/Widget.TFG.Boton.Texto"
                         android:text="@string/asignar"
                         android:layout_marginStart="@dimen/spacing_sm"
@@ -428,14 +447,14 @@
                         android:id="@+id/categoriaPersonalizado"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="44dp"
-                        style="@style/Widget.TFG.Boton.Contorno"
+                        android:layout_height="48dp"
+                        style="@style/Widget.TFG.Boton.Tonal"
                         android:text="@string/categoria_personalizado" />
 
                     <Button
                         android:id="@+id/btnAsignarPersonalizado"
                         android:layout_width="wrap_content"
-                        android:layout_height="44dp"
+                        android:layout_height="48dp"
                         style="@style/Widget.TFG.Boton.Texto"
                         android:text="@string/asignar"
                         android:layout_marginStart="@dimen/spacing_sm"
@@ -446,17 +465,30 @@
         </com.google.android.material.card.MaterialCardView>
 
         <!-- Vista rápida de tareas recientes con mejor espaciado -->
-        <TextView
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/tareas_recientes"
-            android:textStyle="bold"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:layout_marginTop="@dimen/spacing_3xl"
-            android:layout_marginBottom="12dp"
-            android:textSize="20sp"
-            android:textColor="@color/texto_principal"
-            android:letterSpacing="0.02"
-            android:textAppearance="@style/TextAppearance.TFG.Titulo" />
+            android:layout_marginBottom="12dp">
+
+            <View
+                android:layout_width="@dimen/stroke_thick"
+                android:layout_height="20dp"
+                android:layout_marginEnd="@dimen/spacing_sm"
+                android:background="@drawable/bg_accent_bar" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tareas_recientes"
+                android:textStyle="bold"
+                android:textSize="20sp"
+                android:textColor="@color/texto_principal"
+                android:letterSpacing="0.02"
+                android:textAppearance="@style/TextAppearance.TFG.Titulo" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvSinTareasRecientes"

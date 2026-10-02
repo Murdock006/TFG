@@ -6,10 +6,8 @@
     android:layout_height="wrap_content"
     android:layout_marginEnd="10dp"
     app:cardCornerRadius="@dimen/corner_radius_lg"
-    app:cardElevation="@dimen/elevation_pressed"
-    app:cardBackgroundColor="@color/superficie"
-    app:strokeColor="@color/divisor"
-    app:strokeWidth="@dimen/stroke_thin">
+    app:cardElevation="@dimen/elevation_card"
+    app:cardBackgroundColor="@color/superficie">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,7 +16,7 @@
         android:padding="@dimen/spacing_lg"
         android:gravity="center_horizontal">
 
-        <!-- Avatar placeholder -->
+        <!-- Avatar con anillo esmeralda -->
         <ImageView
             android:id="@+id/ivMiembroAvatar"
             android:layout_width="48dp"
@@ -26,7 +24,7 @@
             android:src="@drawable/perfil"
             android:contentDescription="@string/cd_avatar_miembro"
             android:scaleType="centerCrop"
-            android:background="@drawable/bg_avatar_miembro"
+            android:background="@drawable/bg_avatar_ring"
             android:padding="6dp" />
 
         <TextView
@@ -36,7 +34,7 @@
             android:layout_marginTop="@dimen/spacing_sm"
             android:text="Nombre"
             android:textColor="@color/texto_principal"
-            android:textSize="13sp"
+            android:textSize="14sp"
             android:textStyle="bold"
             android:maxLines="1"
             android:ellipsize="end"
@@ -49,9 +47,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="0"
-            android:textColor="@color/texto_principal"
-            android:textSize="22sp"
+            android:textColor="@color/primario"
+            android:textSize="26sp"
             android:textStyle="bold" />
+
 
         <TextView
             android:id="@+id/tvMiembroRol"

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Anillo esmeralda alrededor del avatar de miembro. El relleno interior usa
+     avatar_miembro_bg (token que se adapta al tema oscuro); el borde usa
+     primario, que es esmeralda constante en ambos temas. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/avatar_miembro_bg" />
+    <stroke
+        android:width="3dp"
+        android:color="@color/primario" />
+</shape>

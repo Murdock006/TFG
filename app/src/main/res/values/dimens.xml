@@ -23,6 +23,10 @@
     <dimen name="elevation_pressed">2dp</dimen>
     <dimen name="elevation_none">0dp</dimen>
     <dimen name="elevation_appbar">0dp</dimen>
+    <!-- Profundidad de tarjetas de contenido (miembros, categorías). -->
+    <dimen name="elevation_card">3dp</dimen>
+    <!-- El hero de puntos flota por encima del resto del contenido. -->
+    <dimen name="elevation_hero">5dp</dimen>
 
     <!-- Icon sizes -->
     <dimen name="icon_size_sm">20dp</dimen>
