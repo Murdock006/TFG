@@ -71,6 +71,8 @@
     <string name="aun_no_registrado">¿Aún no estás registrado?</string>
     <string name="pincha_aqui">Pincha aquí</string>
     <string name="iniciar_sesion">Iniciar sesión</string>
+    <string name="login_bienvenida">Bienvenido de nuevo</string>
+    <string name="cd_google_login">Iniciar sesión con Google</string>
 
     <string name="nombre_hint">Nombre</string>
     <string name="fecha_nacimiento_hint">Fecha de nacimiento (DD/MM/AAAA)</string>

@@ -1,10 +1,12 @@
 package es.sintaxys.teamtask.vista
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -22,6 +24,7 @@ import es.sintaxys.teamtask.repositorio.RepositorioRecompensas
 import es.sintaxys.teamtask.service.LocalizadorServicios
 import es.sintaxys.teamtask.viewmodel.ParejaViewModel
 import es.sintaxys.teamtask.util.Constants
+import com.google.android.material.button.MaterialButton
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -90,8 +93,8 @@ class FragmentRecompensas : Fragment() {
         tabActual = tab
         // Colores adaptativos al tema: texto claro sobre la pestaña activa (esmeralda)
         // y texto principal sobre la inactiva.
-        val textoActivo   = requireContext().getColor(R.color.on_acento)
-        val textoInactivo = requireContext().getColor(R.color.texto_principal)
+        val textoActivo   = ContextCompat.getColor(requireContext(), R.color.on_acento)
+        val textoInactivo = ContextCompat.getColor(requireContext(), R.color.texto_principal)
 
         // inactivo
         b.btnTabDisponibles.setBackgroundResource(R.drawable.tab_inactivo)
@@ -162,20 +165,27 @@ class FragmentRecompensas : Fragment() {
         inner class VH(val card: androidx.cardview.widget.CardView) : RecyclerView.ViewHolder(card)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-            val dp   = parent.context.resources.displayMetrics.density
+            val res  = parent.context.resources
             val card = androidx.cardview.widget.CardView(parent.context).apply {
                 layoutParams = RecyclerView.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-                ).also { (it as RecyclerView.LayoutParams).bottomMargin = (10 * dp).toInt() }
-                radius = 12 * dp; cardElevation = 4 * dp
-                setContentPadding((14*dp).toInt(),(12*dp).toInt(),(14*dp).toInt(),(12*dp).toInt())
+                ).also { (it as RecyclerView.LayoutParams).bottomMargin =
+                    res.getDimensionPixelSize(R.dimen.spacing_md) }
+                radius        = res.getDimensionPixelSize(R.dimen.corner_radius_lg).toFloat()
+                cardElevation = res.getDimensionPixelSize(R.dimen.elevation_card).toFloat()
+                setContentPadding(
+                    res.getDimensionPixelSize(R.dimen.spacing_lg),
+                    res.getDimensionPixelSize(R.dimen.spacing_md),
+                    res.getDimensionPixelSize(R.dimen.spacing_lg),
+                    res.getDimensionPixelSize(R.dimen.spacing_md)
+                )
             }
             return VH(card)
         }
 
         override fun onBindViewHolder(holder: VH, position: Int) {
-            val r  = items[position]
-            val dp = holder.card.context.resources.displayMetrics.density
+            val r   = items[position]
+            val res = holder.card.resources
             val ll = LinearLayout(holder.card.context).apply { orientation = LinearLayout.VERTICAL }
 
             // Fila título + tipo
@@ -186,14 +196,14 @@ class FragmentRecompensas : Fragment() {
             val tvTitulo = TextView(holder.card.context).apply {
                 text = r.titulo
                 textSize = 15f
-                setTextColor(holder.card.context.getColor(R.color.texto_principal))
+                setTextColor(ContextCompat.getColor(holder.card.context, R.color.texto_principal))
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             }
             val tvTipo = TextView(holder.card.context).apply {
                 text = if (r.esPredefinida) "⭐ Oficial" else "👥 Personalizada"
                 textSize = 11f
-                setTextColor(holder.card.context.getColor(R.color.texto_secundario))
+                setTextColor(ContextCompat.getColor(holder.card.context, R.color.texto_secundario))
             }
             rowTop.addView(tvTitulo); rowTop.addView(tvTipo)
 
@@ -201,10 +211,10 @@ class FragmentRecompensas : Fragment() {
             val tvDesc = TextView(holder.card.context).apply {
                 text      = r.descripcion ?: ""
                 textSize  = 12f
-                setTextColor(holder.card.context.getColor(R.color.texto_secundario))
+                setTextColor(ContextCompat.getColor(holder.card.context, R.color.texto_secundario))
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-                ).also { it.topMargin = (4*dp).toInt() }
+                ).also { it.topMargin = res.getDimensionPixelSize(R.dimen.spacing_xs) }
                 visibility = if (r.descripcion.isNullOrBlank()) View.GONE else View.VISIBLE
             }
 
@@ -214,22 +224,22 @@ class FragmentRecompensas : Fragment() {
                 max      = 100
                 progress = progresoPct
                 layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, (10*dp).toInt()
-                ).also { it.topMargin = (8*dp).toInt() }
+                    ViewGroup.LayoutParams.MATCH_PARENT, (10 * res.displayMetrics.density).toInt()
+                ).also { it.topMargin = res.getDimensionPixelSize(R.dimen.spacing_sm) }
             }
 
             // Texto progreso — sin mencionar el 10% (ya aparece en la cabecera informativa)
             val puedeCanjear = misPuntos >= r.coste
             val tvProgreso = TextView(holder.card.context).apply {
                 textSize = 12f
-                setTextColor(holder.card.context.getColor(R.color.texto_secundario))
+                setTextColor(ContextCompat.getColor(holder.card.context, R.color.texto_secundario))
                 text = if (puedeCanjear)
                     "✅ ¡Puedes canjearla! Tienes $misPuntos pts 🎁"
                 else
                     "🎁 $misPuntos / ${r.coste} pts  •  $progresoPct%  •  faltan ${r.coste - misPuntos} pts"
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-                ).also { it.topMargin = (2*dp).toInt() }
+                ).also { it.topMargin = res.getDimensionPixelSize(R.dimen.spacing_xs) }
             }
 
             // Fila coste + botón
@@ -238,19 +248,32 @@ class FragmentRecompensas : Fragment() {
                 gravity     = android.view.Gravity.CENTER_VERTICAL
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-                ).also { it.topMargin = (8*dp).toInt() }
+                ).also { it.topMargin = res.getDimensionPixelSize(R.dimen.spacing_md) }
             }
             val tvCoste = TextView(holder.card.context).apply {
                 text = "${r.coste} pts"
                 textSize = 14f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(holder.card.context.getColor(R.color.texto_principal))
+                // Jerarquía: el coste es el dato accionable de la tarjeta -> acento de marca.
+                // `primario_variant` es el token documentado para texto de acento sobre
+                // superficies claras/OSCURAS (en values-night se aclara a #34C79A).
+                setTextColor(ContextCompat.getColor(holder.card.context, R.color.primario_variant))
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             }
-            val btnCanjear = Button(holder.card.context).apply {
+            val btnCanjear = MaterialButton(holder.card.context).apply {
                 text      = getString(R.string.canjear)
                 isEnabled = puedeCanjear
                 textSize  = 13f
+                isAllCaps = false
+                minimumHeight = res.getDimensionPixelSize(R.dimen.button_min_height_sm)
+                cornerRadius  = res.getDimensionPixelSize(R.dimen.corner_radius_md)
+                backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(context, R.color.primario)
+                )
+                setTextColor(ContextCompat.getColor(context, R.color.on_acento))
+                rippleColor = ColorStateList.valueOf(
+                    ContextCompat.getColor(context, R.color.brand_600)
+                )
             }
             rowBottom.addView(tvCoste); rowBottom.addView(btnCanjear)
 
@@ -260,7 +283,8 @@ class FragmentRecompensas : Fragment() {
 
             // Color fondo adaptativo: verde suave si puede canjear, superficie del tema si no
             holder.card.setCardBackgroundColor(
-                holder.card.context.getColor(
+                ContextCompat.getColor(
+                    holder.card.context,
                     if (puedeCanjear) R.color.canje_disponible_bg else R.color.superficie
                 )
             )
@@ -331,27 +355,34 @@ class FragmentRecompensas : Fragment() {
         inner class VH(val card: androidx.cardview.widget.CardView) : RecyclerView.ViewHolder(card)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-            val dp   = parent.context.resources.displayMetrics.density
+            val res  = parent.context.resources
             val card = androidx.cardview.widget.CardView(parent.context).apply {
                 layoutParams = RecyclerView.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-                ).also { (it as RecyclerView.LayoutParams).bottomMargin = (10*dp).toInt() }
-                radius = 12 * dp; cardElevation = 4 * dp
-                setContentPadding((14*dp).toInt(),(12*dp).toInt(),(14*dp).toInt(),(12*dp).toInt())
+                ).also { (it as RecyclerView.LayoutParams).bottomMargin =
+                    res.getDimensionPixelSize(R.dimen.spacing_md) }
+                radius        = res.getDimensionPixelSize(R.dimen.corner_radius_lg).toFloat()
+                cardElevation = res.getDimensionPixelSize(R.dimen.elevation_card).toFloat()
+                setContentPadding(
+                    res.getDimensionPixelSize(R.dimen.spacing_lg),
+                    res.getDimensionPixelSize(R.dimen.spacing_md),
+                    res.getDimensionPixelSize(R.dimen.spacing_lg),
+                    res.getDimensionPixelSize(R.dimen.spacing_md)
+                )
             }
             return VH(card)
         }
 
         override fun onBindViewHolder(holder: VH, position: Int) {
-            val c  = items[position]
-            val dp = holder.card.context.resources.displayMetrics.density
+            val c   = items[position]
+            val res = holder.card.resources
             val ll = LinearLayout(holder.card.context).apply { orientation = LinearLayout.VERTICAL }
 
             val tvTitulo = TextView(holder.card.context).apply {
                 text = c.tituloRecompensa
                 textSize = 15f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(holder.card.context.getColor(R.color.texto_principal))
+                setTextColor(ContextCompat.getColor(holder.card.context, R.color.texto_principal))
             }
             val fechaTxt = c.fecha?.toDate()?.let { d ->
                 val cal = java.util.Calendar.getInstance().apply { time = d }
@@ -365,31 +396,49 @@ class FragmentRecompensas : Fragment() {
             val tvMeta = TextView(holder.card.context).apply {
                 text = "${c.nombreUsuario}  •  ${c.coste} pts  •  $fechaTxt  •  $estadoBadge"
                 textSize = 12f
-                setTextColor(holder.card.context.getColor(R.color.texto_secundario))
+                setTextColor(ContextCompat.getColor(holder.card.context, R.color.texto_secundario))
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-                ).also { it.topMargin = (4*dp).toInt() }
+                ).also { it.topMargin = res.getDimensionPixelSize(R.dimen.spacing_xs) }
             }
             ll.addView(tvTitulo); ll.addView(tvMeta)
 
             // Acciones: solo en tab Pendientes (canjes del otro miembro que yo debo confirmar)
             if (mostrarAcciones && c.estado == "pendiente") {
+                val gap = res.getDimensionPixelSize(R.dimen.spacing_xs)
                 val rowAcc = LinearLayout(holder.card.context).apply {
                     orientation = LinearLayout.HORIZONTAL
                     layoutParams = LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-                    ).also { it.topMargin = (8*dp).toInt() }
+                    ).also { it.topMargin = res.getDimensionPixelSize(R.dimen.spacing_sm) }
                 }
-                val btnAceptar = Button(holder.card.context).apply {
+                // Botones semánticos: verde = aceptar, rojo = rechazar. `verde`/`rojo` se
+                // mantienen claros en modo oscuro y el texto usa `texto_sobre_semantico`
+                // (siempre oscuro), garantizando contraste en ambos temas.
+                val btnAceptar = MaterialButton(holder.card.context).apply {
                     text = "✅ Aceptar"
                     textSize = 12f
-                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).also { it.marginEnd = (4*dp).toInt() }
+                    isAllCaps = false
+                    minimumHeight = res.getDimensionPixelSize(R.dimen.button_min_height_sm)
+                    cornerRadius  = res.getDimensionPixelSize(R.dimen.corner_radius_md)
+                    backgroundTintList = ColorStateList.valueOf(
+                        ContextCompat.getColor(context, R.color.verde)
+                    )
+                    setTextColor(ContextCompat.getColor(context, R.color.texto_sobre_semantico))
+                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).also { it.marginEnd = gap }
                     setOnClickListener { responderCanje(c, true) }
                 }
-                val btnRechazar = Button(holder.card.context).apply {
+                val btnRechazar = MaterialButton(holder.card.context).apply {
                     text = "❌ Rechazar"
                     textSize = 12f
-                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).also { it.marginStart = (4*dp).toInt() }
+                    isAllCaps = false
+                    minimumHeight = res.getDimensionPixelSize(R.dimen.button_min_height_sm)
+                    cornerRadius  = res.getDimensionPixelSize(R.dimen.corner_radius_md)
+                    backgroundTintList = ColorStateList.valueOf(
+                        ContextCompat.getColor(context, R.color.rojo)
+                    )
+                    setTextColor(ContextCompat.getColor(context, R.color.texto_sobre_semantico))
+                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).also { it.marginStart = gap }
                     setOnClickListener { responderCanje(c, false) }
                 }
                 rowAcc.addView(btnAceptar); rowAcc.addView(btnRechazar)
@@ -399,7 +448,8 @@ class FragmentRecompensas : Fragment() {
             holder.card.removeAllViews(); holder.card.addView(ll)
             // Colores de fondo adaptativos al tema (aceptado/rechazado/pendiente)
             holder.card.setCardBackgroundColor(
-                holder.card.context.getColor(
+                ContextCompat.getColor(
+                    holder.card.context,
                     when (c.estado) {
                         "aceptado"  -> R.color.canje_aceptado_bg
                         "rechazado" -> R.color.canje_rechazado_bg

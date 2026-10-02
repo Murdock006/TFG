@@ -6,33 +6,40 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/fondo"
-    android:paddingBottom="72dp"
     tools:context="es.sintaxys.teamtask.vista.FragmentPresentacion">
 
-
-    <ImageView
-        android:layout_width="180dp"
-        android:layout_height="226dp"
-        android:src="@drawable/splash_image"
-        android:scaleType="fitCenter"
-        android:contentDescription="@string/cd_logo_app"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.22" />
-    <TextView
-        android:id="@+id/textoPresentacion"
+    <!-- Grupo centrado: logo + indicador + texto, con espaciado uniforme -->
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/cargando_dependencias"
-        style="@style/TextAppearance.TFG.Cuerpo"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.825" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
+        <ImageView
+            android:layout_width="180dp"
+            android:layout_height="226dp"
+            android:src="@drawable/splash_image"
+            android:scaleType="fitCenter"
+            android:contentDescription="@string/cd_logo_app" />
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:indeterminateTint="@color/primario" />
+
+        <TextView
+            android:id="@+id/textoPresentacion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:text="@string/cargando_dependencias"
+            style="@style/TextAppearance.TFG.Cuerpo" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

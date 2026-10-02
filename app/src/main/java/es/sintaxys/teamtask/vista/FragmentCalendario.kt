@@ -176,9 +176,9 @@ class FragmentCalendario : Fragment() {
             fun sp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, v, dm)
             val card = MaterialCardView(ctx).apply {
                 layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).also { (it as RecyclerView.LayoutParams).setMargins(0, 0, 0, dp(12f).toInt()) }
-                radius = dp(12f)
-                cardElevation = dp(4f)
-                setCardBackgroundColor(ctx.getColor(R.color.fondo))
+                radius = ctx.resources.getDimension(R.dimen.corner_radius_lg)
+                cardElevation = ctx.resources.getDimension(R.dimen.elevation_card)
+                setCardBackgroundColor(ctx.getColor(R.color.superficie))
                 strokeWidth = 0
             }
             // Contenedor horizontal: barra de dificultad (izquierda) + contenido de texto (peso 1).
@@ -202,7 +202,8 @@ class FragmentCalendario : Fragment() {
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             }
             val ivImportante = ImageView(ctx).apply {
-                setImageResource(android.R.drawable.btn_star_big_on)
+                setImageResource(R.drawable.ic_star)
+                imageTintList = android.content.res.ColorStateList.valueOf(ctx.getColor(R.color.advertencia))
                 visibility = View.GONE
                 layoutParams = LinearLayout.LayoutParams(dp(48f).toInt(), dp(48f).toInt())
             }
@@ -267,7 +268,7 @@ class FragmentCalendario : Fragment() {
             // Color de fondo por importancia (token adaptativo: claro en modo claro, ámbar oscuro en modo oscuro)
             holder.card.setCardBackgroundColor(
                 if (t.esImportante) requireContext().getColor(R.color.importante_bg)
-                else requireContext().getColor(R.color.fondo)
+                else requireContext().getColor(R.color.superficie)
             )
 
             // Marca visual de emergencia (borde rojo) y recurrencia (borde violeta). Se resetea en cada

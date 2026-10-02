@@ -23,7 +23,7 @@
         app:layout_constraintHeight_default="percent"
         app:layout_constraintHeight_percent="0.32" />
 
-    <!-- Zona de inputs en scroll -->
+    <!-- Contenido desplazable: inputs y acciones -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/inputs_scroll"
         android:layout_width="0dp"
@@ -44,136 +44,178 @@
             android:paddingTop="@dimen/spacing_lg"
             android:paddingBottom="@dimen/spacing_3xl">
 
-            <!-- Campo email -->
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.TFG.TextInputLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/usuario_hint">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/usuario"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textEmailAddress"
-                    android:textColor="@color/texto_principal"
-                    android:textColorHint="@color/gris"
-                    android:autofillHints="username"
-                    android:imeOptions="flagNoExtractUi" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- Campo contraseña -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/contraseiaLayout"
-                style="@style/Widget.TFG.TextInputLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/contrasena_hint"
-                android:layout_marginTop="@dimen/spacing_md"
-                app:endIconMode="password_toggle">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/textocontraseA"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPassword"
-                    android:imeOptions="flagNoExtractUi"
-                    android:textColor="@color/texto_principal"
-                    android:textColorHint="@color/gris"
-                    android:autofillHints="password" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- Registro -->
+            <!-- Encabezado con barrita de acento (coherente con Inicio) -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="@dimen/spacing_md">
-
-                <TextView
-                    android:id="@+id/sinRegistro"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/aun_no_registrado"
-                    android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
-                    android:textColor="@color/texto_principal" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/botonTransparente"
-                    style="@style/Widget.TFG.Boton.Texto"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/pincha_aqui"
-                    android:textColor="@color/primario"
-                    android:textAllCaps="false"
-                    android:layout_marginStart="@dimen/spacing_sm" />
-
-            </LinearLayout>
-
-            <!-- Botón iniciar sesión -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/iniciarSesion"
-                style="@style/Widget.TFG.Boton.Relleno"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/iniciar_sesion"
-                android:textAllCaps="false"
-                android:layout_marginTop="@dimen/spacing_lg" />
-
-            <!-- Divisor -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="@dimen/spacing_lg">
+                android:layout_marginBottom="@dimen/spacing_lg">
 
                 <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1"
-                    android:background="@color/divisor" />
+                    android:layout_width="@dimen/stroke_thick"
+                    android:layout_height="18dp"
+                    android:layout_marginEnd="@dimen/spacing_sm"
+                    android:background="@drawable/bg_accent_bar" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="  o  "
-                    android:textColor="@color/texto_secundario"
-                    android:textSize="13sp" />
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1"
-                    android:background="@color/divisor" />
+                    android:text="@string/login_bienvenida"
+                    android:textAppearance="@style/TextAppearance.TFG.SubTitulo" />
             </LinearLayout>
 
-            <!-- Botón Google -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnGoogle"
-                style="@style/Widget.TFG.Boton.Google"
+            <!-- Tarjeta contenedora: radio 16dp, elevación 3dp, sin borde -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_md"
-                android:contentDescription="Iniciar sesión con Google"
-                android:text="Continuar con Google"
-                android:textColor="@color/google_text"
-                app:icon="@drawable/googleg_standard_color_18"
-                app:iconGravity="textStart"
-                app:iconPadding="8dp" />
+                app:cardCornerRadius="@dimen/corner_radius_lg"
+                app:cardElevation="@dimen/elevation_card"
+                app:cardBackgroundColor="@color/superficie"
+                app:strokeWidth="0dp">
 
-            <TextView
-                android:id="@+id/tvUsuarioInfo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_sm"
-                android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
-                android:textColor="@color/texto_principal"
-                android:visibility="gone"
-                android:text="" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_xl">
+
+                    <!-- Campo email -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.TFG.TextInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/usuario_hint">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/usuario"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textEmailAddress"
+                            android:textColor="@color/texto_principal"
+                            android:textColorHint="@color/gris"
+                            android:autofillHints="username"
+                            android:imeOptions="flagNoExtractUi" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Campo contraseña -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/contraseiaLayout"
+                        style="@style/Widget.TFG.TextInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/contrasena_hint"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        app:endIconMode="password_toggle">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/textocontraseA"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPassword"
+                            android:imeOptions="flagNoExtractUi"
+                            android:textColor="@color/texto_principal"
+                            android:textColorHint="@color/gris"
+                            android:autofillHints="password" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Botón iniciar sesión (acción principal) -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/iniciarSesion"
+                        style="@style/Widget.TFG.Boton.Relleno"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/iniciar_sesion"
+                        android:textAllCaps="false"
+                        android:layout_marginTop="@dimen/spacing_lg" />
+
+                    <!-- Registro -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_marginTop="@dimen/spacing_md">
+
+                        <TextView
+                            android:id="@+id/sinRegistro"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/aun_no_registrado"
+                            android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
+                            android:textColor="@color/texto_principal" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/botonTransparente"
+                            style="@style/Widget.TFG.Boton.Texto"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/pincha_aqui"
+                            android:textColor="@color/primario"
+                            android:textAllCaps="false"
+                            android:layout_marginStart="@dimen/spacing_xs" />
+
+                    </LinearLayout>
+
+                    <!-- Divisor -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="@dimen/spacing_lg">
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1"
+                            android:background="@color/divisor" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/o_separador"
+                            android:textColor="@color/texto_secundario"
+                            android:textSize="13sp"
+                            android:layout_marginStart="@dimen/spacing_md"
+                            android:layout_marginEnd="@dimen/spacing_md" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1"
+                            android:background="@color/divisor" />
+                    </LinearLayout>
+
+                    <!-- Botón Google -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnGoogle"
+                        style="@style/Widget.TFG.Boton.Google"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:contentDescription="@string/cd_google_login"
+                        android:text="@string/continuar_google"
+                        android:textColor="@color/google_text"
+                        app:icon="@drawable/googleg_standard_color_18"
+                        app:iconGravity="textStart"
+                        app:iconPadding="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvUsuarioInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:textAppearance="@style/TextAppearance.TFG.Cuerpo"
+                        android:textColor="@color/texto_principal"
+                        android:visibility="gone"
+                        android:text="" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 

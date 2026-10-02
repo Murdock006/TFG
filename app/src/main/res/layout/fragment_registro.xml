@@ -12,29 +12,41 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingTop="32dp"
+        android:paddingTop="@dimen/spacing_3xl"
         android:paddingStart="@dimen/spacing_xl"
         android:paddingEnd="@dimen/spacing_xl"
         android:paddingBottom="72dp">
 
-        <TextView
+        <!-- Encabezado con barrita de acento (coherente con Inicio) -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/crear_cuenta"
-            android:textStyle="bold"
-            android:textColor="@color/texto_principal"
-            android:layout_marginBottom="@dimen/spacing_md"
-            android:textAppearance="@style/TextAppearance.TFG.Headline" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="@dimen/spacing_md">
+
+            <View
+                android:layout_width="@dimen/stroke_thick"
+                android:layout_height="24dp"
+                android:layout_marginEnd="@dimen/spacing_sm"
+                android:background="@drawable/bg_accent_bar" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/crear_cuenta"
+                android:textColor="@color/texto_principal"
+                android:textAppearance="@style/TextAppearance.TFG.Headline" />
+        </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_lg"
             app:cardCornerRadius="@dimen/corner_radius_lg"
-            app:cardElevation="@dimen/elevation_pressed"
+            app:cardElevation="@dimen/elevation_card"
             app:cardBackgroundColor="@color/superficie"
-            app:strokeColor="@color/divisor"
-            app:strokeWidth="@dimen/stroke_thin">
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -65,16 +77,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardCornerRadius="@dimen/corner_radius_lg"
-            app:cardElevation="@dimen/elevation_pressed"
+            app:cardElevation="@dimen/elevation_card"
             app:cardBackgroundColor="@color/superficie"
-            app:strokeColor="@color/divisor"
-            app:strokeWidth="@dimen/stroke_thin">
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="@dimen/spacing_xl" android:paddingBottom="76dp">
+                android:padding="@dimen/spacing_xl">
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_nombre"
@@ -100,7 +111,7 @@
                     style="@style/Widget.TFG.TextInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="@dimen/spacing_md"
                     android:minHeight="@dimen/input_min_height"
                     android:hint="@string/fecha_nacimiento_hint">
 
@@ -120,7 +131,7 @@
                     style="@style/Widget.TFG.TextInputLayout.Dropdown"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="@dimen/spacing_md"
                     android:minHeight="@dimen/input_min_height"
                     android:hint="@string/sexo_hint">
 
@@ -139,7 +150,7 @@
                     style="@style/Widget.TFG.TextInputLayout.Dropdown"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="@dimen/spacing_md"
                     android:minHeight="@dimen/input_min_height"
                     android:hint="@string/pais_hint">
 
@@ -159,7 +170,7 @@
                     style="@style/Widget.TFG.TextInputLayout.Dropdown"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="@dimen/spacing_md"
                     android:minHeight="@dimen/input_min_height"
                     android:hint="@string/ciudad_hint">
 
@@ -179,7 +190,7 @@
                     style="@style/Widget.TFG.TextInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="@dimen/spacing_md"
                     android:minHeight="@dimen/input_min_height"
                     android:hint="@string/email_hint">
 
@@ -200,7 +211,7 @@
                     style="@style/Widget.TFG.TextInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="@dimen/spacing_md"
                     android:minHeight="@dimen/input_min_height"
                     android:hint="@string/contrasena_hint"
                     app:endIconMode="password_toggle">
@@ -225,8 +236,7 @@
                     android:layout_marginTop="@dimen/spacing_xl"
                     android:text="@string/registrar"
                     android:textAllCaps="false"
-                    android:paddingTop="14dp"
-                    android:paddingBottom="14dp" />
+                    android:minHeight="@dimen/button_min_height" />
 
             </LinearLayout>
 
