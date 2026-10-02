@@ -527,7 +527,7 @@
                              real: MaterialButton ignora android:background. -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnCopiarCodigo"
-                            style="@style/Widget.TFG.Boton.ContornoMaterial"
+                            style="@style/Widget.TFG.Boton.Contorno"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="@dimen/spacing_sm"
@@ -538,7 +538,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnCompartirCodigo"
-                            style="@style/Widget.TFG.Boton.ContornoMaterial"
+                            style="@style/Widget.TFG.Boton.Contorno"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:ellipsize="end"
